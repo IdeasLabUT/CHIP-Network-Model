@@ -2,7 +2,7 @@ import numpy as np
 import generative_model_utils as utils
 
 
-def block_generative_model(num_nodes, class_prob, bp_mu, bp_alpha, bp_beta, end_time, seed=None):
+def community_generative_model(num_nodes, class_prob, bp_mu, bp_alpha, bp_beta, end_time, seed=None):
     """
 
     :param num_nodes: (int) Total number of nodes
@@ -20,7 +20,7 @@ def block_generative_model(num_nodes, class_prob, bp_mu, bp_alpha, bp_beta, end_
 
     event_dicts = {}
 
-    hawkes_seed = 0
+    hawkes_seed = seed
     for c_i in range(num_classes):
         if len(community_membership[c_i]) == 0:
             continue
@@ -28,24 +28,17 @@ def block_generative_model(num_nodes, class_prob, bp_mu, bp_alpha, bp_beta, end_
         for c_j in range(num_classes):
             if c_i == c_j or len(community_membership[c_j]) == 0:
                 continue
-            # In case two block pairs have same Hawkes params, we still need different generated event times
-            hawkes_seed = None if seed is None else hawkes_seed + 1
 
-            event_times = utils.simulate_univariate_hawkes(bp_mu[c_i, c_j],
-                                                           bp_alpha[c_i, c_j],
-                                                           bp_beta[c_i, c_j],
-                                                           end_time, seed=seed)
-            num_events = len(event_times)
+            for b_i in community_membership[c_i]:
+                for b_j in community_membership[c_j]:
+                    # Seed has to change in order to get different event times for each node pair.
+                    hawkes_seed = None if seed is None else hawkes_seed + 1
 
-            block_i_nodes = np.random.choice(community_membership[c_i], num_events, replace=True)
-            block_j_nodes = np.random.choice(community_membership[c_j], num_events, replace=True)
-
-            for e in range(num_events):
-                node_pair = (block_i_nodes[e], block_j_nodes[e])
-                if node_pair not in event_dicts:
-                    event_dicts[node_pair] = []
-
-                event_dicts[node_pair].append(event_times[e])
+                    event_times = utils.simulate_univariate_hawkes(bp_mu[c_i, c_j],
+                                                                   bp_alpha[c_i, c_j],
+                                                                   bp_beta[c_i, c_j],
+                                                                   end_time, seed=hawkes_seed)
+                    event_dicts[(b_i, b_j)] = event_times
 
     return node_membership, event_dicts
 
@@ -62,10 +55,9 @@ if __name__ == "__main__":
                                                                    beta_range=(0.95, 2),
                                                                    seed=seed)
 
-    node_membership, event_dicts = block_generative_model(number_of_nodes,
-                                                          class_probabilities,
-                                                          bp_mu, bp_alpha, bp_beta,
-                                                          end_time, seed=seed)
+    node_membership, event_dicts = community_generative_model(number_of_nodes,
+                                                              class_probabilities,
+                                                              bp_mu, bp_alpha, bp_beta,
+                                                              end_time, seed=seed)
 
     print(node_membership, event_dicts)
-

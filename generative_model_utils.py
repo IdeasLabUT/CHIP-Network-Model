@@ -1,6 +1,7 @@
 import numpy as np
 from tick.hawkes import SimuHawkesExpKernels
 
+
 def assign_class_membership(num_nodes, class_prob, one_hot=True):
     """
     Randomly assigns num_node nodes to one of the classes based on class_prob.
@@ -46,8 +47,9 @@ def simulate_univariate_hawkes(mu, alpha, beta, run_time, seed):
 
 def generate_random_hawkes_params(num_classes, mu_range, alpha_range, beta_range, seed=None):
     """
-    Generate random numbers for hawkes params for generative models.
+    Generate random numbers for Hawkes params for generative models.
 
+    :param num_classes: number of class communities
     :param mu_range: (tuple) (min, max) range of mu.
     :param alpha_range: (tuple) (min, max) range of alpha.
     :param beta_range: (tuple) (min, max) range of beta.
