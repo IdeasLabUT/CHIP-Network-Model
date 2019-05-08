@@ -67,14 +67,14 @@ def block_generative_model(num_nodes, class_prob, bp_mu, bp_alpha, bp_beta, end_
 
 if __name__ == "__main__":
     seed = 1
-    number_of_nodes = 20
+    number_of_nodes = 8
     class_probabilities = [0.2, 0.4, 0.1, 0.2, 0.1]
     num_of_classes = len(class_probabilities)
     end_time = 10
     bp_mu, bp_alpha, bp_beta = utils.generate_random_hawkes_params(num_of_classes,
-                                                                   mu_range=(0.3, 1),
-                                                                   alpha_range=(0.4, 0.9),
-                                                                   beta_range=(0.95, 2),
+                                                                   mu_range=(0.1, 0.3),
+                                                                   alpha_range=(0.2, 0.4),
+                                                                   beta_range=(0.5, 1),
                                                                    seed=seed)
 
     node_membership, event_dicts = block_generative_model(number_of_nodes,
@@ -83,4 +83,6 @@ if __name__ == "__main__":
                                                           end_time, seed=seed)
 
     print(node_membership, event_dicts.keys())
+    print(utils.event_dict_to_adjacency(number_of_nodes, event_dicts))
+    print(utils.event_dict_to_aggregated_adjacency(number_of_nodes, event_dicts))
 

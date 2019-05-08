@@ -62,3 +62,35 @@ def generate_random_hawkes_params(num_classes, mu_range, alpha_range, beta_range
     bp_beta = np.random.uniform(low=beta_range[0], high=beta_range[1], size=(num_classes, num_classes))
 
     return bp_mu, bp_alpha, bp_beta
+
+
+def event_dict_to_adjacency(num_nodes, event_dicts):
+    """
+
+    :param num_nodes: (int) Total number of nodes
+    :param event_dicts: Edge dictionary of events between all node pair. Output of the generative models.
+    :return: np array (num_nodes x num_nodes) Adjacency matrix with 1 between nodes where there is at least one event.
+    """
+    adjacency_matrix = np.zeros((num_nodes, num_nodes), dtype=int)
+
+    for (u, v), event_times in event_dicts.items():
+        if len(event_times) != 0:
+            adjacency_matrix[u, v] = 1
+
+    return adjacency_matrix
+
+
+def event_dict_to_aggregated_adjacency(num_nodes, event_dicts):
+    """
+
+    :param num_nodes: (int) Total number of nodes
+    :param event_dicts: Edge dictionary of events between all node pair. Output of the generative models.
+    :return: np array (num_nodes x num_nodes) Adjacency matrix where element ij denotes the number of events between
+                                              nodes i an j.
+    """
+    adjacency_matrix = np.zeros((num_nodes, num_nodes), dtype=int)
+
+    for (u, v), event_times in event_dicts.items():
+        adjacency_matrix[u, v] = len(event_times)
+
+    return adjacency_matrix
