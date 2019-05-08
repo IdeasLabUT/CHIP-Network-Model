@@ -26,11 +26,15 @@ def community_generative_model(num_nodes, class_prob, bp_mu, bp_alpha, bp_beta, 
             continue
 
         for c_j in range(num_classes):
-            if c_i == c_j or len(community_membership[c_j]) == 0:
+            if len(community_membership[c_j]) == 0:
                 continue
 
             for b_i in community_membership[c_i]:
                 for b_j in community_membership[c_j]:
+                    # self events are not allowed
+                    if b_i == b_j:
+                        continue
+
                     # Seed has to change in order to get different event times for each node pair.
                     hawkes_seed = None if seed is None else hawkes_seed + 1
 
@@ -45,10 +49,10 @@ def community_generative_model(num_nodes, class_prob, bp_mu, bp_alpha, bp_beta, 
 
 if __name__ == "__main__":
     seed = 1
-    number_of_nodes = 20
+    number_of_nodes = 5000
     class_probabilities = [0.2, 0.4, 0.1, 0.2, 0.1]
     num_of_classes = len(class_probabilities)
-    end_time = 10
+    end_time = 200
     bp_mu, bp_alpha, bp_beta = utils.generate_random_hawkes_params(num_of_classes,
                                                                    mu_range=(0.3, 1),
                                                                    alpha_range=(0.4, 0.9),
