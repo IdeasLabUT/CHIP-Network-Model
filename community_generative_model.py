@@ -49,10 +49,10 @@ def community_generative_model(num_nodes, class_prob, bp_mu, bp_alpha, bp_beta, 
 
 if __name__ == "__main__":
     seed = 1
-    number_of_nodes = 5000
+    number_of_nodes = 10
     class_probabilities = [0.2, 0.4, 0.1, 0.2, 0.1]
     num_of_classes = len(class_probabilities)
-    end_time = 200
+    end_time = 10
     bp_mu, bp_alpha, bp_beta = utils.generate_random_hawkes_params(num_of_classes,
                                                                    mu_range=(0.3, 1),
                                                                    alpha_range=(0.4, 0.9),
@@ -64,4 +64,4 @@ if __name__ == "__main__":
                                                               bp_mu, bp_alpha, bp_beta,
                                                               end_time, seed=seed)
 
-    print(node_membership, event_dicts)
+    print(node_membership, event_dicts.keys())

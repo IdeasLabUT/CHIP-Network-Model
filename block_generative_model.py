@@ -22,12 +22,19 @@ def block_generative_model(num_nodes, class_prob, bp_mu, bp_alpha, bp_beta, end_
 
     hawkes_seed = 0
     for c_i in range(num_classes):
+        # No member in the communit
         if len(community_membership[c_i]) == 0:
             continue
 
         for c_j in range(num_classes):
-            if c_i == c_j or len(community_membership[c_j]) == 0:
+            # No member in the community
+            if len(community_membership[c_j]) == 0:
                 continue
+
+            # generating within community events, when the community only has one member
+            if c_i == c_j and len(community_membership[c_j]) == 1:
+                continue
+
             # In case two block pairs have same Hawkes params, we still need different generated event times
             hawkes_seed = None if seed is None else hawkes_seed + 1
 
@@ -37,8 +44,16 @@ def block_generative_model(num_nodes, class_prob, bp_mu, bp_alpha, bp_beta, end_
                                                            end_time, seed=seed)
             num_events = len(event_times)
 
-            block_i_nodes = np.random.choice(community_membership[c_i], num_events, replace=True)
-            block_j_nodes = np.random.choice(community_membership[c_j], num_events, replace=True)
+            # self events are not allowed. Nodes must be sampled without replacement for within community events.
+            if c_i != c_j:
+                block_i_nodes = np.random.choice(community_membership[c_i], num_events, replace=True)
+                block_j_nodes = np.random.choice(community_membership[c_j], num_events, replace=True)
+            else:
+                block_i_nodes = np.empty(num_events, dtype=int)
+                block_j_nodes = np.empty(num_events, dtype=int)
+
+                for bn in range(num_events):
+                    block_i_nodes[bn], block_j_nodes[bn] = np.random.choice(community_membership[c_i], 2, replace=False)
 
             for e in range(num_events):
                 node_pair = (block_i_nodes[e], block_j_nodes[e])
@@ -67,5 +82,5 @@ if __name__ == "__main__":
                                                           bp_mu, bp_alpha, bp_beta,
                                                           end_time, seed=seed)
 
-    print(node_membership, event_dicts)
+    print(node_membership, event_dicts.keys())
 
