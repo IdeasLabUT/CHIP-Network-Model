@@ -7,8 +7,8 @@ from block_generative_model import block_generative_model
 from community_generative_model import community_generative_model
 
 
-# model = "block"
-model = "community"
+model = "block"
+# model = "community"
 
 regularized = True
 
