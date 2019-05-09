@@ -2,19 +2,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 import generative_model_utils as utils
 from sklearn.metrics import adjusted_rand_score
-from spectral_clustering import spectral_cluster
+from spectral_clustering import spectral_cluster, regularized_spectral_cluster
 from block_generative_model import block_generative_model
 from community_generative_model import community_generative_model
 
+
 # model = "block"
 model = "community"
+
+regularized = True
 
 # Setting up model parameters. Mu must be set for the block model. It will be adjusted accordingly.
 seed = None
 number_of_nodes = 128
 class_probabilities = [.25, .25, .25, .25]
-# durations = [20, 40, 60, 80, 150, 300, 1000]
-durations = [5000, 10000, 25000, 50000]
+durations = [20, 40, 60, 80, 150, 300, 1000]
+# durations = [5000, 10000, 25000, 50000]
 num_simulation_per_duration = 10
 
 num_of_classes = len(class_probabilities)
@@ -27,10 +30,7 @@ np.fill_diagonal(bp_mu, 1.8)
 
 if model == "community":
     generative_model = community_generative_model
-    print(bp_mu)
     bp_mu = utils.get_block_comparable_mu_for_community_model(bp_mu, number_of_nodes, class_probabilities)
-    print(bp_mu)
-
 else:
     generative_model = block_generative_model
 
@@ -54,31 +54,40 @@ for end_time in durations:
 
         # Spectral clustering on adjacency matrix
         adj = utils.event_dict_to_adjacency(number_of_nodes, event_dicts)
-        print(adj)
-        adj_sc_pred = spectral_cluster(adj.astype(np.float), num_classes=num_of_classes)
+
+        if regularized:
+            adj_sc_pred = regularized_spectral_cluster(adj, num_classes=num_of_classes)
+        else:
+            adj_sc_pred = spectral_cluster(adj, num_classes=num_of_classes)
+
         adj_sc_rands[i] = adjusted_rand_score(true_class_assignments, adj_sc_pred)
 
         # Spectral clustering on aggregated adjacency matrix
         agg_adj = utils.event_dict_to_aggregated_adjacency(number_of_nodes, event_dicts)
-        print(agg_adj)
-        agg_adj_pred = spectral_cluster(agg_adj, num_classes=num_of_classes)
+
+        if regularized:
+            agg_adj_pred = regularized_spectral_cluster(agg_adj, num_classes=num_of_classes)
+        else:
+            agg_adj_pred = spectral_cluster(agg_adj, num_classes=num_of_classes)
+
         agg_adj_sc_rands[i] = adjusted_rand_score(true_class_assignments, agg_adj_pred)
-    exit()
+
     mean_adj_sc_rand_scores.append(np.mean(adj_sc_rands))
-    mean_adj_sc_rand_scores_err.append(2 * np.std(adj_sc_rands))
+    mean_adj_sc_rand_scores_err.append(2 * np.std(adj_sc_rands) / np.sqrt(len(adj_sc_rands)))
 
     mean_agg_adj_sc_rand_scores.append(np.mean(agg_adj_sc_rands))
-    mean_agg_adj_sc_rand_scores_err.append(2 * np.std(agg_adj_sc_rands))
+    mean_agg_adj_sc_rand_scores_err.append(2 * np.std(agg_adj_sc_rands) / np.sqrt(len(adj_sc_rands)))
+
+sc_model = "RSC" if regularized else "SC"
 
 print(f"{model} model:")
 print("Durations:", durations)
-print("SC on Adjacency:", mean_adj_sc_rand_scores)
-print("SC on Aggregated Adjacency:", mean_agg_adj_sc_rand_scores)
+print(f"{sc_model} on Adjacency:", mean_adj_sc_rand_scores)
+print(f"{sc_model} on Aggregated Adjacency:", mean_agg_adj_sc_rand_scores)
 
 
 # Plot Results
 fig, ax = plt.subplots()
-
 ind = np.arange(len(durations))    # the x locations for the groups
 width = 0.35         # the width of the bars
 p1 = ax.bar(ind, mean_adj_sc_rand_scores, width, color='r', yerr=mean_adj_sc_rand_scores_err)
@@ -89,6 +98,6 @@ ax.set_xticks(ind + width / 2)
 ax.set_xticklabels(durations)
 ax.set_ylim(0, 1)
 
-ax.legend((p1[0], p2[0]), ('SC on Adjacency', 'SC on Aggregated Adjacency'))
+ax.legend((p1[0], p2[0]), (f"{sc_model} on Adjacency", f"{sc_model} on Aggregated Adjacency"))
 ax.autoscale_view()
 plt.show()
