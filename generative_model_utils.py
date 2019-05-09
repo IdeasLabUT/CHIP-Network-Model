@@ -22,7 +22,7 @@ def assign_class_membership(num_nodes, class_prob, one_hot=True):
         community_membership.append(np.where(node_membership[:, i] == 1)[0])
 
     if not one_hot:
-        node_membership = np.argmax(node_membership, axis=1)
+        node_membership = one_hot_to_class_assignment(node_membership)
 
     return node_membership, community_membership
 
@@ -64,14 +64,15 @@ def generate_random_hawkes_params(num_classes, mu_range, alpha_range, beta_range
     return bp_mu, bp_alpha, bp_beta
 
 
-def event_dict_to_adjacency(num_nodes, event_dicts):
+def event_dict_to_adjacency(num_nodes, event_dicts, dtype=np.float):
     """
 
     :param num_nodes: (int) Total number of nodes
     :param event_dicts: Edge dictionary of events between all node pair. Output of the generative models.
+    :param dtype: data type of the adjacency matrix. Float is needed for the spectral clustering algorithm.
     :return: np array (num_nodes x num_nodes) Adjacency matrix with 1 between nodes where there is at least one event.
     """
-    adjacency_matrix = np.zeros((num_nodes, num_nodes), dtype=int)
+    adjacency_matrix = np.zeros((num_nodes, num_nodes), dtype=dtype)
 
     for (u, v), event_times in event_dicts.items():
         if len(event_times) != 0:
@@ -80,17 +81,28 @@ def event_dict_to_adjacency(num_nodes, event_dicts):
     return adjacency_matrix
 
 
-def event_dict_to_aggregated_adjacency(num_nodes, event_dicts):
+def event_dict_to_aggregated_adjacency(num_nodes, event_dicts, dtype=np.float):
     """
 
     :param num_nodes: (int) Total number of nodes
     :param event_dicts: Edge dictionary of events between all node pair. Output of the generative models.
+    :param dtype: data type of the adjacency matrix. Float is needed for the spectral clustering algorithm.
     :return: np array (num_nodes x num_nodes) Adjacency matrix where element ij denotes the number of events between
                                               nodes i an j.
     """
-    adjacency_matrix = np.zeros((num_nodes, num_nodes), dtype=int)
+    adjacency_matrix = np.zeros((num_nodes, num_nodes), dtype=dtype)
 
     for (u, v), event_times in event_dicts.items():
         adjacency_matrix[u, v] = len(event_times)
 
     return adjacency_matrix
+
+
+def one_hot_to_class_assignment(node_membership):
+    """
+    converts one-hot encoding of node_membership to class assignment
+
+    :param node_membership: One-hot encoding of node_membership
+    :return: 1-D np array with class of each node.
+    """
+    return np.argmax(node_membership, axis=1)
