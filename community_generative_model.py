@@ -7,9 +7,9 @@ def community_generative_model(num_nodes, class_prob, bp_mu, bp_alpha, bp_beta, 
 
     :param num_nodes: (int) Total number of nodes
     :param class_prob: (list) Probability of class memberships from class 0 to K - 1
-    :param bp_mu: K*2 x K*2 matrix where entry ij denotes the mu of Hawkes process for block pair (b_i, b_j)
-    :param bp_alpha: K*2 x K*2 matrix where entry ij denotes the alpha of Hawkes process for block pair (b_i, b_j)
-    :param bp_beta: K*2 x K*2 matrix where entry ij denotes the beta of Hawkes process for block pair (b_i, b_j)
+    :param bp_mu: K x K matrix where entry ij denotes the mu of Hawkes process for block pair (b_i, b_j)
+    :param bp_alpha: K x K matrix where entry ij denotes the alpha of Hawkes process for block pair (b_i, b_j)
+    :param bp_beta: K x K matrix where entry ij denotes the beta of Hawkes process for block pair (b_i, b_j)
     :param end_time: end_time of hawkes simulation
     :param seed: seed of all random processes
     """
