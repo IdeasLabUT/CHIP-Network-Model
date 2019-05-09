@@ -106,3 +106,28 @@ def one_hot_to_class_assignment(node_membership):
     :return: 1-D np array with class of each node.
     """
     return np.argmax(node_membership, axis=1)
+
+
+def get_block_comparable_mu_for_community_model(block_model_mu, num_nodes, class_prob):
+    """
+    Calculates comparable mu (baseline rate) values based on the mu for Block Hawkes model, for the Community
+        Hawkes model. This is done by dividing mu for each block pair by the expected size of that block pair.
+    :param block_model_mu: K x K matrix, ij denotes the mu of the Block Hawkes process for block pair (b_i, b_j)
+    :param num_nodes: (int) Total number of nodes
+    :param class_prob: (list) Probability of class memberships from class 0 to K - 1
+    :return: K x K matrix, ij denotes the mu of the Community Hawkes process for block pair (b_i, b_j)
+    """
+    num_classes = len(class_prob)
+
+    expected_class_size = np.array(class_prob) * num_nodes
+    expected_class_size_expanded = np.ones((num_classes, num_classes)) * expected_class_size
+
+    # computing expected block size by |b_i| * |b_j|
+    expected_block_size = expected_class_size_expanded * expected_class_size_expanded.T
+
+    # Subtracting |b_i| from diagonals to get |b_i| * (|b_i| - 1) for diagonal block size
+    expected_block_size = expected_block_size - np.diag(expected_class_size)
+
+    community_model_mu = block_model_mu / expected_block_size
+
+    return community_model_mu
