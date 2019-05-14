@@ -7,18 +7,18 @@ from block_generative_model import block_generative_model
 from community_generative_model import community_generative_model
 
 
-model = "block"
-# model = "community"
+# model = "block"
+model = "community"
 
 regularized = True
 
 # Setting up model parameters. Mu must be set for the block model. It will be adjusted accordingly.
 seed = None
-number_of_nodes = 128
+number_of_nodes = 15
 class_probabilities = [.25, .25, .25, .25]
-durations = [20, 40, 60, 80, 150, 300, 1000]
-# durations = [5000, 10000, 25000, 50000]
-num_simulation_per_duration = 10
+# durations = [20, 40, 60, 80, 150, 300, 1000]
+durations = [40]
+num_simulation_per_duration = 100
 
 num_of_classes = len(class_probabilities)
 
@@ -30,7 +30,9 @@ np.fill_diagonal(bp_mu, 1.8)
 
 if model == "community":
     generative_model = community_generative_model
-    bp_mu = utils.get_block_comparable_mu_for_community_model(bp_mu, number_of_nodes, class_probabilities)
+    bp_mu = utils.scale_parameteres_by_block_pair_size(bp_mu, number_of_nodes, class_probabilities)
+    bp_alpha = utils.scale_parameteres_by_block_pair_size(bp_alpha, number_of_nodes, class_probabilities)
+    bp_beta = utils.scale_parameteres_by_block_pair_size(bp_beta, number_of_nodes, class_probabilities)
 else:
     generative_model = block_generative_model
 
@@ -40,6 +42,7 @@ mean_adj_sc_rand_scores_err = []
 mean_agg_adj_sc_rand_scores = []
 mean_agg_adj_sc_rand_scores_err = []
 
+temp = []
 for end_time in durations:
     adj_sc_rands = np.zeros(num_simulation_per_duration)
     agg_adj_sc_rands = np.zeros(num_simulation_per_duration)
@@ -54,6 +57,7 @@ for end_time in durations:
 
         # Spectral clustering on adjacency matrix
         adj = utils.event_dict_to_adjacency(number_of_nodes, event_dicts)
+        # temp.append(number_of_nodes ** 2 - np.sum(adj))
 
         if regularized:
             adj_sc_pred = regularized_spectral_cluster(adj, num_classes=num_of_classes)
@@ -64,6 +68,7 @@ for end_time in durations:
 
         # Spectral clustering on aggregated adjacency matrix
         agg_adj = utils.event_dict_to_aggregated_adjacency(number_of_nodes, event_dicts)
+        # utils.plot_degree_count_histogram(agg_adj)
 
         if regularized:
             agg_adj_pred = regularized_spectral_cluster(agg_adj, num_classes=num_of_classes)
@@ -80,6 +85,7 @@ for end_time in durations:
 
 sc_model = "RSC" if regularized else "SC"
 
+print(np.mean(temp))
 print(f"{model} model:")
 print("Durations:", durations)
 print(f"{sc_model} on Adjacency:", mean_adj_sc_rand_scores)
@@ -100,4 +106,4 @@ ax.set_ylim(0, 1)
 
 ax.legend((p1[0], p2[0]), (f"{sc_model} on Adjacency", f"{sc_model} on Aggregated Adjacency"))
 ax.autoscale_view()
-plt.show()
+# plt.show()

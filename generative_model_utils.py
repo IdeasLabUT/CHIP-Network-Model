@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from tick.hawkes import SimuHawkesExpKernels
 
 
@@ -108,11 +109,11 @@ def one_hot_to_class_assignment(node_membership):
     return np.argmax(node_membership, axis=1)
 
 
-def get_block_comparable_mu_for_community_model(block_model_mu, num_nodes, class_prob):
+def scale_parameteres_by_block_pair_size(param, num_nodes, class_prob):
     """
-    Calculates comparable mu (baseline rate) values based on the mu for Block Hawkes model, for the Community
-        Hawkes model. This is done by dividing mu for each block pair by the expected size of that block pair.
-    :param block_model_mu: K x K matrix, ij denotes the mu of the Block Hawkes process for block pair (b_i, b_j)
+    Calculates comparable hawkes parameters values based on the parameters for Block Hawkes model, for the Community
+        Hawkes model, by dividing the parameter for each block pair by the expected size of that block pair.
+    :param param: K x K matrix, ij denotes the hawkes parameter of the Block Hawkes process for block pair (b_i, b_j)
     :param num_nodes: (int) Total number of nodes
     :param class_prob: (list) Probability of class memberships from class 0 to K - 1
     :return: K x K matrix, ij denotes the mu of the Community Hawkes process for block pair (b_i, b_j)
@@ -128,6 +129,18 @@ def get_block_comparable_mu_for_community_model(block_model_mu, num_nodes, class
     # Subtracting |b_i| from diagonals to get |b_i| * (|b_i| - 1) for diagonal block size
     expected_block_size = expected_block_size - np.diag(expected_class_size)
 
-    community_model_mu = block_model_mu / expected_block_size
+    community_model_mu = param / expected_block_size
 
     return community_model_mu
+
+
+def plot_degree_count_histogram(aggregated_adjacency):
+    n = aggregated_adjacency.shape[0]
+    deg_count_flattened = np.reshape(aggregated_adjacency, (n * n))
+
+    plt.hist(deg_count_flattened, bins=30)
+
+    plt.xlabel('Event Count')
+    plt.ylabel('Frequency')
+    plt.title(f'Histogram of the Count Matrix \n Mean Count: {np.mean(deg_count_flattened)}')
+    plt.show()
