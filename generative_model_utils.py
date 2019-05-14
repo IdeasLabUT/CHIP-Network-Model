@@ -28,7 +28,7 @@ def assign_class_membership(num_nodes, class_prob, one_hot=True):
     return node_membership, community_membership
 
 
-def simulate_univariate_hawkes(mu, alpha, beta, run_time, seed):
+def simulate_univariate_hawkes(mu, alpha, beta, run_time, seed=None):
     # this is due to tick's implementation of Hawkes process
     alpha = alpha / beta
 
@@ -144,3 +144,17 @@ def plot_degree_count_histogram(aggregated_adjacency):
     plt.ylabel('Frequency')
     plt.title(f'Histogram of the Count Matrix \n Mean Count: {np.mean(deg_count_flattened)}')
     plt.show()
+
+
+def asymptotic_mean(mu, alpha, beta, run_time):
+    """
+    Calculates Hawkes asymptotic mean.
+    """
+    return (mu * run_time) / (1 - alpha / beta)
+
+
+def asymptotic_var(mu, alpha, beta, run_time):
+    """
+    Calculates Hawkes asymptotic variance.
+    """
+    return (mu * run_time) / (1 - alpha / beta) ** 3
