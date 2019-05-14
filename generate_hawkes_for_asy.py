@@ -19,10 +19,10 @@ def calc_event_count_man_var(mu, alpha, beta, t, n_itter):
     asy_var = utils.asymptotic_var(mu, alpha, beta, t)
     sam_var = np.var(event_counts)
 
-    return t, asy_mean, sam_mean, asy_var, sam_var
+    return asy_mean, sam_mean, asy_var, sam_var, t
 
 
-n_itter = 1
+n_itter = 1000000
 
 mu = 0.5
 alpha = 0.6
@@ -63,8 +63,8 @@ plt.title("Hawkes Generated Event Counts Asymptotic vs. Sample Mean")
 plt.ylabel("Event Count Mean")
 plt.xlabel("T")
 plt.legend()
-# plt.savefig(plot_path + "asy-mean.pdf")
-plt.show()
+plt.savefig(plot_path + "asy-mean.pdf")
+# plt.show()
 
 plt.clf()
 
@@ -74,5 +74,5 @@ plt.title("Hawkes Generated Event Counts Asymptotic vs. Sample Variance")
 plt.ylabel("Event Count Variance")
 plt.xlabel("T")
 plt.legend()
-# plt.savefig(plot_path + "asy-var.pdf")
-plt.show()
+plt.savefig(plot_path + "asy-var.pdf")
+# plt.show()
