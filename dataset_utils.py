@@ -37,31 +37,58 @@ def load_core_reality_mining():
     return event_dict, len(core_nodes_id)
 
 
-def plot_reality_mining_num_events_hist():
-    reality_mining_event_dict, num_nodes = load_core_reality_mining()
-    reality_mining_agg_adj = utils.event_dict_to_aggregated_adjacency(num_nodes, reality_mining_event_dict)
+def load_enron():
+    """
+    Loads Enron dataset.
+    :return: (dict) with (caller_id, receiver_id): [unix_timestamps] (event dict structure)
+             (int) number of nodes
+    """
+    edges_file_path = '/shared/DataSets/EnronPriebe2009/raw/execs.email.lines2.txt'
 
-    num_events = np.reshape(reality_mining_agg_adj, num_nodes**2)
-    print(num_events)
-    print(np.sum(num_events), min(num_events), max(num_events))
+    # load the core dataset.  time, from, receiver, tag
+    enron_data = np.loadtxt(edges_file_path, np.int, delimiter=' ', usecols=(0, 1, 2))
+    # Sorting by unix_timestamp
+    enron_data = enron_data[enron_data[:, 0].argsort()]
+
+    people = set(enron_data[:, 1])
+    people = people.union(enron_data[:, 2])
+
+    event_dict = {}
+    for i in range(enron_data.shape[0]):
+        if (enron_data[i, 1], enron_data[i, 2]) not in event_dict:
+            event_dict[(enron_data[i, 1], enron_data[i, 2])] = []
+
+        event_dict[(enron_data[i, 1], enron_data[i, 2])].append(enron_data[i, 0])
+
+    print(event_dict)
+    return event_dict, len(people)
+
+
+def plot_event_count_hist(event_dict, num_nodes, dset_title_name):
+    """
+    Plot Histogram of Event Count
+    :param event_dict: event_dict of interactions
+    :param num_nodes: number of nodes in the dataset
+    :param dset_title_name: Name of the dataset to be added to the title
+    :rtype: None (show hist)
+    """
+    event_agg_adj = utils.event_dict_to_aggregated_adjacency(num_nodes, event_dict)
+
+    num_events = np.reshape(event_agg_adj, num_nodes**2)
 
     plt.hist(num_events, 50, density=True)
     plt.xlabel("Number of Events")
     plt.ylabel("Density")
-    plt.title(f"Histogram of Reality Mining's Core people's Number of Interactions \n"
-              f" Mean: {np.mean(num_events):.4f}, Total count: {np.sum(num_events)}")
+    plt.title(f"Histogram of {dset_title_name}'s Number of Interactions \n"
+              f" Mean Count: {np.mean(num_events):.4f}, Total count: {np.sum(num_events)}")
     plt.yscale("log")
     plt.show()
 
-    # nun_zero_event_counts = num_events[num_events != 0]
-    # plt.hist(nun_zero_event_counts, 50, density=True)
-    # plt.xlabel("Number of Events")
-    # plt.ylabel("Density")
-    # plt.title("Histogram of Reality Mining's Core people's Number of Interactions (excludes zeros) \n  "
-    #           "Mean: {np.mean(nun_zero_event_counts)")
-    # plt.yscale("log")
-    # plt.show()
-
 
 if __name__ == '__main__':
-    plot_reality_mining_num_events_hist()
+    # reality_mining_event_dict, num_nodes = load_core_reality_mining()
+    # plot_event_count_hist(reality_mining_event_dict, num_nodes, "Reality Mining's Core people")
+
+    enron_event_dict, num_nodes = load_enron()
+    plot_event_count_hist(enron_event_dict, num_nodes, "Enron")
+    # print(load_enron())
