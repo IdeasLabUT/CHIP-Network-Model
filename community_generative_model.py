@@ -90,55 +90,77 @@ if __name__ == "__main__":
     number_of_nodes = 128
     class_probabilities = [0.25, 0.25, 0.25, 0.25]
     num_of_classes = len(class_probabilities)
+    end_time = 50
 
-    for s in [1, 2, 3, 4]:
-        print("scalar", s)
-        end_time = 50 * s
+    bp_alpha = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 7500
+    bp_beta = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 8000
+    bp_mu = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 0.6
+    np.fill_diagonal(bp_mu, 1.8)
 
-        # bp_mu, bp_alpha, bp_beta = utils.generate_random_hawkes_params(num_of_classes,
-        #                                                                mu_range=(0.1, 0.3),
-        #                                                                alpha_range=(0.2, 0.4),
-        #                                                                beta_range=(0.5, 1),
-        #                                                                seed=seed)
+    bp_mu = utils.scale_parameteres_by_block_pair_size(bp_mu, 128, class_probabilities)
+    bp_alpha = utils.scale_parameteres_by_block_pair_size(bp_alpha, 128, class_probabilities)
+    bp_beta = utils.scale_parameteres_by_block_pair_size(bp_beta, 128, class_probabilities)
 
-        bp_alpha = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 7500
-        bp_beta = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 8000
-        bp_mu = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 0.6 / s
-        np.fill_diagonal(bp_mu, 1.8 / s)
+    theta = utils.generate_theta_params_for_degree_corrected_community(number_of_nodes, dist='dirichlet', norm_sum_to='n')
 
-        bp_mu = utils.scale_parameteres_by_block_pair_size(bp_mu, 128, class_probabilities)
-        bp_alpha = utils.scale_parameteres_by_block_pair_size(bp_alpha, 128, class_probabilities)
-        bp_beta = utils.scale_parameteres_by_block_pair_size(bp_beta, 128, class_probabilities)
-        
-        # print(bp_mu)
-        # print(bp_alpha)
-        # print(bp_beta)
-        #
-        # m = (bp_mu * end_time) / (1 - (bp_alpha/bp_beta))
-        #
-        # print(m)
-        # print(np.mean(m))
+    node_membership, event_dicts = degree_corrected_community_generative_model(number_of_nodes,
+                                                                               class_probabilities,
+                                                                               bp_mu, bp_alpha, bp_beta,
+                                                                               theta,
+                                                                               end_time, seed=seed)
 
-        event_count_means = []
+    dataset_utils.plot_event_count_hist(event_dicts, number_of_nodes, "DC Community Hawkes")
 
-        for i in range(10):
-            node_membership, event_dicts = community_generative_model(number_of_nodes,
-                                                                      class_probabilities,
-                                                                      bp_mu, bp_alpha, bp_beta,
-                                                                      end_time, seed=seed)
-
-            # dataset_utils.plot_event_count_hist(event_dicts, number_of_nodes, "Community Hawkes")
-            event_agg_adj = utils.event_dict_to_aggregated_adjacency(number_of_nodes, event_dicts, dtype=np.int)
-
-            # np.savetxt(f"community-hawkes-{i}.txt", event_agg_adj, delimiter=' ', fmt='%d')
-
-            num_events = np.reshape(event_agg_adj, number_of_nodes**2)
-
-            event_count_means.append(np.mean(num_events))
-
-        print("mean:", np.mean(event_count_means))
-        print("95% Error:", 2 * np.std(event_count_means) / np.sqrt(len(event_count_means)))
-
-    # print(node_membership, event_dicts.keys())
-    # print(utils.event_dict_to_adjacency(number_of_nodes, event_dicts))
-    # print(utils.event_dict_to_aggregated_adjacency(number_of_nodes, event_dicts))
+    # Check if the theoretical mean gets closer to empirical by scaling T and Mu
+    #
+    # for s in [1, 2, 3, 4]:
+    #     print("scalar", s)
+    #     end_time = 50 * s
+    #
+    #     # bp_mu, bp_alpha, bp_beta = utils.generate_random_hawkes_params(num_of_classes,
+    #     #                                                                mu_range=(0.1, 0.3),
+    #     #                                                                alpha_range=(0.2, 0.4),
+    #     #                                                                beta_range=(0.5, 1),
+    #     #                                                                seed=seed)
+    #
+    #     bp_alpha = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 7500
+    #     bp_beta = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 8000
+    #     bp_mu = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 0.6 / s
+    #     np.fill_diagonal(bp_mu, 1.8 / s)
+    #
+    #     bp_mu = utils.scale_parameteres_by_block_pair_size(bp_mu, 128, class_probabilities)
+    #     bp_alpha = utils.scale_parameteres_by_block_pair_size(bp_alpha, 128, class_probabilities)
+    #     bp_beta = utils.scale_parameteres_by_block_pair_size(bp_beta, 128, class_probabilities)
+    #
+    #     # print(bp_mu)
+    #     # print(bp_alpha)
+    #     # print(bp_beta)
+    #     #
+    #     # m = (bp_mu * end_time) / (1 - (bp_alpha/bp_beta))
+    #     #
+    #     # print(m)
+    #     # print(np.mean(m))
+    #
+    #     event_count_means = []
+    #
+    #     for i in range(10):
+    #         node_membership, event_dicts = community_generative_model(number_of_nodes,
+    #                                                                   class_probabilities,
+    #                                                                   bp_mu, bp_alpha, bp_beta,
+    #                                                                   end_time, seed=seed)
+    #
+    #         # dataset_utils.plot_event_count_hist(event_dicts, number_of_nodes, "Community Hawkes")
+    #         event_agg_adj = utils.event_dict_to_aggregated_adjacency(number_of_nodes, event_dicts, dtype=np.int)
+    #
+    #         # np.savetxt(f"community-hawkes-{i}.txt", event_agg_adj, delimiter=' ', fmt='%d')
+    #
+    #         num_events = np.reshape(event_agg_adj, number_of_nodes**2)
+    #
+    #         event_count_means.append(np.mean(num_events))
+    #
+    #     print("mean:", np.mean(event_count_means))
+    #     print("95% Error:", 2 * np.std(event_count_means) / np.sqrt(len(event_count_means)))
+    #
+    # # print(node_membership, event_dicts.keys())
+    # # print(utils.event_dict_to_adjacency(number_of_nodes, event_dicts))
+    # # print(utils.event_dict_to_aggregated_adjacency(number_of_nodes, event_dicts))

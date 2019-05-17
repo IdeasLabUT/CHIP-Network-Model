@@ -74,21 +74,22 @@ def generate_theta_params_for_degree_corrected_community(num_nodes, dist, norm_s
     :param norm_sum_to: (string) Normalize all theta to sum to either "1" or "n" (number of nodes)
     :return: (list) theta values for each node
     """
-    
-    if dist != "exp" or dist != "dirichlet":
+
+    if dist != "exp" and dist != "dirichlet":
         exit("dist param can only be either exp or dirichlet")
 
-    if norm_sum_to != "1" or norm_sum_to != "n":
+    if norm_sum_to != "1" and norm_sum_to != "n":
         exit("norm_sum_to must be either '1' or 'n'")
 
     if dist == "dirichlet":
-        theta = np.random.dirichlet(np.ones(num_nodes), 1)
+        theta = np.random.dirichlet(np.ones(num_nodes), 1)[0]
         return theta if norm_sum_to == "1" else theta * num_nodes
 
     theta = np.random.exponential(1, num_nodes)
     theta_normed_to_one = theta / sum(theta)
 
     return theta_normed_to_one if norm_sum_to == "1" else theta_normed_to_one * num_nodes
+
 
 def event_dict_to_adjacency(num_nodes, event_dicts, dtype=np.float):
     """
