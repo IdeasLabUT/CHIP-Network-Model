@@ -17,15 +17,35 @@ def assign_class_membership(num_nodes, class_prob, one_hot=True):
     num_classes = len(class_prob)
 
     node_membership = np.random.multinomial(1, class_prob, size=num_nodes)
-    community_membership = []
 
-    for i in range(num_classes):
-        community_membership.append(np.where(node_membership[:, i] == 1)[0])
+    community_membership = node_membership_to_community_membership(node_membership, num_classes, is_one_hot=True)
 
     if not one_hot:
         node_membership = one_hot_to_class_assignment(node_membership)
 
     return node_membership, community_membership
+
+
+def node_membership_to_community_membership(node_membership, n_classes, is_one_hot=False):
+    """
+    :param node_membership: membership of every node to one of K classes. num_nodes x num_classes (if one_hot)
+                            num_nodes x 1 otherwise
+    :param n_classes: Number of classes
+    :param is_one_hot: True, if node_membership of one_hot encoded
+    :return: list of nodes belonging to each class. num_classes x (varying size list)
+    """
+    community_membership = []
+
+    if is_one_hot:
+        for i in range(n_classes):
+            community_membership.append(np.where(node_membership[:, i] == 1)[0])
+
+        return community_membership
+
+    for i in range(n_classes):
+        community_membership.append(np.where(node_membership == i)[0])
+
+    return community_membership
 
 
 def simulate_univariate_hawkes(mu, alpha, beta, run_time, seed=None):
@@ -123,6 +143,31 @@ def event_dict_to_aggregated_adjacency(num_nodes, event_dicts, dtype=np.float):
         adjacency_matrix[u, v] = len(event_times)
 
     return adjacency_matrix
+
+
+def event_dict_to_block_pair_events(event_dicts, class_assignment, n_classes):
+    """
+    Converts event_dicts to list of event lists for each block pair
+
+    :param event_dicts: Edge dictionary of events between all node pair. Output of the generative models.
+    :param class_assignment: membership of every node to one of K classes. num_nodes x 1 (class of node i)
+    :param n_classes: total number of classes
+    :return: (list) n_classes x n_classes where entry ij is a list of event lists between nodes in block i to nodes in
+                    block j.
+    """
+    
+    # Init block_pair_events
+    block_pair_events = np.zeros((n_classes, n_classes), dtype=np.int).tolist()
+    for i in range(n_classes):
+        for j in range(n_classes):
+            block_pair_events[i][j] = []
+
+    for u, v in event_dicts:
+        if len(event_dicts[(u, v)]) == 0:
+            continue
+        block_pair_events[class_assignment[u]][class_assignment[v]].append(event_dicts[(u, v)])
+
+    return block_pair_events
 
 
 def one_hot_to_class_assignment(node_membership):

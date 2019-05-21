@@ -6,17 +6,28 @@ import generative_model_utils as utils
 from sklearn.metrics import adjusted_rand_score
 from spectral_clustering import spectral_cluster, regularized_spectral_cluster
 from block_generative_model import block_generative_model
-from community_generative_model import community_generative_model
+from community_generative_model import community_generative_model, degree_corrected_community_generative_model
 
 
 def test_spectral_clustering_on_generative_model(generative_model, regularized,
                                                  n_nodes, n_classes, class_prob,
                                                  mu, alpha, beta, t, seed):
 
-    node_membership, event_dicts = generative_model(n_nodes,
-                                                    class_prob,
-                                                    mu, alpha, beta,
-                                                    t, seed=seed)
+    # node_membership, event_dicts = generative_model(n_nodes,
+    #                                                 class_prob,
+    #                                                 mu, alpha, beta,
+    #                                                 t, seed=seed)
+
+    burnin = 0
+
+    theta = utils.generate_theta_params_for_degree_corrected_community(number_of_nodes, dist='dirichlet',
+                                                                       norm_sum_to='n')
+
+    node_membership, event_dicts = degree_corrected_community_generative_model(number_of_nodes,
+                                                                               class_prob,
+                                                                               mu, alpha, beta,
+                                                                               theta,
+                                                                               burnin, t, seed=seed)
 
     true_class_assignments = utils.one_hot_to_class_assignment(node_membership)
 
@@ -155,7 +166,7 @@ width = 0.35         # the width of the bars
 p1 = ax.bar(ind, mean_adj_sc_rand_scores, width, color='r', yerr=mean_adj_sc_rand_scores_err)
 p2 = ax.bar(ind + width, mean_agg_adj_sc_rand_scores, width, color='b', yerr=mean_agg_adj_sc_rand_scores_err)
 
-ax.set_title(f'{model} Model\'s Mean Adjusted Rand Scores')
+ax.set_title(f'DC {model} Model\'s Mean Adjusted Rand Scores')
 ax.set_xticks(ind + width / 2)
 ax.set_xticklabels(number_of_nodes_list)
 ax.set_ylim(0, 1)

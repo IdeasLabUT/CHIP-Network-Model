@@ -99,8 +99,8 @@ if __name__ == "__main__":
     number_of_nodes = 128
     class_probabilities = [0.25, 0.25, 0.25, 0.25]
     num_of_classes = len(class_probabilities)
-    end_time = 150
-    burnin = 100
+    end_time = 50
+    burnin = None
 
     bp_alpha = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 7500
     bp_beta = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 8000
@@ -111,15 +111,26 @@ if __name__ == "__main__":
     bp_alpha = utils.scale_parameteres_by_block_pair_size(bp_alpha, 128, class_probabilities)
     bp_beta = utils.scale_parameteres_by_block_pair_size(bp_beta, 128, class_probabilities)
 
-    theta = utils.generate_theta_params_for_degree_corrected_community(number_of_nodes, dist='dirichlet', norm_sum_to='n')
+    node_membership, event_dicts = community_generative_model(number_of_nodes,
+                                                              class_probabilities,
+                                                              bp_mu, bp_alpha, bp_beta,
+                                                              burnin, end_time, seed=seed)
 
-    node_membership, event_dicts = degree_corrected_community_generative_model(number_of_nodes,
-                                                                               class_probabilities,
-                                                                               bp_mu, bp_alpha, bp_beta,
-                                                                               theta,
-                                                                               burnin, end_time, seed=seed)
+    node_membership = utils.one_hot_to_class_assignment(node_membership)
 
-    dataset_utils.plot_event_count_hist(event_dicts, number_of_nodes, "DC Community Hawkes")
+    block_pair_events = utils.event_dict_to_block_pair_events(event_dicts, node_membership, num_of_classes)
+    print(block_pair_events)
+    exit()
+
+    # theta = utils.generate_theta_params_for_degree_corrected_community(number_of_nodes, dist='dirichlet', norm_sum_to='n')
+    #
+    # node_membership, event_dicts = degree_corrected_community_generative_model(number_of_nodes,
+    #                                                                            class_probabilities,
+    #                                                                            bp_mu, bp_alpha, bp_beta,
+    #                                                                            theta,
+    #                                                                            burnin, end_time, seed=seed)
+    #
+    # dataset_utils.plot_event_count_hist(event_dicts, number_of_nodes, "DC Community Hawkes")
 
     # Check if the theoretical mean gets closer to empirical by scaling T and Mu
 
@@ -155,7 +166,7 @@ if __name__ == "__main__":
 
         event_count_means = []
 
-        for i in range(10):
+        for i in range(100):
             node_membership, event_dicts = community_generative_model(number_of_nodes,
                                                                       class_probabilities,
                                                                       bp_mu, bp_alpha, bp_beta,
