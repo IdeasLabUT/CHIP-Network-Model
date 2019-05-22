@@ -23,11 +23,9 @@ def calc_mean_and_error_of_count_estiamte(n_nodes, class_probabilities, bp_mu, b
 
 seed = None
 num_simulations = 100
-num_nodes_to_test = [4, 8, 16, 32, 64, 128, 256, 512, 1024]
-# num_nodes_to_test = [4, 8, 16, 32, 64, 128]
-end_time = 50
+num_nodes_to_test = [4, 8, 16, 32, 64, 128, 256, 512]
+end_time = 100
 
-# class_probabilities = [0.25, 0.25, 0.25, 0.25]
 class_probabilities = [1]
 num_of_classes = len(class_probabilities)
 
@@ -46,22 +44,15 @@ true_mu = bp_mu[0, 0]
 mu_mse = []
 ratio_mse = []
 
-num_cores = multiprocessing.cpu_count()
 for n_nodes in num_nodes_to_test:
-    # results = []
     results = Parallel(n_jobs=20)(delayed(calc_mean_and_error_of_count_estiamte)
                                          (n_nodes, class_probabilities,
                                           bp_mu, bp_alpha, bp_beta,
                                           burnin=None, end_time=end_time, seed=seed)
                                           for i in range(num_simulations))
 
-    # for i in range(num_simulations):
-    #     res = calc_mean_and_error_of_count_estiamte(n_nodes, class_probabilities,
-    #                                                 bp_mu, bp_alpha, bp_beta,
-    #                                                 burnin=None, end_time=end_time, seed=seed)
-    #     results.append(res)
+    print(f"Done simulations with {n_nodes} nodes.")
 
-    print(n_nodes)
     # each row is mu, alpha_beta_ratio
     results = np.asarray(results, dtype=np.float)
     results = np.reshape(results, (num_simulations, 2))
