@@ -12,6 +12,7 @@ import generative_model_utils as utils
 from community_generative_model import community_generative_model
 from scipy.optimize import minimize_scalar
 
+
 def estimate_hawkes_from_counts(agg_adj, class_vec, duration):
     num_classes = class_vec.max()+1
     sample_mean = np.zeros((num_classes,num_classes))
@@ -267,15 +268,18 @@ def plot_likelihood(variable_param, values_to_test, bp_events, mu, alpha, beta, 
     plt.ylabel(f"Log-likelihood")
     plt.show()
 
+
 def neg_log_likelihood_beta(beta, bp_events, mu, alpha_beta_ratio, end_time):
     alpha = alpha_beta_ratio*beta
     return -full_log_likelihood(bp_events, mu, alpha, beta, end_time)
+
 
 def estimate_beta_from_events(bp_events, mu, alpha_beta_ratio, end_time, 
                               tol=1e-3):
     res = minimize_scalar(neg_log_likelihood_beta, method='brent',
                           args=(bp_events, mu, alpha_beta_ratio, end_time))
     return res.x, res
+
 
 def plot_likelihood_scaling_alpha_beta(scalars, bp_events, mu, alpha, beta, end_time):
     """

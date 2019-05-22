@@ -22,17 +22,17 @@ def calc_mean_and_error_of_count_estiamte(n_nodes, class_probabilities, bp_mu, b
 
 
 seed = None
-num_simulations = 10
+num_simulations = 30
 num_nodes_to_test = [4, 8, 16, 32, 64, 128, 256, 512, 1024]
-# num_nodes_to_test = [4, 8, 16, 32]
-end_time = 200
+# num_nodes_to_test = [4, 8, 16, 32, 64, 128]
+end_time = 50
 
 # class_probabilities = [0.25, 0.25, 0.25, 0.25]
 class_probabilities = [1]
 num_of_classes = len(class_probabilities)
 
-bp_alpha = np.ones((num_of_classes, num_of_classes), dtype=np.float) * .75
-bp_beta = np.ones((num_of_classes, num_of_classes), dtype=np.float) * .8
+bp_alpha = np.ones((num_of_classes, num_of_classes), dtype=np.float) * .7500
+bp_beta = np.ones((num_of_classes, num_of_classes), dtype=np.float) * .8000
 bp_mu = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 0.6
 np.fill_diagonal(bp_mu, 1.8)
 
@@ -48,19 +48,26 @@ ratio_mse = []
 
 num_cores = multiprocessing.cpu_count()
 for n_nodes in num_nodes_to_test:
-
+    # results = []
     results = Parallel(n_jobs=10)(delayed(calc_mean_and_error_of_count_estiamte)
                                          (n_nodes, class_probabilities,
                                           bp_mu, bp_alpha, bp_beta,
                                           burnin=None, end_time=end_time, seed=seed)
-                                         for i in range(num_simulations))
+                                          for i in range(num_simulations))
 
+    # for i in range(num_simulations):
+    #     res = calc_mean_and_error_of_count_estiamte(n_nodes, class_probabilities,
+    #                                                 bp_mu, bp_alpha, bp_beta,
+    #                                                 burnin=None, end_time=end_time, seed=seed)
+    #     results.append(res)
+
+    print(n_nodes)
     # each row is mu, alpha_beta_ratio
     results = np.asarray(results, dtype=np.float)
     results = np.reshape(results, (num_simulations, 2))
 
-    mu_mse.append(np.mean(np.power(results[0, :] - true_mu, 2)))
-    ratio_mse.append(np.mean(np.power(results[1, :] - true_ratio, 2)))
+    mu_mse.append(np.mean(np.power(results[:, 0] - true_mu, 2)))
+    ratio_mse.append(np.mean(np.power(results[:, 1] - true_ratio, 2)))
 
 print(mu_mse)
 print(ratio_mse)
