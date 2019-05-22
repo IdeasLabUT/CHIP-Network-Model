@@ -93,16 +93,24 @@ def estimate_hawkes_kernel(event_dicts, class_assignment, n_classes, bp_beta, le
 
 def compute_wijs(np_events, beta):
     n_events = len(np_events)
+    if n_events <= 1:
+        return 0
+
     wijs = np.zeros((n_events - 1))
 
     for q in range(1, n_events):
         wijs[q - 1] = np.sum(np.exp(-beta * (np_events[q] - np_events[:q])))
 
+    if n_events == 1:
+        print(wijs)
     return wijs
 
 
 def compute_vijs(np_events, beta):
     n_events = len(np_events)
+    if n_events <= 1:
+        return 0
+
     vijs = np.zeros((n_events - 1))
 
     for q in range(1, n_events):
@@ -121,9 +129,7 @@ def full_log_likelihood(bp_events, mu, alpha, beta, end_time):
             continue
 
         second_inner_sum = np.sum((alpha / beta) * (np.exp(-beta * (end_time - np_events)) - 1))
-
-        wijs = compute_wijs(np_events, beta)
-        third_inner_sum = np.sum(np.log(mu + alpha * wijs))
+        third_inner_sum = np.sum(np.log(mu + alpha * compute_wijs(np_events, beta)))
 
         ll += second_inner_sum + third_inner_sum
 
@@ -136,7 +142,7 @@ def log_likelihood_alpha_deriv(bp_events, mu, alpha, beta, end_time):
         if len(np_events) == 0:
             continue
 
-        first_inner_sum = np.sum((1 / beta) * (np.exp(-beta * (end_time - np_events)) - 1))
+        first_inner_sum = np.sum(np.exp(-beta * (end_time - np_events)) - 1) / beta
 
         wijs = compute_wijs(np_events, beta)
         second_inner_sum = np.sum(wijs / (mu + alpha * wijs))
@@ -149,11 +155,12 @@ def log_likelihood_alpha_deriv(bp_events, mu, alpha, beta, end_time):
 def log_likelihood_mu_deriv(bp_events, mu, alpha, beta, end_time):
     ll = 0
     for np_events in bp_events:
+        ll += -end_time
+
         if len(np_events) == 0:
-            ll += -end_time
             continue
 
-        ll += -end_time + np.sum(1 / (mu + alpha * compute_wijs(np_events, beta)))
+        ll += np.sum(1 / (mu + alpha * compute_wijs(np_events, beta)))
 
     return ll
 
@@ -166,10 +173,10 @@ def log_likelihood_beta_deriv(bp_events, mu, alpha, beta, end_time):
 
         np_events_t_shifted = end_time - np_events
         first_inner_sum = - alpha * np.sum((1 / beta) * np_events_t_shifted * np.exp(-beta * np_events_t_shifted) +
-                                           (1 / beta ** 2) * np.exp(-beta * np_events_t_shifted))
+                                           (1 / beta ** 2) * (np.exp(-beta * np_events_t_shifted) - 1))
 
-        wijs = compute_wijs(np_events, beta)
         vijs = compute_vijs(np_events, beta)
+        wijs = compute_wijs(np_events, beta)
         second_inner_sum = np.sum((alpha * vijs) / (mu + alpha * wijs))
 
         ll += first_inner_sum - second_inner_sum
@@ -263,6 +270,7 @@ def plot_likelihood(variable_param, values_to_test, bp_events, mu, alpha, beta, 
 
 
 if __name__ == "__main__":
+    # Everything below from this point on is only for testing.
     seed = None
     number_of_nodes = 128
     class_probabilities = [0.25, 0.25, 0.25, 0.25]
@@ -294,32 +302,34 @@ if __name__ == "__main__":
     for b_i in range(num_of_classes):
         for b_j in range(num_of_classes):
             # Plotting log-likelihood derivatives
-            # plot_likelihood_deriv("alpha", np.arange(bp_alpha[b_i, b_j] - 5, bp_alpha[b_i, b_j] + 15, 0.2),
-            #                       block_pair_events[b_i][b_j],
-            #                  bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
-            #
-            # plot_likelihood_deriv("mu", np.arange(0, bp_mu[b_i, b_j] + .005, 0.0001),
-            #                  block_pair_events[b_i][b_j],
-            #                  bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
-            #
-            # plot_likelihood_deriv("beta", np.arange(bp_beta[b_i, b_j] - 5, bp_beta[b_i, b_j] + 15, 0.2),
-            #                  block_pair_events[b_i][b_j],
-            #                  bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
+            plot_likelihood_deriv("alpha", np.arange(bp_alpha[b_i, b_j] - 5, bp_alpha[b_i, b_j] + 15, 0.2),
+                                  block_pair_events[b_i][b_j],
+                             bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
+
+            plot_likelihood_deriv("mu", np.arange(0, bp_mu[b_i, b_j] + .005, 0.0001),
+                             block_pair_events[b_i][b_j],
+                             bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
+
+            plot_likelihood_deriv("beta", np.arange(bp_beta[b_i, b_j] - 5, bp_beta[b_i, b_j] + 15, 0.2),
+                             block_pair_events[b_i][b_j],
+                             bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
 
 
             # plotting log-likelihood
-            plot_likelihood("alpha", np.arange(bp_alpha[b_i, b_j] - 5, bp_alpha[b_i, b_j] + 15, 0.2),
-                             block_pair_events[b_i][b_j],
-                             bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
+            # plot_likelihood("alpha", np.arange(bp_alpha[b_i, b_j] - 5, bp_alpha[b_i, b_j] + 15, 0.2),
+            #                  block_pair_events[b_i][b_j],
+            #                  bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
+            #
+            # plot_likelihood("mu", np.arange(0, bp_mu[b_i, b_j] + .005, 0.0001),
+            #                  block_pair_events[b_i][b_j],
+            #                  bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
+            #
+            # plot_likelihood("beta", np.arange(bp_beta[b_i, b_j] - 5, bp_beta[b_i, b_j] + 15, 0.2),
+            #                  block_pair_events[b_i][b_j],
+            #                  bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
 
-            plot_likelihood("mu", np.arange(0, bp_mu[b_i, b_j] + .005, 0.0001),
-                             block_pair_events[b_i][b_j],
-                             bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
 
-            plot_likelihood("beta", np.arange(bp_beta[b_i, b_j] - 5, bp_beta[b_i, b_j] + 15, 0.2),
-                             block_pair_events[b_i][b_j],
-                             bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
-
+            # Tick estimation
             # print("Block pair", b_i, b_j)
             # print("Alpha: True:", bp_alpha[b_i, b_j], "Estimate:", alpha_estimates[b_i, b_j])
             # print("Mu: True:", bp_mu[b_i, b_j], "Estimate:", mu_estimates[b_i, b_j])
