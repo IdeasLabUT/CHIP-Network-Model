@@ -27,14 +27,92 @@ def load_core_reality_mining():
     rm_data = rm_data[rm_data[:, 0].argsort()]
 
     event_dict = {}
+
     for i in range(rm_data.shape[0]):
         if rm_data[i, 1] in core_nodes_id and rm_data[i, 2] in core_nodes_id:
+
+            # if rm_data[i, 0] > 1096588800 and rm_data[i, 0] < 1104537600:
+            #     cnt += 1
+
             if (rm_data[i, 1], rm_data[i, 2]) not in event_dict:
                 event_dict[(rm_data[i, 1], rm_data[i, 2])] = []
 
             event_dict[(rm_data[i, 1], rm_data[i, 2])].append(rm_data[i, 0])
 
     return event_dict, len(core_nodes_id)
+
+
+def load_reality_mining_test_train():
+    """
+    TODO: This code is not complete due to issues with DuBios's paper.
+
+    Loads the pre-split dataset for test and train of reality mining.
+    :return: (dict) with (caller_id, receiver_id): [unix_timestamps] (event dict structure)
+             (int) number of nodes
+    """
+
+    train_file_path = '/shared/DataSets/RealityMining/Dubois2013/train_reality.csv'
+    test_file_path = '/shared/DataSets/RealityMining/Dubois2013/test_reality.csv'
+
+    # load the core dataset. caller_id,receiver_id,unix_timestamp
+    train_data = np.loadtxt(train_file_path, np.float, delimiter=',', usecols=(0, 1, 2))
+    # Sorting by unix_timestamp
+    train_data = train_data[train_data[:, 2].argsort()]
+    train_nodes = set()
+
+    train_event_dict = {}
+    for i in range(train_data.shape[0]):
+        caller_id = np.int(train_data[i, 0])
+        receiver_id = np.int(train_data[i, 1])
+
+        train_nodes.add(caller_id)
+        train_nodes.add(receiver_id)
+
+        if (caller_id, receiver_id) not in train_event_dict:
+            train_event_dict[(caller_id, receiver_id)] = []
+
+        train_event_dict[(caller_id, receiver_id)].append(train_data[i, 0])
+
+
+    # load the core dataset. caller_id,receiver_id,unix_timestamp
+    test_data = np.loadtxt(test_file_path, np.float, delimiter=',', usecols=(0, 1, 2))
+    # Sorting by unix_timestamp
+    test_data = test_data[test_data[:, 2].argsort()]
+    test_nodes = set()
+
+    test_event_dict = {}
+    for i in range(test_data.shape[0]):
+        caller_id = np.int(test_data[i, 0])
+        receiver_id = np.int(test_data[i, 1])
+
+        test_nodes.add(caller_id)
+        test_nodes.add(receiver_id)
+
+        if (caller_id, receiver_id) not in test_event_dict:
+            test_event_dict[(caller_id, receiver_id)] = []
+
+        test_event_dict[(caller_id, receiver_id)].append(test_data[i, 0])
+
+    print(test_nodes)
+    print(len(test_nodes))
+
+    print(train_nodes)
+    print(len(train_nodes))
+
+    print(test_nodes.difference(train_nodes))
+    print(train_nodes.difference(test_nodes))
+
+    cnt = 0
+    for n in test_nodes.difference(train_nodes):
+        for u, v in test_event_dict:
+            if n == u or n == v:
+                cnt += len(test_event_dict[(u, v)])
+
+    print(cnt)
+    print(test_data.shape[0])
+    print(train_data.shape[0])
+
+    print(test_data.shape[0] + train_data.shape[0])
 
 
 def load_enron():
@@ -89,6 +167,9 @@ if __name__ == '__main__':
     # reality_mining_event_dict, num_nodes = load_core_reality_mining()
     # plot_event_count_hist(reality_mining_event_dict, num_nodes, "Reality Mining's Core people")
 
-    enron_event_dict, num_nodes = load_enron()
-    plot_event_count_hist(enron_event_dict, num_nodes, "Enron")
+    # enron_event_dict, num_nodes = load_enron()
+    # plot_event_count_hist(enron_event_dict, num_nodes, "Enron")
     # print(load_enron())
+
+    load_reality_mining_test_train()
+    load_core_reality_mining()

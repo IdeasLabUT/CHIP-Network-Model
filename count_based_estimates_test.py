@@ -22,7 +22,7 @@ def calc_mean_and_error_of_count_estiamte(n_nodes, class_probabilities, bp_mu, b
 
 
 seed = None
-num_simulations = 30
+num_simulations = 100
 num_nodes_to_test = [4, 8, 16, 32, 64, 128, 256, 512, 1024]
 # num_nodes_to_test = [4, 8, 16, 32, 64, 128]
 end_time = 50
@@ -49,7 +49,7 @@ ratio_mse = []
 num_cores = multiprocessing.cpu_count()
 for n_nodes in num_nodes_to_test:
     # results = []
-    results = Parallel(n_jobs=10)(delayed(calc_mean_and_error_of_count_estiamte)
+    results = Parallel(n_jobs=20)(delayed(calc_mean_and_error_of_count_estiamte)
                                          (n_nodes, class_probabilities,
                                           bp_mu, bp_alpha, bp_beta,
                                           burnin=None, end_time=end_time, seed=seed)
