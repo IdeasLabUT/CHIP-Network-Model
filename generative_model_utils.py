@@ -145,15 +145,18 @@ def event_dict_to_aggregated_adjacency(num_nodes, event_dicts, dtype=np.float):
     return adjacency_matrix
 
 
-def event_dict_to_block_pair_events(event_dicts, class_assignment, n_classes):
+def event_dict_to_block_pair_events(event_dicts, class_assignment, n_classes, is_for_tick=False):
     """
     Converts event_dicts to list of event lists for each block pair.
+
 
     :param event_dicts: Edge dictionary of events between all node pair. Output of the generative models.
     :param class_assignment: membership of every node to one of K classes. num_nodes x 1 (class of node i)
     :param n_classes: (int) total number of classes
+    :param is_for_tick: (bool) if True, every list of event is wrapped in a list of length 1 to accommodate tick kernel
+                        estimation.
     :return: (list) n_classes x n_classes where entry ij is a list of event lists between nodes in block i to nodes in
-                    block j. Every list of event is wrapped in a list of length 1 to accommodate tick kernel estimation.
+                    block j.
     """
 
     # Init block_pair_events
@@ -163,9 +166,13 @@ def event_dict_to_block_pair_events(event_dicts, class_assignment, n_classes):
             block_pair_events[i][j] = []
 
     for u, v in event_dicts:
-        if len(event_dicts[(u, v)]) == 0:
+        if is_for_tick and len(event_dicts[(u, v)]) == 0:
             continue
-        block_pair_events[class_assignment[u]][class_assignment[v]].append([event_dicts[(u, v)]])
+
+        if is_for_tick:
+            block_pair_events[class_assignment[u]][class_assignment[v]].append([event_dicts[(u, v)]])
+        else:
+            block_pair_events[class_assignment[u]][class_assignment[v]].append(event_dicts[(u, v)])
 
     return block_pair_events
 
