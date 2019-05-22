@@ -177,7 +177,7 @@ def log_likelihood_beta_deriv(bp_events, mu, alpha, beta, end_time):
     return ll
 
 
-def plot_likelihoods(deriv, values_to_test, bp_events, mu, alpha, beta, end_time):
+def plot_likelihood_deriv(deriv, values_to_test, bp_events, mu, alpha, beta, end_time):
     """
     Plots the log-likelihoods to make sure they are maximized at the true parameter.
 
@@ -219,6 +219,49 @@ def plot_likelihoods(deriv, values_to_test, bp_events, mu, alpha, beta, end_time
     plt.show()
 
 
+def plot_likelihood(variable_param, values_to_test, bp_events, mu, alpha, beta, end_time):
+    """
+    Plots the log-likelihood to make sure they are maximized at the true parameter, while keeping all parameters except
+    `variable_param` constant.
+
+    :param variable_param: (string) "alpha", "beta", "mu". The parameter to vary to calculate log likelihood.
+    :param values_to_test: (iterable) range of values for the variable_param parameter.
+    :param bp_events: (list) list of lists of events of a single block pair.
+    :param mu: True mu/baseline for the block pair.
+    :param alpha: True alpha for the block pair.
+    :param beta: True beta for the block pair.
+    :param end_time: End-time/duration of the hawkes processes.
+    """
+
+    result = []
+    true_val = 0
+
+    if variable_param == "alpha":
+        true_val = alpha
+        for val in values_to_test:
+            result.append(full_log_likelihood(bp_events, mu, val, beta, end_time))
+            print(val, end='\r')
+
+    elif variable_param == "beta":
+        true_val = beta
+        for val in values_to_test:
+            result.append(full_log_likelihood(bp_events, mu, alpha, val, end_time))
+            print(val, end='\r')
+
+    elif variable_param == "mu":
+        true_val = mu
+        for val in values_to_test:
+            result.append(full_log_likelihood(bp_events, val, alpha, beta, end_time))
+            print(val, end='\r')
+
+    print()
+    plt.plot(values_to_test, result, c='red')
+    plt.axvline(x=true_val)
+    plt.xlabel(variable_param)
+    plt.ylabel(f"Log-likelihood")
+    plt.show()
+
+
 if __name__ == "__main__":
     seed = None
     number_of_nodes = 128
@@ -248,18 +291,32 @@ if __name__ == "__main__":
 
     block_pair_events = utils.event_dict_to_block_pair_events(event_dicts, node_membership, num_of_classes)
 
-
     for b_i in range(num_of_classes):
         for b_j in range(num_of_classes):
-            plot_likelihoods("alpha", np.arange(bp_alpha[b_i, b_j] - 5, bp_alpha[b_i, b_j] + 15, 0.2),
+            # Plotting log-likelihood derivatives
+            # plot_likelihood_deriv("alpha", np.arange(bp_alpha[b_i, b_j] - 5, bp_alpha[b_i, b_j] + 15, 0.2),
+            #                       block_pair_events[b_i][b_j],
+            #                  bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
+            #
+            # plot_likelihood_deriv("mu", np.arange(0, bp_mu[b_i, b_j] + .005, 0.0001),
+            #                  block_pair_events[b_i][b_j],
+            #                  bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
+            #
+            # plot_likelihood_deriv("beta", np.arange(bp_beta[b_i, b_j] - 5, bp_beta[b_i, b_j] + 15, 0.2),
+            #                  block_pair_events[b_i][b_j],
+            #                  bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
+
+
+            # plotting log-likelihood
+            plot_likelihood("alpha", np.arange(bp_alpha[b_i, b_j] - 5, bp_alpha[b_i, b_j] + 15, 0.2),
                              block_pair_events[b_i][b_j],
                              bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
 
-            plot_likelihoods("mu", np.arange(0, bp_mu[b_i, b_j] + .005, 0.0001),
+            plot_likelihood("mu", np.arange(0, bp_mu[b_i, b_j] + .005, 0.0001),
                              block_pair_events[b_i][b_j],
                              bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
 
-            plot_likelihoods("beta", np.arange(bp_beta[b_i, b_j] - 5, bp_beta[b_i, b_j] + 15, 0.2),
+            plot_likelihood("beta", np.arange(bp_beta[b_i, b_j] - 5, bp_beta[b_i, b_j] + 15, 0.2),
                              block_pair_events[b_i][b_j],
                              bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
 
