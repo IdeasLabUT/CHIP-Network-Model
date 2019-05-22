@@ -13,7 +13,7 @@ import generative_model_utils as utils
 from community_generative_model import community_generative_model
 from spectral_clustering import spectral_cluster
 from sklearn.metrics import adjusted_rand_score
-from parameter_estimation import estimate_hawkes_from_counts
+from parameter_estimation import estimate_hawkes_from_counts, estimate_beta_from_events
 
 #%% Set parameter values
 number_of_nodes = 256
@@ -118,7 +118,20 @@ print('Estimated alpha/beta:')
 print(ratio_est)
 print('Actual alpha/beta:')
 print(bp_alpha/bp_beta)
-print('Actual alpha:')
-print(bp_alpha)
+
+block_pair_events = utils.event_dict_to_block_pair_events(event_dicts, adj_sc_pred, num_of_classes)
+beta_est = np.zeros((num_of_classes,num_of_classes))
+for a in range(num_of_classes):
+    for b in range(num_of_classes):
+        print(f'Estimating beta for block pair ({a},{b})')
+        beta_est[a,b] = estimate_beta_from_events(block_pair_events[a][b],
+                mu_est[a,b], ratio_est[a,b], end_time)[0]
+alpha_est = ratio_est*beta_est
+print('Estimated beta:')
+print(beta_est)
 print('Actual beta:')
 print(bp_beta)
+print('Estimated alpha:')
+print(alpha_est)
+print('Actual alpha:')
+print(bp_alpha)

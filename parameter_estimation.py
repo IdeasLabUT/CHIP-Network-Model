@@ -10,7 +10,7 @@ import tick.hawkes as tick
 import matplotlib.pyplot as plt
 import generative_model_utils as utils
 from community_generative_model import community_generative_model
-
+from scipy.optimize import minimize_scalar
 
 
 def estimate_hawkes_from_counts(agg_adj, class_vec, duration):
@@ -134,7 +134,6 @@ def full_log_likelihood(bp_events, mu, alpha, beta, end_time):
         ll += second_inner_sum + third_inner_sum
 
     return ll
-
 
 def log_likelihood_alpha_deriv(bp_events, mu, alpha, beta, end_time):
     ll = 0
@@ -268,6 +267,15 @@ def plot_likelihood(variable_param, values_to_test, bp_events, mu, alpha, beta, 
     plt.ylabel(f"Log-likelihood")
     plt.show()
 
+def neg_log_likelihood_beta(beta, bp_events, mu, alpha_beta_ratio, end_time):
+    alpha = alpha_beta_ratio*beta
+    return -full_log_likelihood(bp_events, mu, alpha, beta, end_time)
+
+def estimate_beta_from_events(bp_events, mu, alpha_beta_ratio, end_time, 
+                              tol=1e-3):
+    res = minimize_scalar(neg_log_likelihood_beta, method='brent',
+                          args=(bp_events, mu, alpha_beta_ratio, end_time))
+    return res.x, res
 
 if __name__ == "__main__":
     # Everything below from this point on is only for testing.
