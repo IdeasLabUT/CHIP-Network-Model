@@ -12,7 +12,6 @@ import generative_model_utils as utils
 from community_generative_model import community_generative_model
 
 
-
 def estimate_hawkes_from_counts(agg_adj, class_vec, duration):
     num_classes = class_vec.max()+1
     sample_mean = np.zeros((num_classes,num_classes))
@@ -41,6 +40,7 @@ def estimate_hawkes_from_counts(agg_adj, class_vec, duration):
     
     mu = np.sqrt(sample_mean**3 / sample_var) / duration
     alpha_beta_ratio = 1 - np.sqrt(sample_mean / sample_var)
+
     return (mu, alpha_beta_ratio)
 
 
@@ -269,6 +269,34 @@ def plot_likelihood(variable_param, values_to_test, bp_events, mu, alpha, beta, 
     plt.show()
 
 
+def plot_likelihood_scaling_alpha_beta(scalars, bp_events, mu, alpha, beta, end_time):
+    """
+    Plots the log-likelihood to make sure they are maximized at the true parameter, while keeping all parameters except
+    `variable_param` constant.
+
+    :param scalars: (iterator) scales to scale both alpha and beta with, keeping their ratio constant.
+    :param bp_events: (list) list of lists of events of a single block pair.
+    :param mu: True mu/baseline for the block pair.
+    :param alpha: True alpha for the block pair.
+    :param beta: True beta for the block pair.
+    :param end_time: End-time/duration of the hawkes processes.
+    """
+
+    result = []
+
+    for s in scalars:
+        result.append(full_log_likelihood(bp_events, mu, alpha * s, beta * s, end_time))
+        print(s, end='\r')
+
+    print()
+    plt.plot(scalars, result, c='red')
+    plt.title("Log-Likelihood with scaling both alpha and beta")
+    plt.xlabel("Scalar")
+    plt.axvline(x=1)
+    plt.ylabel("Log-likelihood")
+    plt.show()
+
+
 if __name__ == "__main__":
     # Everything below from this point on is only for testing.
     seed = None
@@ -301,18 +329,21 @@ if __name__ == "__main__":
 
     for b_i in range(num_of_classes):
         for b_j in range(num_of_classes):
+            plot_likelihood_scaling_alpha_beta(np.logspace(np.log10(0.01), np.log10(10), 100), block_pair_events[b_i][b_j],
+                                               bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
+
             # Plotting log-likelihood derivatives
-            plot_likelihood_deriv("alpha", np.arange(bp_alpha[b_i, b_j] - 5, bp_alpha[b_i, b_j] + 15, 0.2),
-                                  block_pair_events[b_i][b_j],
-                             bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
-
-            plot_likelihood_deriv("mu", np.arange(0, bp_mu[b_i, b_j] + .005, 0.0001),
-                             block_pair_events[b_i][b_j],
-                             bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
-
-            plot_likelihood_deriv("beta", np.arange(bp_beta[b_i, b_j] - 5, bp_beta[b_i, b_j] + 15, 0.2),
-                             block_pair_events[b_i][b_j],
-                             bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
+            # plot_likelihood_deriv("alpha", np.arange(bp_alpha[b_i, b_j] - 5, bp_alpha[b_i, b_j] + 15, 0.2),
+            #                       block_pair_events[b_i][b_j],
+            #                       bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
+            #
+            # plot_likelihood_deriv("mu", np.arange(0, bp_mu[b_i, b_j] + .005, 0.0001),
+            #                       block_pair_events[b_i][b_j],
+            #                       bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
+            #
+            # plot_likelihood_deriv("beta", np.arange(bp_beta[b_i, b_j] - 5, bp_beta[b_i, b_j] + 15, 0.2),
+            #                       block_pair_events[b_i][b_j],
+            #                       bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
 
 
             # plotting log-likelihood
