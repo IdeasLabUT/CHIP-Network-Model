@@ -147,7 +147,8 @@ def load_enron_tain_test():
     Loads Enron dataset.
     :return: Three tuples one for each train, test and combined datasets. Each Tuple contains:
              ((dict) with (caller_id, receiver_id): [unix_timestamps] (event dict structure),
-             (int) number of nodes)
+             (int) number of nodes,
+             (float) duration)
              (list) nodes_not_in_train
     """
     train_file_path = '/shared/DataSets/EnronPriebe2009/train_enron.csv'
@@ -156,15 +157,17 @@ def load_enron_tain_test():
     combined_node_id_map, train_node_id_map, test_node_id_map, nodes_not_in_train = \
         load_and_combine_nodes_for_test_train(train_file_path, test_file_path)
 
-    train_event_dict = load_test_train_data(train_file_path, train_node_id_map)
-    test_event_dict = load_test_train_data(test_file_path, test_node_id_map)
+    train_event_dict, train_duration = load_test_train_data(train_file_path, train_node_id_map)
+    test_event_dict, test_duration = load_test_train_data(test_file_path, test_node_id_map)
     combined_event_dict = load_test_train_combined(train_file_path, test_file_path, combined_node_id_map)
 
-    train_event_dict.copy()
+    # Timestamps are adjusted to start from 0 and go up to 1000.
+    combined_duration = 1000.0
 
-    return ((train_event_dict, len(train_node_id_map)),
-            (test_event_dict, len(test_node_id_map)),
-            (combined_event_dict, len(combined_node_id_map)), nodes_not_in_train)
+    return ((train_event_dict, len(train_node_id_map), train_duration),
+            (test_event_dict, len(test_node_id_map), test_duration),
+            (combined_event_dict, len(combined_node_id_map), combined_duration),
+            nodes_not_in_train)
 
 
 def load_and_combine_nodes_for_test_train(train_path, test_path):
@@ -219,6 +222,8 @@ def load_test_train_data(file_path, node_id_map, prev_event_dict=None):
     # Sorting by unix_timestamp
     data = data[data[:, 2].argsort()]
 
+    duration = data[-1, 2] - data[0, 2]
+
     event_dict = {} if prev_event_dict is None else prev_event_dict
 
     for i in range(data.shape[0]):
@@ -230,12 +235,12 @@ def load_test_train_data(file_path, node_id_map, prev_event_dict=None):
 
         event_dict[(sender_id, receiver_id)].append(data[i, 2])
 
-    return event_dict
+    return event_dict, duration
 
 
 def load_test_train_combined(train_path, test_path, node_id_map):
-    combined_event_dict = load_test_train_data(train_path, node_id_map)
-    combined_event_dict = load_test_train_data(test_path, node_id_map, combined_event_dict)
+    combined_event_dict, _ = load_test_train_data(train_path, node_id_map)
+    combined_event_dict, _ = load_test_train_data(test_path, node_id_map, combined_event_dict)
 
     return combined_event_dict
 
