@@ -249,6 +249,7 @@ def simulate_community_hawkes(params=None):
                       'mu_off_diag': 0.6,
                       'mu_diag': 1.8,
                       'num_nodes_to_scale': 128,
+                      'alpha_diag': None,
                       'scale': True}
 
     if params is not None:
@@ -265,6 +266,9 @@ def simulate_community_hawkes(params=None):
     bp_beta = np.ones((num_of_classes, num_of_classes), dtype=np.float) * default_params['beta']
     bp_mu = np.ones((num_of_classes, num_of_classes), dtype=np.float) * default_params['mu_off_diag']
     np.fill_diagonal(bp_mu, default_params['mu_diag'])
+
+    if default_params['alpha_diag'] is not None:
+        np.fill_diagonal(bp_alpha, default_params['alpha_diag'])
 
     if default_params['scale']:
         n_scale = default_params['num_nodes_to_scale']
