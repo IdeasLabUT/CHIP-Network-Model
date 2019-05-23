@@ -5,6 +5,7 @@ Created on Sun May 19 21:34:50 2019
 @author: kevin
 """
 
+import warnings
 import numpy as np
 import tick.hawkes as tick
 import matplotlib.pyplot as plt
@@ -13,7 +14,7 @@ from community_generative_model import community_generative_model
 from scipy.optimize import minimize_scalar
 
 
-def estimate_hawkes_from_counts(agg_adj, class_vec, duration):
+def estimate_hawkes_from_counts(agg_adj, class_vec, duration, defualt_mu=None):
     num_classes = class_vec.max()+1
     sample_mean = np.zeros((num_classes,num_classes))
     sample_var = np.zeros((num_classes,num_classes))
@@ -38,11 +39,21 @@ def estimate_hawkes_from_counts(agg_adj, class_vec, duration):
             else:
                 sample_mean[a,b] = np.mean(agg_adj_block)
                 sample_var[a,b] = np.var(agg_adj_block,ddof=1)
-    
-    mu = np.sqrt(sample_mean**3 / sample_var) / duration
-    alpha_beta_ratio = 1 - np.sqrt(sample_mean / sample_var)
 
-    return (mu, alpha_beta_ratio)
+    # Variance can be zero, resulting in division by zero warnings. Ignore and set a default mu.
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        mu = np.sqrt(sample_mean**3 / sample_var) / duration
+        alpha_beta_ratio = 1 - np.sqrt(sample_mean / sample_var)
+
+    if defualt_mu is not None:
+        mu[np.isnan(mu)] = defualt_mu
+        alpha_beta_ratio[np.isnan(alpha_beta_ratio)] = 0
+
+        # If ratio is negative, set it to 0
+        alpha_beta_ratio[alpha_beta_ratio < 0] = 0
+
+    return mu, alpha_beta_ratio
 
 
 def estimate_hawkes_kernel(event_dicts, class_assignment, n_classes, bp_beta, learner_param_dict=None):
@@ -102,8 +113,6 @@ def compute_wijs(np_events, beta):
     for q in range(1, n_events):
         wijs[q - 1] = np.sum(np.exp(-beta * (np_events[q] - np_events[:q])))
 
-    if n_events == 1:
-        print(wijs)
     return wijs
 
 
@@ -121,7 +130,13 @@ def compute_vijs(np_events, beta):
     return vijs
 
 
-def full_log_likelihood(bp_events, mu, alpha, beta, end_time):
+def full_log_likelihood(bp_events, mu, alpha, beta, end_time, block_pair_size=None):
+    """
+
+    :param block_pair_size: Size of the block pair. bp_events may not include an entry for node_pairs with no
+                            interactions, in that case, we need to add (-mu * end_time) to the likelihood for each
+                            missing node pair.
+    """
     ll = 0
     for np_events in bp_events:
         ll += -mu * end_time
@@ -134,7 +149,23 @@ def full_log_likelihood(bp_events, mu, alpha, beta, end_time):
 
         ll += second_inner_sum + third_inner_sum
 
+    if block_pair_size is not None:
+        num_missing_node_pairs = block_pair_size - len(bp_events)
+        ll += num_missing_node_pairs * -mu * end_time
+
     return ll
+
+
+def neg_log_likelihood_beta(beta, bp_events, mu, alpha_beta_ratio, end_time, block_pair_size):
+    alpha = alpha_beta_ratio*beta
+    return -full_log_likelihood(bp_events, mu, alpha, beta, end_time, block_pair_size)
+
+
+def estimate_beta_from_events(bp_events, mu, alpha_beta_ratio, end_time, block_pair_size=None, tol=1e-3):
+    res = minimize_scalar(neg_log_likelihood_beta, method='bounded', bounds=(0, 10),
+                          args=(bp_events, mu, alpha_beta_ratio, end_time, block_pair_size))
+    return res.x, res
+
 
 def log_likelihood_alpha_deriv(bp_events, mu, alpha, beta, end_time):
     ll = 0
@@ -269,18 +300,6 @@ def plot_likelihood(variable_param, values_to_test, bp_events, mu, alpha, beta, 
     plt.show()
 
 
-def neg_log_likelihood_beta(beta, bp_events, mu, alpha_beta_ratio, end_time):
-    alpha = alpha_beta_ratio*beta
-    return -full_log_likelihood(bp_events, mu, alpha, beta, end_time)
-
-
-def estimate_beta_from_events(bp_events, mu, alpha_beta_ratio, end_time, 
-                              tol=1e-3):
-    res = minimize_scalar(neg_log_likelihood_beta, method='brent',
-                          args=(bp_events, mu, alpha_beta_ratio, end_time))
-    return res.x, res
-
-
 def plot_likelihood_scaling_alpha_beta(scalars, bp_events, mu, alpha, beta, end_time):
     """
     Plots the log-likelihood to make sure they are maximized at the true parameter, while keeping all parameters except
@@ -311,7 +330,7 @@ def plot_likelihood_scaling_alpha_beta(scalars, bp_events, mu, alpha, beta, end_
 
 if __name__ == "__main__":
     # Everything below from this point on is only for testing.
-    seed = None
+    seed = 1
     number_of_nodes = 128
     class_probabilities = [0.25, 0.25, 0.25, 0.25]
     num_of_classes = len(class_probabilities)

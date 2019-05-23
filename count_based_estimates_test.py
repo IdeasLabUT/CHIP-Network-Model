@@ -29,10 +29,10 @@ end_time = 100
 class_probabilities = [1]
 num_of_classes = len(class_probabilities)
 
-bp_alpha = np.ones((num_of_classes, num_of_classes), dtype=np.float) * .7500
-bp_beta = np.ones((num_of_classes, num_of_classes), dtype=np.float) * .8000
+bp_alpha = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 2.7500
+bp_beta = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 2.8000
 bp_mu = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 0.6
-np.fill_diagonal(bp_mu, 1.8)
+np.fill_diagonal(bp_mu, 3.8)
 
 # bp_mu = utils.scale_parameteres_by_block_pair_size(bp_mu, 128, class_probabilities)
 # bp_alpha = utils.scale_parameteres_by_block_pair_size(bp_alpha, 128, class_probabilities)
@@ -45,7 +45,7 @@ mu_mse = []
 ratio_mse = []
 
 for n_nodes in num_nodes_to_test:
-    results = Parallel(n_jobs=20)(delayed(calc_mean_and_error_of_count_estiamte)
+    results = Parallel(n_jobs=5)(delayed(calc_mean_and_error_of_count_estiamte)
                                          (n_nodes, class_probabilities,
                                           bp_mu, bp_alpha, bp_beta,
                                           burnin=None, end_time=end_time, seed=seed)

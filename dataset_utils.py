@@ -142,7 +142,7 @@ def load_enron():
     return event_dict, len(people)
 
 
-def load_enron_tain_test():
+def load_enron_train_test():
     """
     Loads Enron dataset.
     :return: Three tuples one for each train, test and combined datasets. Each Tuple contains:
@@ -204,14 +204,16 @@ def load_and_combine_nodes_for_test_train(train_path, test_path):
         test_node_id_map[n] = i
 
     # Combined
-    nodes_not_in_train = test_nodes_set.difference(train_nodes_set)
-
     all_nodes = list(train_nodes_set.union(test_nodes_set))
     all_nodes.sort()
 
     full_node_id_map = {}
     for i, n in enumerate(all_nodes):
         full_node_id_map[n] = i
+
+    nodes_not_in_train = []
+    for n in test_nodes_set.difference(train_nodes_set):
+        nodes_not_in_train.append(full_node_id_map[n])
 
     return full_node_id_map, train_node_id_map, test_node_id_map, nodes_not_in_train
 
