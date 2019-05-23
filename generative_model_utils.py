@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from tick.hawkes import SimuHawkesExpKernels
+from community_generative_model import community_generative_model
 
 
 def assign_class_membership(num_nodes, class_prob, one_hot=True):
@@ -236,3 +237,46 @@ def asymptotic_var(mu, alpha, beta, run_time):
     Calculates Hawkes asymptotic variance.
     """
     return (mu * run_time) / (1 - alpha / beta) ** 3
+
+
+def simulate_community_hawkes(params=None):
+    default_params = {'seed': None,
+                      'number_of_nodes': 128,
+                      'class_probabilities': [0.25, 0.25, 0.25, 0.25],
+                      'end_time': 50,
+                      'alpha': 7500,
+                      'beta': 8000,
+                      'mu_off_diag': 0.6,
+                      'mu_diag': 1.8,
+                      'num_nodes_to_scale': 128,
+                      'scale': True}
+
+    if params is not None:
+        default_params.update(params)
+
+    seed = default_params['seed']
+    number_of_nodes = default_params['number_of_nodes']
+    class_probabilities = default_params['class_probabilities']
+    num_of_classes = len(class_probabilities)
+    end_time = default_params['end_time']
+    burnin = None
+
+    bp_alpha = np.ones((num_of_classes, num_of_classes), dtype=np.float) * default_params['alpha']
+    bp_beta = np.ones((num_of_classes, num_of_classes), dtype=np.float) * default_params['beta']
+    bp_mu = np.ones((num_of_classes, num_of_classes), dtype=np.float) * default_params['mu_off_diag']
+    np.fill_diagonal(bp_mu, default_params['mu_diag'])
+
+    if default_params['scale']:
+        n_scale = default_params['num_nodes_to_scale']
+        bp_mu = scale_parameteres_by_block_pair_size(bp_mu, n_scale, class_probabilities)
+        bp_alpha = scale_parameteres_by_block_pair_size(bp_alpha, n_scale, class_probabilities)
+        bp_beta = scale_parameteres_by_block_pair_size(bp_beta, n_scale, class_probabilities)
+
+    node_membership, event_dict = community_generative_model(number_of_nodes,
+                                                             class_probabilities,
+                                                             bp_mu, bp_alpha, bp_beta,
+                                                             burnin, end_time, seed=seed)
+
+    node_membership = one_hot_to_class_assignment(node_membership)
+
+    return event_dict, node_membership
