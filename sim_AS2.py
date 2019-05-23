@@ -8,20 +8,19 @@ from spectral_clustering import spectral_cluster
 
 result_file_path = '/shared/Results/CommunityHawkes/pickles/AS2'
 
-# sim_type = 'a'
-sim_type = 'b'
+sim_type = 'a'
+# sim_type = 'b'
 
 scalars_to_test = [0.001, 0.01, 0.05, 0.1, 1, 10, 25, 50, 100, 200]
 n_classes = 4
-num_simulation_per_duration = 30
-n_cores = 30
+num_simulation_per_duration = 100
+n_cores = 34
 
 
 def test_spectral_clustering_on_generative_model(scalar):
     params = {'mu_off_diag': 0.6 * scalar,
               'mu_diag': 1.8 if sim_type == 'b' else 1.8 * scalar,
-              'scale': True,
-              'number_of_nodes': 32}
+              'scale': True}
 
     event_dict, true_class_assignments = utils.simulate_community_hawkes(params)
 
