@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 import matplotlib.pyplot as plt
 import generative_model_utils as utils
@@ -138,8 +139,105 @@ def load_enron():
 
         event_dict[(enron_data[i, 1], enron_data[i, 2])].append(enron_data[i, 0])
 
-    print(event_dict)
     return event_dict, len(people)
+
+
+def load_enron_tain_test():
+    """
+    Loads Enron dataset.
+    :return: Three tuples one for each train, test and combined datasets. Each Tuple contains:
+             ((dict) with (caller_id, receiver_id): [unix_timestamps] (event dict structure),
+             (int) number of nodes)
+             (list) nodes_not_in_train
+    """
+    train_file_path = '/shared/DataSets/EnronPriebe2009/train_enron.csv'
+    test_file_path = '/shared/DataSets/EnronPriebe2009/test_enron.csv'
+
+    combined_node_id_map, train_node_id_map, test_node_id_map, nodes_not_in_train = \
+        load_and_combine_nodes_for_test_train(train_file_path, test_file_path)
+
+    train_event_dict = load_test_train_data(train_file_path, train_node_id_map)
+    test_event_dict = load_test_train_data(test_file_path, test_node_id_map)
+    combined_event_dict = load_test_train_combined(train_file_path, test_file_path, combined_node_id_map)
+
+    train_event_dict.copy()
+
+    return ((train_event_dict, len(train_node_id_map)),
+            (test_event_dict, len(test_node_id_map)),
+            (combined_event_dict, len(combined_node_id_map)), nodes_not_in_train)
+
+
+def load_and_combine_nodes_for_test_train(train_path, test_path):
+    """
+    Loads the set of nodes in both train and test datasets and maps all the node ids to start form 0 to num total nodes.
+    :param train_path
+    :param test_path
+    :return `full_node_id_map` dict mapping node id in the entire dataset to a range from 0 to n_full
+            `train_node_id_map` dict mapping node id in the train dataset to a range from 0 to n_train
+            `test_node_id_map` dict mapping node id in the test dataset to a range from 0 to n_test
+            `nodes_not_in_train` list of mapped node ids that are in test, but not in train.
+    """
+
+    # load dataset. caller_id,receiver_id,unix_timestamp
+
+    # Train data
+    train_nodes = np.loadtxt(train_path, np.int, delimiter=',', usecols=(0, 1))
+    train_nodes_set = set(train_nodes.reshape(train_nodes.shape[0] * 2))
+    train_nodes = list(train_nodes_set)
+    train_nodes.sort()
+
+    train_node_id_map = {}
+    for i, n in enumerate(train_nodes):
+        train_node_id_map[n] = i
+
+    # Test data
+    test_nodes = np.loadtxt(test_path, np.int, delimiter=',', usecols=(0, 1))
+    test_nodes_set = set(test_nodes.reshape(test_nodes.shape[0] * 2))
+    test_nodes = list(test_nodes_set)
+    test_nodes.sort()
+
+    test_node_id_map = {}
+    for i, n in enumerate(test_nodes):
+        test_node_id_map[n] = i
+
+    # Combined
+    nodes_not_in_train = test_nodes_set.difference(train_nodes_set)
+
+    all_nodes = list(train_nodes_set.union(test_nodes_set))
+    all_nodes.sort()
+
+    full_node_id_map = {}
+    for i, n in enumerate(all_nodes):
+        full_node_id_map[n] = i
+
+    return full_node_id_map, train_node_id_map, test_node_id_map, nodes_not_in_train
+
+
+def load_test_train_data(file_path, node_id_map, prev_event_dict=None):
+    # load the core dataset. sender_id,receiver_id,unix_timestamp
+    data = np.loadtxt(file_path, np.float, delimiter=',', usecols=(0, 1, 2))
+    # Sorting by unix_timestamp
+    data = data[data[:, 2].argsort()]
+
+    event_dict = {} if prev_event_dict is None else prev_event_dict
+
+    for i in range(data.shape[0]):
+        sender_id = node_id_map[np.int(data[i, 0])]
+        receiver_id = node_id_map[np.int(data[i, 1])]
+
+        if (sender_id, receiver_id) not in event_dict:
+            event_dict[(sender_id, receiver_id)] = []
+
+        event_dict[(sender_id, receiver_id)].append(data[i, 2])
+
+    return event_dict
+
+
+def load_test_train_combined(train_path, test_path, node_id_map):
+    combined_event_dict = load_test_train_data(train_path, node_id_map)
+    combined_event_dict = load_test_train_data(test_path, node_id_map, combined_event_dict)
+
+    return combined_event_dict
 
 
 def plot_event_count_hist(event_dict, num_nodes, dset_title_name):
@@ -171,5 +269,13 @@ if __name__ == '__main__':
     # plot_event_count_hist(enron_event_dict, num_nodes, "Enron")
     # print(load_enron())
 
-    load_reality_mining_test_train()
-    load_core_reality_mining()
+    # load_reality_mining_test_train()
+    # load_core_reality_mining()
+
+    ((enron_train_event_dict, enron_train_n_nodes),
+     (enron_test_event_dict, enron_test_n_nodes),
+     (enron_combined_event_dict, enron_combined_n_nodes), nodes_not_in_train) = load_enron_tain_test()
+
+    print(np.sum(utils.event_dict_to_aggregated_adjacency(enron_train_n_nodes, enron_train_event_dict)))
+    print(np.sum(utils.event_dict_to_aggregated_adjacency(enron_test_n_nodes, enron_test_event_dict)))
+    print(np.sum(utils.event_dict_to_aggregated_adjacency(enron_combined_n_nodes, enron_combined_event_dict)))
