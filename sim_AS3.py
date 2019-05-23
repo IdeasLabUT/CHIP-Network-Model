@@ -70,16 +70,16 @@ fixed_var = 'n'
 
 for fixed_var in ['n', 't', 'k']:
     # Number of test values for all variable must be the same
-    n_range = [8, 16, 32, 64, 128, 256, 512]
-    t_range = [10, 20, 50, 100, 250, 500, 1000]
-    k_range = [15, 10, 8, 5, 3, 2, 1]
+    n_range = [16, 32, 64, 128, 256, 512]
+    t_range = [10, 20, 50, 100, 250, 500]
+    k_range = [15, 10, 5, 3, 2, 1]
     num_test_values = len(n_range)
 
-    fixed_n = 128
+    fixed_n = 32
     fixed_t = 50
     fixed_k = 4
 
-    num_simulation_per_duration = 100
+    num_simulation_per_duration = 34
     n_cores = 34
 
 
@@ -147,29 +147,29 @@ for fixed_var in ['n', 't', 'k']:
     print(f"rand error:", mean_sc_rand_scores_err)
 
 
-    # # Plot Results
-    # fig, ax = plt.subplots()
-    #
-    # if fixed_var == 'n':
-    #     ylables = t_range
-    #     xlables = k_range
-    #     plt.ylabel("T")
-    #     plt.xlabel("K")
-    #
-    # elif fixed_var == 't':
-    #     ylables = n_range
-    #     xlables = k_range
-    #     plt.ylabel("N")
-    #     plt.xlabel("K")
-    #
-    # else:
-    #     ylables = n_range
-    #     xlables = t_range
-    #     plt.ylabel("N")
-    #     plt.xlabel("T")
-    #
-    # im, _ = heatmap(mean_sc_rand_scores, ylables, xlables, ax=ax, cmap="Greys", cbarlabel=f"Fixed {fixed_var}")
-    #
-    # ax.set_title(f"AS3 Fixed {fixed_var} Community Model SC Rand")
-    # fig.tight_layout()
-    # plt.show()
+    # Plot Results
+    fig, ax = plt.subplots()
+
+    if fixed_var == 'n':
+        ylables = t_range
+        xlables = k_range
+        plt.ylabel("T")
+        plt.xlabel("K")
+
+    elif fixed_var == 't':
+        ylables = n_range
+        xlables = k_range
+        plt.ylabel("N")
+        plt.xlabel("K")
+
+    else:
+        ylables = n_range
+        xlables = t_range
+        plt.ylabel("N")
+        plt.xlabel("T")
+
+    im, _ = heatmap(mean_sc_rand_scores, ylables, xlables, ax=ax, cmap="Greys", cbarlabel=f"Fixed {fixed_var}")
+
+    ax.set_title(f"AS3 Fixed {fixed_var} Community Model SC Rand")
+    fig.tight_layout()
+    plt.show()
