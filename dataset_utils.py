@@ -1,4 +1,3 @@
-import copy
 import numpy as np
 import matplotlib.pyplot as plt
 import generative_model_utils as utils
@@ -154,15 +153,47 @@ def load_enron_train_test():
     train_file_path = '/shared/DataSets/EnronPriebe2009/train_enron.csv'
     test_file_path = '/shared/DataSets/EnronPriebe2009/test_enron.csv'
 
+    # Timestamps are adjusted to start from 0 and go up to 1000.
+    combined_duration = 1000.0
+
+    return load_train_test(train_file_path, test_file_path, combined_duration)
+
+
+def load_fb_train_test():
+    """
+    Loads FB dataset.
+    :return: Three tuples one for each train, test and combined datasets. Each Tuple contains:
+             ((dict) with (caller_id, receiver_id): [unix_timestamps] (event dict structure),
+             (int) number of nodes,
+             (float) duration)
+             (list) nodes_not_in_train
+    """
+    train_file_path = '/shared/DataSets/FacebookViswanath2009/train_FB_event_mat.csv'
+    test_file_path = '/shared/DataSets/FacebookViswanath2009/test_FB_event_mat.csv'
+
+    # Timestamps are adjusted to start from 0 and go up to 8759.9.
+    combined_duration = 8759.9
+
+    return load_train_test(train_file_path, test_file_path, combined_duration)
+
+
+def load_train_test(train_file_path, test_file_path, combined_duration):
+    """
+    Loads datasets already split into train and test, such as Enron and FB.
+
+    :return: Three tuples one for each train, test and combined datasets. Each Tuple contains:
+             ((dict) with (caller_id, receiver_id): [unix_timestamps] (event dict structure),
+             (int) number of nodes,
+             (float) duration)
+             (list) nodes_not_in_train
+    """
+
     combined_node_id_map, train_node_id_map, test_node_id_map, nodes_not_in_train = \
         load_and_combine_nodes_for_test_train(train_file_path, test_file_path)
 
     train_event_dict, train_duration = load_test_train_data(train_file_path, train_node_id_map)
     test_event_dict, test_duration = load_test_train_data(test_file_path, test_node_id_map)
     combined_event_dict = load_test_train_combined(train_file_path, test_file_path, combined_node_id_map)
-
-    # Timestamps are adjusted to start from 0 and go up to 1000.
-    combined_duration = 1000.0
 
     return ((train_event_dict, len(train_node_id_map), train_duration),
             (test_event_dict, len(test_node_id_map), test_duration),
@@ -268,6 +299,118 @@ def plot_event_count_hist(event_dict, num_nodes, dset_title_name):
     plt.show()
 
 
+# def load_facebook_wall():
+#     jan_1_2007 = 1167609600
+#     jan_1_2008 = 1199145600
+#     file_path = '/shared/DataSets/FacebookViswanath2009/raw/facebook-wall.txt'
+#
+#     # load the core dataset. sender_id  receiver_id unix_timestamp
+#     data = np.loadtxt(file_path, np.int)
+#     # Sorting by unix_timestamp
+#     data = data[data[:, 2].argsort()]
+#
+#     # filtering date
+#     data = data[np.where(np.logical_and(data[:, 2] >= jan_1_2007, data[:, 2] <= jan_1_2008))[0], :]
+#
+#     # remove self-edges
+#     data = data[np.where(data[:, 0] != data[:, 1])[0], :]
+#
+#     # filtering nodes
+#     sender_nodes, nodes_out_degree = np.unique(data[:, 0], return_counts=True)
+#     receiver_nodes, nodes_in_degree = np.unique(data[:, 1], return_counts=True)
+#     nodes_to_include = set(sender_nodes[nodes_out_degree > 9]).intersection(receiver_nodes[nodes_in_degree > 9])
+#
+#     # Adjust first timestamp to start from 0
+#     data[:, 2] = data[:, 2] - data[0, 2]
+#
+#     # Spilt into train and test
+#     num_test_events = 10000
+#     combined_data = data
+#     full_node_id_map, _ = get_facebook_node_map(data)
+#
+#     train_data = data[:-num_test_events, :]
+#     train_node_id_map, train_nodes_set = get_facebook_node_map(train_data)
+#
+#     test_data = data[num_test_events:, :]
+#     test_node_id_map, test_nodes_set = get_facebook_node_map(test_data)
+#
+#     nodes_not_in_train = []
+#     for n in test_nodes_set.difference(train_nodes_set):
+#         nodes_not_in_train.append(full_node_id_map[n])
+#
+#
+#     print(len(nodes_to_include))
+#     # print(node_out_degree)
+#     # print(data.shape[0])
+#
+#
+# def load_facebook_wall():
+#     jan_1_2007 = 1167609600
+#     jan_1_2008 = 1199145600
+#     file_path = '/shared/DataSets/FacebookViswanath2009/FB_event_mat.csv'
+#
+#     # load the core dataset. sender_id  receiver_id unix_timestamp
+#     data = np.loadtxt(file_path, np.float, delimiter=',')
+#     # Sorting by unix_timestamp
+#     # data = data[data[:, 2].argsort()]
+#
+#     print(data.shape[0] * .8)
+#     print(data[0:5, :])
+#
+#     print(data[-1, :])
+#
+#
+#     exit()
+#     np.savetxt("/shared/DataSets/FacebookViswanath2009/train_FB_event_mat.csv", data[:-1000, :],
+#                fmt="%d")
+#
+#     exit()
+#     # filtering date
+#     data = data[np.where(np.logical_and(data[:, 2] >= jan_1_2007, data[:, 2] <= jan_1_2008))[0], :]
+#
+#     # remove self-edges
+#     data = data[np.where(data[:, 0] != data[:, 1])[0], :]
+#
+#     # filtering nodes
+#     sender_nodes, nodes_out_degree = np.unique(data[:, 0], return_counts=True)
+#     receiver_nodes, nodes_in_degree = np.unique(data[:, 1], return_counts=True)
+#     nodes_to_include = set(sender_nodes[nodes_out_degree > 9]).intersection(receiver_nodes[nodes_in_degree > 9])
+#
+#     # Adjust first timestamp to start from 0
+#     data[:, 2] = data[:, 2] - data[0, 2]
+#
+#     # Spilt into train and test
+#     num_test_events = 10000
+#     combined_data = data
+#     full_node_id_map, _ = get_facebook_node_map(data)
+#
+#     train_data = data[:-num_test_events, :]
+#     train_node_id_map, train_nodes_set = get_facebook_node_map(train_data)
+#
+#     test_data = data[num_test_events:, :]
+#     test_node_id_map, test_nodes_set = get_facebook_node_map(test_data)
+#
+#     nodes_not_in_train = []
+#     for n in test_nodes_set.difference(train_nodes_set):
+#         nodes_not_in_train.append(full_node_id_map[n])
+#
+#
+#     print(len(nodes_to_include))
+#     # print(node_out_degree)
+#     # print(data.shape[0])
+#
+#
+# def get_facebook_node_map(data):
+#     nodes_set = set(data[:, 0]).union(data[:, 1])
+#     nodes = list(nodes_set)
+#     nodes.sort()
+#
+#     node_id_map = {}
+#     for i, n in enumerate(nodes):
+#         node_id_map[n] = i
+#
+#     return node_id_map, nodes_set
+
 if __name__ == '__main__':
     # reality_mining_event_dict, num_nodes = load_core_reality_mining()
     # plot_event_count_hist(reality_mining_event_dict, num_nodes, "Reality Mining's Core people")
@@ -279,10 +422,23 @@ if __name__ == '__main__':
     # load_reality_mining_test_train()
     # load_core_reality_mining()
 
-    ((enron_train_event_dict, enron_train_n_nodes),
-     (enron_test_event_dict, enron_test_n_nodes),
-     (enron_combined_event_dict, enron_combined_n_nodes), nodes_not_in_train) = load_enron_tain_test()
+    # ((enron_train_event_dict, enron_train_n_nodes),
+    #  (enron_test_event_dict, enron_test_n_nodes),
+    #  (enron_combined_event_dict, enron_combined_n_nodes), nodes_not_in_train) = load_enron_train_test()
+    #
+    # print(np.sum(utils.event_dict_to_aggregated_adjacency(enron_train_n_nodes, enron_train_event_dict)))
+    # print(np.sum(utils.event_dict_to_aggregated_adjacency(enron_test_n_nodes, enron_test_event_dict)))
+    # print(np.sum(utils.event_dict_to_aggregated_adjacency(enron_combined_n_nodes, enron_combined_event_dict)))
 
-    print(np.sum(utils.event_dict_to_aggregated_adjacency(enron_train_n_nodes, enron_train_event_dict)))
-    print(np.sum(utils.event_dict_to_aggregated_adjacency(enron_test_n_nodes, enron_test_event_dict)))
-    print(np.sum(utils.event_dict_to_aggregated_adjacency(enron_combined_n_nodes, enron_combined_event_dict)))
+
+    ((enron_train_event_dict, enron_train_n_nodes, train_duration),
+     (enron_test_event_dict, enron_test_n_nodes, test_duration),
+     (enron_combined_event_dict, enron_combined_n_nodes, combined_duration), nodes_not_in_train) = load_fb_train_test()
+
+    print("Train -- Num Nodes:", enron_train_n_nodes,
+          "Num Edges:", np.sum(utils.event_dict_to_aggregated_adjacency(enron_train_n_nodes, enron_train_event_dict)))
+    print("Test -- Num Nodes:", enron_test_n_nodes,
+          "Num Edges:", np.sum(utils.event_dict_to_aggregated_adjacency(enron_test_n_nodes, enron_test_event_dict)))
+    print("Combined -- Num Nodes:", enron_combined_n_nodes,
+          "Num Edges:", np.sum(utils.event_dict_to_aggregated_adjacency(enron_combined_n_nodes, enron_combined_event_dict)))
+

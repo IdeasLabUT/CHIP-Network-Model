@@ -14,14 +14,18 @@ from community_generative_model import community_generative_model
 from scipy.optimize import minimize_scalar
 
 
-def estimate_hawkes_from_counts(agg_adj, class_vec, duration, defualt_mu=None):
+def estimate_hawkes_from_counts(agg_adj, class_vec, duration, default_mu=None):
     num_classes = class_vec.max()+1
     sample_mean = np.zeros((num_classes,num_classes))
     sample_var = np.zeros((num_classes,num_classes))
+
+    community_membership = utils.node_membership_to_community_membership(class_vec, num_classes)
+
     for a in range(num_classes):
         for b in range(num_classes):
-            nodes_in_a = np.where(class_vec==a)[0]
-            nodes_in_b = np.where(class_vec==b)[0]
+            nodes_in_a = community_membership[a]
+            nodes_in_b = community_membership[b]
+
             agg_adj_block = agg_adj[nodes_in_a[:,np.newaxis],nodes_in_b]
             if a == b:
                 # For diagonal blocks, need to make sure we're not including
@@ -46,8 +50,8 @@ def estimate_hawkes_from_counts(agg_adj, class_vec, duration, defualt_mu=None):
         mu = np.sqrt(sample_mean**3 / sample_var) / duration
         alpha_beta_ratio = 1 - np.sqrt(sample_mean / sample_var)
 
-    if defualt_mu is not None:
-        mu[np.isnan(mu)] = defualt_mu
+    if default_mu is not None:
+        mu[np.isnan(mu)] = default_mu
         alpha_beta_ratio[np.isnan(alpha_beta_ratio)] = 0
 
         # If ratio is negative, set it to 0
