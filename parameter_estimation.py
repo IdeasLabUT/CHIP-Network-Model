@@ -109,27 +109,37 @@ def estimate_hawkes_kernel(event_dicts, class_assignment, n_classes, bp_beta, le
 
 def compute_wijs(np_events, beta):
     n_events = len(np_events)
-    if n_events <= 1:
+    if n_events < 1:
         return 0
 
-    wijs = np.zeros((n_events - 1))
-
+    wijs = np.zeros(n_events)
     for q in range(1, n_events):
-        wijs[q - 1] = np.sum(np.exp(-beta * (np_events[q] - np_events[:q])))
+        wijs[q] = np.sum(np.exp(-beta * (np_events[q] - np_events[:q])))
+
+    return wijs
+
+
+def compute_wijs_recursive(np_events, beta):
+    n_events = len(np_events)
+    if n_events < 1:
+        return 0
+
+    wijs = np.zeros(n_events)
+    for i in range(1, n_events):
+        wijs[i] = np.exp(-beta * (np_events[i] - np_events[i - 1])) * (1 + wijs[i - 1])
 
     return wijs
 
 
 def compute_vijs(np_events, beta):
     n_events = len(np_events)
-    if n_events <= 1:
+    if n_events < 1:
         return 0
 
-    vijs = np.zeros((n_events - 1))
-
+    vijs = np.zeros(n_events)
     for q in range(1, n_events):
         q_shifted_events = np_events[q] - np_events[:q]
-        vijs[q - 1] = np.sum(q_shifted_events * np.exp(-beta * q_shifted_events))
+        vijs[q] = np.sum(q_shifted_events * np.exp(-beta * q_shifted_events))
 
     return vijs
 
@@ -148,8 +158,8 @@ def full_log_likelihood(bp_events, mu, alpha, beta, end_time, block_pair_size=No
         if len(np_events) == 0:
             continue
 
-        second_inner_sum = np.sum((alpha / beta) * (np.exp(-beta * (end_time - np_events)) - 1))
-        third_inner_sum = np.sum(np.log(mu + alpha * compute_wijs(np_events, beta)))
+        second_inner_sum = (alpha / beta) * np.sum(np.exp(-beta * (end_time - np_events)) - 1)
+        third_inner_sum = np.sum(np.log(mu + alpha * compute_wijs_recursive(np_events, beta)))
 
         ll += second_inner_sum + third_inner_sum
 

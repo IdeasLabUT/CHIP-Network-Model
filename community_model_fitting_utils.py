@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import generative_model_utils as utils
 import parameter_estimation as estimate_utils
 from spectral_clustering import spectral_cluster
+from model_fitting import fit_and_eval_community_hawkes
 from community_generative_model import community_generative_model
 
 
@@ -115,9 +116,18 @@ def calc_per_event_log_likelihood(combined_log_likelihood, train_log_likelihood,
     return (combined_log_likelihood - train_log_likelihood) / test_num_events
 
 
-def plot_real_vs_fitted_count_histogram(event_dict, node_membership,
-                                        bp_mu, bp_alpha, bp_beta,
-                                        duration, seed=None):
+def generate_fit_community_hawkes(event_dict, node_membership,
+                                  bp_mu, bp_alpha, bp_beta,
+                                  duration, fit_generated_model, plot_hist, train_percentage=0.8, seed=None):
+    """
+    Generates a community model the plots its count histogram against the original event_dict. (if plot_hist is True)
+
+    Also, fits a community model to the generated data itself (if fit_generated_model is True), this is done by
+    converting the generated event_dict to event_list and split it to train\test and fit it using model_fitting.
+    """
+    if not fit_generated_model and not plot_hist:
+        return
+
     # Generating a network
     n_nodes = len(node_membership)
 
@@ -129,19 +139,31 @@ def plot_real_vs_fitted_count_histogram(event_dict, node_membership,
                                                                                  burnin=None, end_time=duration,
                                                                                  seed=seed)
 
-    generated_agg_adj = utils.event_dict_to_aggregated_adjacency(n_nodes, generated_event_dict, dtype=np.int)
-    generated_deg_count_flattened = np.reshape(generated_agg_adj, (n_nodes * n_nodes))
+    if plot_hist:
+        generated_agg_adj = utils.event_dict_to_aggregated_adjacency(n_nodes, generated_event_dict, dtype=np.int)
+        generated_deg_count_flattened = np.reshape(generated_agg_adj, (n_nodes * n_nodes))
 
-    agg_adj = utils.event_dict_to_aggregated_adjacency(n_nodes, event_dict, dtype=np.int)
-    deg_count_flattened = np.reshape(agg_adj, (n_nodes * n_nodes))
+        agg_adj = utils.event_dict_to_aggregated_adjacency(n_nodes, event_dict, dtype=np.int)
+        deg_count_flattened = np.reshape(agg_adj, (n_nodes * n_nodes))
 
-    plt.hist(deg_count_flattened, bins=50, alpha=0.5, label='Real Data', color='blue', density=True)
-    plt.hist(generated_deg_count_flattened, bins=50, alpha=0.5, label='Generated Data', color='red', density=True)
+        plt.hist(deg_count_flattened, bins=50, alpha=0.5, label='Real Data', color='blue', density=True)
+        plt.hist(generated_deg_count_flattened, bins=50, alpha=0.5, label='Generated Data', color='red', density=True)
 
-    plt.legend(loc='upper right')
-    plt.xlabel('Event Count')
-    plt.ylabel('Density')
-    plt.title(f'Histogram of the Count Matrix Real Vs. Generated Data - K: {len(class_prob)}'
-              f'\n Mean Count -  Real: {np.mean(agg_adj):.3f} - Generated: {np.mean(generated_agg_adj):.3f}')
-    plt.yscale("log")
-    plt.show()
+        plt.legend(loc='upper right')
+        plt.xlabel('Event Count')
+        plt.ylabel('Density')
+        plt.title(f'Histogram of the Count Matrix Real Vs. Generated Data - K: {len(class_prob)}'
+                  f'\n Mean Count -  Real: {np.mean(agg_adj):.3f} - Generated: {np.mean(generated_agg_adj):.3f}')
+        plt.yscale("log")
+        plt.show()
+
+    if fit_generated_model:
+        print("Generated model test ll:")
+        gen_event_list = utils.event_dict_to_event_list(generated_event_dict)
+        gen_train_tuple, gen_test_tuple, gen_combined_tuple, gen_nodes_not_in_train = \
+            dataset_utils.split_event_list_to_train_test(gen_event_list, train_percentage)
+
+        # print(utils.num_events_in_event_dict(ge))
+        fit_and_eval_community_hawkes(gen_train_tuple, gen_test_tuple, gen_combined_tuple, gen_nodes_not_in_train)
+
+    return

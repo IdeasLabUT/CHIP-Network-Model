@@ -217,30 +217,17 @@ def load_and_combine_nodes_for_test_train(train_path, test_path):
     # Train data
     train_nodes = np.loadtxt(train_path, np.int, delimiter=',', usecols=(0, 1))
     train_nodes_set = set(train_nodes.reshape(train_nodes.shape[0] * 2))
-    train_nodes = list(train_nodes_set)
-    train_nodes.sort()
-
-    train_node_id_map = {}
-    for i, n in enumerate(train_nodes):
-        train_node_id_map[n] = i
+    train_node_id_map = get_node_map(train_nodes_set)
 
     # Test data
     test_nodes = np.loadtxt(test_path, np.int, delimiter=',', usecols=(0, 1))
     test_nodes_set = set(test_nodes.reshape(test_nodes.shape[0] * 2))
-    test_nodes = list(test_nodes_set)
-    test_nodes.sort()
-
-    test_node_id_map = {}
-    for i, n in enumerate(test_nodes):
-        test_node_id_map[n] = i
+    test_node_id_map = get_node_map(test_nodes_set)
 
     # Combined
     all_nodes = list(train_nodes_set.union(test_nodes_set))
+    full_node_id_map = get_node_map(all_nodes)
     all_nodes.sort()
-
-    full_node_id_map = {}
-    for i, n in enumerate(all_nodes):
-        full_node_id_map[n] = i
 
     nodes_not_in_train = []
     for n in test_nodes_set.difference(train_nodes_set):
@@ -249,11 +236,26 @@ def load_and_combine_nodes_for_test_train(train_path, test_path):
     return full_node_id_map, train_node_id_map, test_node_id_map, nodes_not_in_train
 
 
-def load_test_train_data(file_path, node_id_map, prev_event_dict=None):
-    # load the core dataset. sender_id,receiver_id,unix_timestamp
-    data = np.loadtxt(file_path, np.float, delimiter=',', usecols=(0, 1, 2))
-    # Sorting by unix_timestamp
-    data = data[data[:, 2].argsort()]
+def get_node_map(node_set):
+    nodes = list(node_set)
+    nodes.sort()
+
+    node_id_map = {}
+    for i, n in enumerate(nodes):
+        node_id_map[n] = i
+
+    return node_id_map
+
+
+def load_test_train_data(file, node_id_map, prev_event_dict=None):
+    # File can be both the file path or an ordered event_list
+    if isinstance(file, str):
+        # load the core dataset. sender_id,receiver_id,unix_timestamp
+        data = np.loadtxt(file, np.float, delimiter=',', usecols=(0, 1, 2))
+        # Sorting by unix_timestamp
+        data = data[data[:, 2].argsort()]
+    else:
+        data = file
 
     duration = data[-1, 2] - data[0, 2]
 
@@ -271,11 +273,50 @@ def load_test_train_data(file_path, node_id_map, prev_event_dict=None):
     return event_dict, duration
 
 
-def load_test_train_combined(train_path, test_path, node_id_map):
-    combined_event_dict, _ = load_test_train_data(train_path, node_id_map)
-    combined_event_dict, _ = load_test_train_data(test_path, node_id_map, combined_event_dict)
+def load_test_train_combined(train, test, node_id_map):
+    combined_event_dict, _ = load_test_train_data(train, node_id_map)
+    combined_event_dict, _ = load_test_train_data(test, node_id_map, combined_event_dict)
 
     return combined_event_dict
+
+
+def split_event_list_to_train_test(event_list, train_percentage=0.8):
+    """
+    Given an event_list it splits it into train and test, ready for model fitting.
+    """
+    # sort by timestamp
+    event_list = event_list[event_list[:, 2].argsort()]
+    combined_duration = event_list[-1, 2] - event_list[0, 2]
+
+    split_point = np.int(event_list.shape[0] * train_percentage)
+
+    # Train data
+    train_event_list = event_list[:split_point, :]
+    train_nodes_set = set(train_event_list[:, 0]).union(train_event_list[:, 1])
+    train_node_id_map = get_node_map(train_nodes_set)
+
+    # Test data
+    test_event_list = event_list[split_point:, :]
+    test_nodes_set = set(test_event_list[:, 0]).union(test_event_list[:, 1])
+    test_node_id_map = get_node_map(test_nodes_set)
+
+    # Combined
+    all_nodes = list(train_nodes_set.union(test_nodes_set))
+    combined_node_id_map = get_node_map(all_nodes)
+    all_nodes.sort()
+
+    nodes_not_in_train = []
+    for n in test_nodes_set.difference(train_nodes_set):
+        nodes_not_in_train.append(combined_node_id_map[n])
+
+    train_event_dict, train_duration = load_test_train_data(train_event_list, train_node_id_map)
+    test_event_dict, test_duration = load_test_train_data(test_event_list, test_node_id_map)
+    combined_event_dict = load_test_train_combined(train_event_list, test_event_list, combined_node_id_map)
+
+    return ((train_event_dict, len(train_node_id_map), train_duration),
+            (test_event_dict, len(test_node_id_map), test_duration),
+            (combined_event_dict, len(combined_node_id_map), combined_duration),
+            nodes_not_in_train)
 
 
 def plot_event_count_hist(event_dict, num_nodes, dset_title_name):
@@ -429,7 +470,6 @@ if __name__ == '__main__':
     # print(np.sum(utils.event_dict_to_aggregated_adjacency(enron_train_n_nodes, enron_train_event_dict)))
     # print(np.sum(utils.event_dict_to_aggregated_adjacency(enron_test_n_nodes, enron_test_event_dict)))
     # print(np.sum(utils.event_dict_to_aggregated_adjacency(enron_combined_n_nodes, enron_combined_event_dict)))
-
 
     ((enron_train_event_dict, enron_train_n_nodes, train_duration),
      (enron_test_event_dict, enron_test_n_nodes, test_duration),

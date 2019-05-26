@@ -178,6 +178,41 @@ def event_dict_to_block_pair_events(event_dicts, class_assignment, n_classes, is
     return block_pair_events
 
 
+def num_events_in_event_dict(event_dict):
+    """
+    Given an event dict, returns number of events
+
+    :param event_dict: Edge dictionary of events between all node pair. Output of the generative models.
+    :return: (int) number of events
+    """
+    num_events = 0
+    for _, event_times in event_dict.items():
+        num_events += len(event_times)
+
+    return num_events
+
+
+def event_dict_to_event_list(event_dict):
+    """
+    Converts an event_dict to a list of events [from, to, timestamp] ordered by timestamp
+    :param event_dict: Edge dictionary of events between all node pair. Output of the generative models.
+    :return: np.array num_events x 3 float
+    """
+    num_events = num_events_in_event_dict(event_dict)
+    event_list = np.zeros((num_events, 3), np.float)
+
+    i = 0
+    for (u, v), event_times in event_dict.items():
+        for t in event_times:
+            event_list[i, :] = [u, v, t]
+            i += 1
+
+    # sort by timestamp
+    event_list = event_list[event_list[:, 2].argsort()]
+
+    return event_list
+
+
 def one_hot_to_class_assignment(node_membership):
     """
     converts one-hot encoding of node_membership to class assignment
@@ -284,3 +319,4 @@ def simulate_community_hawkes(params=None):
     node_membership = one_hot_to_class_assignment(node_membership)
 
     return event_dict, node_membership
+
