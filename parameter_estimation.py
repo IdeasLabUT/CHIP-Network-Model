@@ -144,7 +144,7 @@ def compute_vijs(np_events, beta):
     return vijs
 
 
-def full_log_likelihood(bp_events, mu, alpha, beta, end_time, block_pair_size=None):
+def block_pair_full_hawkes_log_likelihood(bp_events, mu, alpha, beta, end_time, block_pair_size=None):
     """
 
     :param block_pair_size: Size of the block pair. bp_events may not include an entry for node_pairs with no
@@ -172,7 +172,7 @@ def full_log_likelihood(bp_events, mu, alpha, beta, end_time, block_pair_size=No
 
 def neg_log_likelihood_beta(beta, bp_events, mu, alpha_beta_ratio, end_time, block_pair_size):
     alpha = alpha_beta_ratio*beta
-    return -full_log_likelihood(bp_events, mu, alpha, beta, end_time, block_pair_size)
+    return -block_pair_full_hawkes_log_likelihood(bp_events, mu, alpha, beta, end_time, block_pair_size)
 
 
 def estimate_beta_from_events(bp_events, mu, alpha_beta_ratio, end_time, block_pair_size=None, tol=1e-3):
@@ -291,19 +291,19 @@ def plot_likelihood(variable_param, values_to_test, bp_events, mu, alpha, beta, 
     if variable_param == "alpha":
         true_val = alpha
         for val in values_to_test:
-            result.append(full_log_likelihood(bp_events, mu, val, beta, end_time))
+            result.append(block_pair_full_hawkes_log_likelihood(bp_events, mu, val, beta, end_time))
             print(val, end='\r')
 
     elif variable_param == "beta":
         true_val = beta
         for val in values_to_test:
-            result.append(full_log_likelihood(bp_events, mu, alpha, val, end_time))
+            result.append(block_pair_full_hawkes_log_likelihood(bp_events, mu, alpha, val, end_time))
             print(val, end='\r')
 
     elif variable_param == "mu":
         true_val = mu
         for val in values_to_test:
-            result.append(full_log_likelihood(bp_events, val, alpha, beta, end_time))
+            result.append(block_pair_full_hawkes_log_likelihood(bp_events, val, alpha, beta, end_time))
             print(val, end='\r')
 
     print()
@@ -330,7 +330,7 @@ def plot_likelihood_scaling_alpha_beta(scalars, bp_events, mu, alpha, beta, end_
     result = []
 
     for s in scalars:
-        result.append(full_log_likelihood(bp_events, mu, alpha * s, beta * s, end_time))
+        result.append(block_pair_full_hawkes_log_likelihood(bp_events, mu, alpha * s, beta * s, end_time))
         print(s, end='\r')
 
     print()

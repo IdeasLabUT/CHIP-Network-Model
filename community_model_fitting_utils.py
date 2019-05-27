@@ -1,6 +1,7 @@
 import numpy as np
 import dataset_utils
 import matplotlib.pyplot as plt
+from scipy.stats import multinomial
 import generative_model_utils as utils
 import parameter_estimation as estimate_utils
 from spectral_clustering import spectral_cluster
@@ -91,10 +92,20 @@ def calc_full_log_likelihood(block_pair_events, node_membership,
             if b_i == b_j:
                 bp_size -= len(np.where(node_membership == b_i)[0])
 
-            log_likelihood += estimate_utils.full_log_likelihood(block_pair_events[b_i][b_j],
-                                                                 bp_mu[b_i, b_j], bp_alpha[b_i, b_j],
-                                                                 bp_beta[b_i, b_j], duration,
-                                                                 block_pair_size=bp_size)
+            log_likelihood += estimate_utils.block_pair_full_hawkes_log_likelihood(block_pair_events[b_i][b_j],
+                                                                                   bp_mu[b_i, b_j], bp_alpha[b_i, b_j],
+                                                                                   bp_beta[b_i, b_j], duration,
+                                                                                   block_pair_size=bp_size)
+
+    # Adding the log probability of the community assignments to the full log likelihood
+    n_nodes = len(node_membership)
+    _, block_count = np.unique(node_membership, return_counts=True)
+    class_prob_mle = block_count / sum(block_count)
+    rv_multi = multinomial(n_nodes, class_prob_mle)
+    log_prob_community_assignment = rv_multi.logpmf(block_count)
+
+    log_likelihood += log_prob_community_assignment
+
     return log_likelihood
 
 
