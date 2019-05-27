@@ -141,7 +141,7 @@ def load_enron():
     return event_dict, len(people)
 
 
-def load_enron_train_test():
+def load_enron_train_test(remove_nodes_not_in_train=False):
     """
     Loads Enron dataset.
     :return: Three tuples one for each train, test and combined datasets. Each Tuple contains:
@@ -156,10 +156,10 @@ def load_enron_train_test():
     # Timestamps are adjusted to start from 0 and go up to 1000.
     combined_duration = 1000.0
 
-    return load_train_test(train_file_path, test_file_path, combined_duration)
+    return load_train_test(train_file_path, test_file_path, combined_duration, remove_nodes_not_in_train)
 
 
-def load_fb_train_test():
+def load_fb_train_test(remove_nodes_not_in_train=False):
     """
     Loads FB dataset.
     :return: Three tuples one for each train, test and combined datasets. Each Tuple contains:
@@ -174,10 +174,10 @@ def load_fb_train_test():
     # Timestamps are adjusted to start from 0 and go up to 8759.9.
     combined_duration = 8759.9
 
-    return load_train_test(train_file_path, test_file_path, combined_duration)
+    return load_train_test(train_file_path, test_file_path, combined_duration, remove_nodes_not_in_train)
 
 
-def load_train_test(train_file_path, test_file_path, combined_duration):
+def load_train_test(train_file_path, test_file_path, combined_duration, remove_nodes_not_in_train):
     """
     Loads datasets already split into train and test, such as Enron and FB.
 
@@ -189,7 +189,7 @@ def load_train_test(train_file_path, test_file_path, combined_duration):
     """
 
     combined_node_id_map, train_node_id_map, test_node_id_map, nodes_not_in_train = \
-        load_and_combine_nodes_for_test_train(train_file_path, test_file_path)
+        load_and_combine_nodes_for_test_train(train_file_path, test_file_path, remove_nodes_not_in_train)
 
     train_event_dict, train_duration = load_test_train_data(train_file_path, train_node_id_map)
     test_event_dict, test_duration = load_test_train_data(test_file_path, test_node_id_map)
@@ -201,11 +201,12 @@ def load_train_test(train_file_path, test_file_path, combined_duration):
             nodes_not_in_train)
 
 
-def load_and_combine_nodes_for_test_train(train_path, test_path):
+def load_and_combine_nodes_for_test_train(train_path, test_path, remove_nodes_not_in_train):
     """
     Loads the set of nodes in both train and test datasets and maps all the node ids to start form 0 to num total nodes.
     :param train_path
     :param test_path
+    :param remove_nodes_not_in_train: if True, all the nodes in test and combined that are not in train, will be removed
     :return `full_node_id_map` dict mapping node id in the entire dataset to a range from 0 to n_full
             `train_node_id_map` dict mapping node id in the train dataset to a range from 0 to n_train
             `test_node_id_map` dict mapping node id in the test dataset to a range from 0 to n_test
@@ -222,12 +223,17 @@ def load_and_combine_nodes_for_test_train(train_path, test_path):
     # Test data
     test_nodes = np.loadtxt(test_path, np.int, delimiter=',', usecols=(0, 1))
     test_nodes_set = set(test_nodes.reshape(test_nodes.shape[0] * 2))
+    if remove_nodes_not_in_train:
+        test_nodes_set = test_nodes_set - test_nodes_set.difference(train_nodes_set)
     test_node_id_map = get_node_map(test_nodes_set)
 
     # Combined
-    all_nodes = list(train_nodes_set.union(test_nodes_set))
-    full_node_id_map = get_node_map(all_nodes)
-    all_nodes.sort()
+    if remove_nodes_not_in_train:
+        full_node_id_map = train_node_id_map
+    else:
+        all_nodes = list(train_nodes_set.union(test_nodes_set))
+        full_node_id_map = get_node_map(all_nodes)
+        all_nodes.sort()
 
     nodes_not_in_train = []
     for n in test_nodes_set.difference(train_nodes_set):
@@ -262,6 +268,10 @@ def load_test_train_data(file, node_id_map, prev_event_dict=None):
     event_dict = {} if prev_event_dict is None else prev_event_dict
 
     for i in range(data.shape[0]):
+        # This step is needed to skip events involving nodes that were not in train, in case they were removed.
+        if np.int(data[i, 0]) not in node_id_map or np.int(data[i, 1]) not in node_id_map:
+            continue
+
         sender_id = node_id_map[np.int(data[i, 0])]
         receiver_id = node_id_map[np.int(data[i, 1])]
 
@@ -280,7 +290,7 @@ def load_test_train_combined(train, test, node_id_map):
     return combined_event_dict
 
 
-def split_event_list_to_train_test(event_list, train_percentage=0.8):
+def split_event_list_to_train_test(event_list, train_percentage=0.8, remove_nodes_not_in_train=False):
     """
     Given an event_list it splits it into train and test, ready for model fitting.
     """
@@ -298,12 +308,17 @@ def split_event_list_to_train_test(event_list, train_percentage=0.8):
     # Test data
     test_event_list = event_list[split_point:, :]
     test_nodes_set = set(test_event_list[:, 0]).union(test_event_list[:, 1])
+    if remove_nodes_not_in_train:
+        test_nodes_set = test_nodes_set - test_nodes_set.difference(train_nodes_set)
     test_node_id_map = get_node_map(test_nodes_set)
 
     # Combined
-    all_nodes = list(train_nodes_set.union(test_nodes_set))
-    combined_node_id_map = get_node_map(all_nodes)
-    all_nodes.sort()
+    if remove_nodes_not_in_train:
+        all_nodes = list(train_nodes_set.union(test_nodes_set))
+        combined_node_id_map = get_node_map(all_nodes)
+        all_nodes.sort()
+    else:
+        combined_node_id_map = train_node_id_map
 
     nodes_not_in_train = []
     for n in test_nodes_set.difference(train_nodes_set):

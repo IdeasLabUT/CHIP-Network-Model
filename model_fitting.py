@@ -46,6 +46,7 @@ def fit_and_eval_community_hawkes(train_tuple, test_tuple, combined_tuple, nodes
         # Add nodes that were not in train to the largest block
         combined_node_membership = model_utils.assign_node_membership_for_missing_nodes(train_node_membership,
                                                                                         nodes_not_in_train)
+
         # Calculate log-likelihood given the entire dataset
         combined_block_pair_events = utils.event_dict_to_block_pair_events(combined_event_dict,
                                                                            combined_node_membership,
@@ -86,30 +87,31 @@ def fit_and_eval_community_hawkes(train_tuple, test_tuple, combined_tuple, nodes
 
 
 if __name__ == "__main__":
-    # # Facebook Dataset
-    # print("Facebook wall-post dataset")
-    # fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = dataset_utils.load_fb_train_test()
-    # fit_and_eval_community_hawkes(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
-    #                               k_values_to_test=list(range(1, 11)),
-    #                               plot_fitted_hist=False, verbose=False)
+    # Facebook Dataset
+    print("Facebook wall-post dataset")
+    fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
+        dataset_utils.load_fb_train_test(remove_nodes_not_in_train=False)
+    fit_and_eval_community_hawkes(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
+                                  k_values_to_test=list(range(1, 11)),
+                                  plot_fitted_hist=False, verbose=False)
 
-    # Enron Dataset
+    # # Enron Dataset
     # print("Enron dataset")
     # enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train = \
-    #     dataset_utils.load_enron_train_test()
+    #     dataset_utils.load_enron_train_test(remove_nodes_not_in_train=False)
     # fit_and_eval_community_hawkes(enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train,
     #                               k_values_to_test=list(range(1, 10)),
     #                               plot_fitted_hist=False, verbose=False)
 
     # Simulated Data
-    print("Simulated Data:")
-    sim_event_dict, sim_node_membership = utils.simulate_community_hawkes(params={'number_of_nodes': 128,
-                                                                                  'end_time': 200})
-    sim_event_list = utils.event_dict_to_event_list(sim_event_dict)
-    sim_train_tuple, sim_test_tuple, sim_combined_tuple, sim_nodes_not_in_train = \
-        dataset_utils.split_event_list_to_train_test(sim_event_list, train_percentage=0.8)
-
-    print(sim_train_tuple[-1])
-    print(sim_test_tuple[-1])
-    print(sim_combined_tuple[-1])
-    fit_and_eval_community_hawkes(sim_train_tuple, sim_test_tuple, sim_combined_tuple, sim_nodes_not_in_train)
+    # print("Simulated Data:")
+    # sim_event_dict, sim_node_membership = utils.simulate_community_hawkes(params={'number_of_nodes': 128,
+    #                                                                               'end_time': 200})
+    # sim_event_list = utils.event_dict_to_event_list(sim_event_dict)
+    # sim_train_tuple, sim_test_tuple, sim_combined_tuple, sim_nodes_not_in_train = \
+    #     dataset_utils.split_event_list_to_train_test(sim_event_list, train_percentage=0.8)
+    #
+    # print(sim_train_tuple[-1])
+    # print(sim_test_tuple[-1])
+    # print(sim_combined_tuple[-1])
+    # fit_and_eval_community_hawkes(sim_train_tuple, sim_test_tuple, sim_combined_tuple, sim_nodes_not_in_train)
