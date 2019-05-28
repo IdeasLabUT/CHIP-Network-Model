@@ -13,7 +13,8 @@ import generative_model_utils as utils
 from community_generative_model import community_generative_model
 from spectral_clustering import spectral_cluster
 from sklearn.metrics import adjusted_rand_score
-from parameter_estimation import estimate_hawkes_from_counts, estimate_beta_from_events
+from parameter_estimation import estimate_hawkes_from_counts, \
+    estimate_beta_from_events, estimate_all_from_events
 
 #%% Set parameter values
 number_of_nodes = 256
@@ -21,10 +22,12 @@ class_probabilities = [.25, .25, .25, .25]
 end_time = 200
 num_of_classes = len(class_probabilities)
 
-bp_alpha = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 7500
-bp_beta = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 8000
+#bp_alpha = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 7500
+#bp_beta = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 8000
 #bp_alpha = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 0.6
 #bp_beta = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 0.8
+bp_alpha = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 10
+bp_beta = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 20
 #bp_alpha = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 5000
 #np.fill_diagonal(bp_alpha, 15000)
 #bp_beta = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 5400
@@ -107,7 +110,8 @@ print(agg_adj_sc_rand)
 #plt.plot(out_deg_agg_adj[agg_sc_sort_idx])
 #plt.plot(in_deg_agg_adj[agg_sc_sort_idx])
 
-#%% Check accuracy of parameter estimates
+#%% Check accuracy of parameter estimates from counts
+print('Estimating parameters from counts')
 #mu_est,ratio_est = estimate_hawkes_from_counts(agg_adj,agg_adj_pred,end_time)
 mu_est,ratio_est = estimate_hawkes_from_counts(agg_adj,adj_sc_pred,end_time)
 print('Estimated mu:')
@@ -135,3 +139,35 @@ print('Estimated alpha:')
 print(alpha_est)
 print('Actual alpha:')
 print(bp_alpha)
+
+#%% Check accuracy of parameter estimates from events
+print('Estimating parameters from events')
+param_est = np.zeros((num_of_classes, num_of_classes, 3))
+for a in range(num_of_classes):
+    for b in range(num_of_classes):
+        print(f'Estimating parameters for block pair ({a},{b})')
+        param_est[a,b,:] = estimate_all_from_events(block_pair_events[a][b],
+                 end_time)[0]
+print('Estimated alpha:')
+print(param_est[:,:,0])
+print('Actual alpha:')
+print(bp_alpha)
+print('Estimated beta:')
+print(param_est[:,:,1])
+print('Actual beta:')
+print(bp_beta)
+print('Estimated mu:')
+print(param_est[:,:,2])
+print('Actual mu:')
+print(bp_mu)
+print('Estimated alpha/beta:')
+print(param_est[:,:,0]/param_est[:,:,1])
+print('Actual alpha/beta:')
+print(bp_alpha/bp_beta)
+
+from scipy.optimize import check_grad
+from parameter_estimation import neg_log_likelihood_all, \
+    neg_log_likelihood_deriv_all
+print('Deviation between numerical gradient and gradient function:')
+print(check_grad(neg_log_likelihood_all, neg_log_likelihood_deriv_all, 
+                 (1e-2,2e-2,2e-5), block_pair_events[0][0], end_time))

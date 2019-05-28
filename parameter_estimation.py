@@ -11,7 +11,7 @@ import tick.hawkes as tick
 import matplotlib.pyplot as plt
 import generative_model_utils as utils
 from community_generative_model import community_generative_model
-from scipy.optimize import minimize_scalar
+from scipy.optimize import minimize_scalar, minimize
 
 
 def estimate_hawkes_from_counts(agg_adj, class_vec, duration, default_mu=None):
@@ -174,13 +174,32 @@ def neg_log_likelihood_beta(beta, bp_events, mu, alpha_beta_ratio, end_time, blo
     alpha = alpha_beta_ratio*beta
     return -block_pair_full_hawkes_log_likelihood(bp_events, mu, alpha, beta, end_time, block_pair_size)
 
+def neg_log_likelihood_all(param, bp_events, end_time, block_pair_size=None):
+    alpha = param[0]
+    beta = param[1]
+    mu = param[2]
+    return -block_pair_full_hawkes_log_likelihood(bp_events, mu, alpha, beta,
+                                                  end_time, block_pair_size)
 
 def estimate_beta_from_events(bp_events, mu, alpha_beta_ratio, end_time, block_pair_size=None, tol=1e-3):
     res = minimize_scalar(neg_log_likelihood_beta, method='bounded', bounds=(0, 10),
                           args=(bp_events, mu, alpha_beta_ratio, end_time, block_pair_size))
     return res.x, res
 
+def estimate_all_from_events(bp_events, end_time, init_param=(1e-2,2e-2,2e-5), block_pair_size=None, tol=1e-3):
+    res = minimize(neg_log_likelihood_all, init_param, method='L-BFGS-B',
+                   bounds=((0, None), (0, None), (0, None)), jac=None,
+                   args=(bp_events, end_time, block_pair_size))
+    return res.x, res
 
+def neg_log_likelihood_deriv_all(param, bp_events, end_time):
+    alpha = param[0]
+    beta = param[1]
+    mu = param[2]
+    return -np.r_[log_likelihood_alpha_deriv(bp_events, mu, alpha, beta, end_time),
+             log_likelihood_beta_deriv(bp_events, mu, alpha, beta, end_time),
+             log_likelihood_mu_deriv(bp_events, mu, alpha, beta, end_time)]
+    
 def log_likelihood_alpha_deriv(bp_events, mu, alpha, beta, end_time):
     ll = 0
     for np_events in bp_events:
