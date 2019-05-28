@@ -4,10 +4,13 @@ from scipy.sparse.linalg import svds
 from sklearn.preprocessing import normalize
 
 
-def spectral_cluster(adj, num_classes=2, n_kmeans_init=10, normalize_z=True):
+def spectral_cluster(adj, num_classes=2, n_kmeans_init=10, normalize_z=True, verbose=False):
     # Compute largest num_classes singular values and vectors of adjacency matrix
     u, s, v = svds(adj, k=num_classes)
     v = v.T
+
+    if verbose:
+        print("Eigenvalues: \n", s)
 
     # Sort in decreasing order of magnitude
     sorted_ind = np.argsort(-s)

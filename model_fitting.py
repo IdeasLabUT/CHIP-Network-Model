@@ -87,21 +87,21 @@ def fit_and_eval_community_hawkes(train_tuple, test_tuple, combined_tuple, nodes
 
 
 if __name__ == "__main__":
-    # Facebook Dataset
-    print("Facebook wall-post dataset")
-    fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
-        dataset_utils.load_fb_train_test(remove_nodes_not_in_train=False)
-    fit_and_eval_community_hawkes(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
-                                  k_values_to_test=list(range(1, 11)),
-                                  plot_fitted_hist=False, verbose=False)
-
-    # # Enron Dataset
-    # print("Enron dataset")
-    # enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train = \
-    #     dataset_utils.load_enron_train_test(remove_nodes_not_in_train=False)
-    # fit_and_eval_community_hawkes(enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train,
-    #                               k_values_to_test=list(range(1, 10)),
+    # # Facebook Dataset
+    # print("Facebook wall-post dataset")
+    # fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
+    #     dataset_utils.load_fb_train_test(remove_nodes_not_in_train=False)
+    # fit_and_eval_community_hawkes(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
+    #                               k_values_to_test=[1],
     #                               plot_fitted_hist=False, verbose=False)
+
+    # Enron Dataset
+    print("Enron dataset")
+    enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train = \
+        dataset_utils.load_enron_train_test(remove_nodes_not_in_train=False)
+    fit_and_eval_community_hawkes(enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train,
+                                  k_values_to_test=list(range(1, 10)),
+                                  plot_fitted_hist=False, verbose=True)
 
     # Simulated Data
     # print("Simulated Data:")
