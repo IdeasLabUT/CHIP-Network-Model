@@ -1,7 +1,9 @@
+import os
+import pickle
 import numpy as np
 import matplotlib.pyplot as plt
+import community_generative_model as chp
 from tick.hawkes import SimuHawkesExpKernels
-from community_generative_model import community_generative_model
 
 
 def assign_class_membership(num_nodes, class_prob, one_hot=True):
@@ -274,7 +276,9 @@ def asymptotic_var(mu, alpha, beta, run_time):
     return (mu * run_time) / (1 - alpha / beta) ** 3
 
 
-def simulate_community_hawkes(params=None):
+def simulate_community_hawkes(params=None, network_name=None, load_if_exists=False, verbose=False):
+    generated_network_path = '/shared/Results/CommunityHawkes/generated_networks/'
+
     default_params = {'seed': None,
                       'number_of_nodes': 128,
                       'class_probabilities': [0.25, 0.25, 0.25, 0.25],
@@ -285,7 +289,18 @@ def simulate_community_hawkes(params=None):
                       'mu_diag': 1.8,
                       'num_nodes_to_scale': 128,
                       'alpha_diag': None,
-                      'scale': True}
+                      'scale': True,
+                      'n_cores': 1}
+
+    # Load the network if existed
+    if load_if_exists and network_name is not None:
+        if os.path.isfile(generated_network_path + network_name + ".pckl"):
+            with open(generated_network_path + network_name + ".pckl", 'rb') as handle:
+                [event_dict, node_membership, params] = pickle.load(handle)
+
+                if verbose:
+                    print(params)
+            return event_dict, node_membership
 
     if params is not None:
         default_params.update(params)
@@ -311,12 +326,17 @@ def simulate_community_hawkes(params=None):
         bp_alpha = scale_parameteres_by_block_pair_size(bp_alpha, n_scale, class_probabilities)
         bp_beta = scale_parameteres_by_block_pair_size(bp_beta, n_scale, class_probabilities)
 
-    node_membership, event_dict = community_generative_model(number_of_nodes,
-                                                             class_probabilities,
-                                                             bp_mu, bp_alpha, bp_beta,
-                                                             burnin, end_time, seed=seed)
+    node_membership, event_dict = chp.community_generative_model(number_of_nodes,
+                                                                 class_probabilities,
+                                                                 bp_mu, bp_alpha, bp_beta,
+                                                                 burnin, end_time,
+                                                                 n_cores=default_params['n_cores'], seed=seed)
 
     node_membership = one_hot_to_class_assignment(node_membership)
+
+    if network_name is not None:
+        with open(generated_network_path + network_name + ".pckl", 'wb') as handle:
+            pickle.dump([event_dict, node_membership, default_params], handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     return event_dict, node_membership
 

@@ -53,7 +53,7 @@ bp_beta = utils.scale_parameteres_by_block_pair_size(bp_beta, 128,
 print('Generating event matrix')
 node_membership, event_dicts = community_generative_model(
         number_of_nodes,class_probabilities,bp_mu,bp_alpha,bp_beta,
-        burnin=None,end_time=end_time)
+        burnin=None,end_time=end_time, seed=1)
 true_class_assignments = utils.one_hot_to_class_assignment(node_membership)
 adj = utils.event_dict_to_adjacency(number_of_nodes, event_dicts)
 agg_adj = utils.event_dict_to_aggregated_adjacency(number_of_nodes, event_dicts)
@@ -110,64 +110,70 @@ print(agg_adj_sc_rand)
 #plt.plot(out_deg_agg_adj[agg_sc_sort_idx])
 #plt.plot(in_deg_agg_adj[agg_sc_sort_idx])
 
-#%% Check accuracy of parameter estimates from counts
-print('Estimating parameters from counts')
-#mu_est,ratio_est = estimate_hawkes_from_counts(agg_adj,agg_adj_pred,end_time)
-mu_est,ratio_est = estimate_hawkes_from_counts(agg_adj,adj_sc_pred,end_time)
-print('Estimated mu:')
-print(mu_est)
-print('Actual mu:')
-print(bp_mu)
-print('Estimated alpha/beta:')
-print(ratio_est)
-print('Actual alpha/beta:')
-print(bp_alpha/bp_beta)
-
-block_pair_events = utils.event_dict_to_block_pair_events(event_dicts, adj_sc_pred, num_of_classes)
-beta_est = np.zeros((num_of_classes,num_of_classes))
-for a in range(num_of_classes):
-    for b in range(num_of_classes):
-        print(f'Estimating beta for block pair ({a},{b})')
-        beta_est[a,b] = estimate_beta_from_events(block_pair_events[a][b],
-                mu_est[a,b], ratio_est[a,b], end_time)[0]
-alpha_est = ratio_est*beta_est
-print('Estimated beta:')
-print(beta_est)
-print('Actual beta:')
-print(bp_beta)
-print('Estimated alpha:')
-print(alpha_est)
-print('Actual alpha:')
-print(bp_alpha)
-
-#%% Check accuracy of parameter estimates from events
-print('Estimating parameters from events')
-param_est = np.zeros((num_of_classes, num_of_classes, 3))
-for a in range(num_of_classes):
-    for b in range(num_of_classes):
-        print(f'Estimating parameters for block pair ({a},{b})')
-        param_est[a,b,:] = estimate_all_from_events(block_pair_events[a][b],
-                 end_time)[0]
-print('Estimated alpha:')
-print(param_est[:,:,0])
-print('Actual alpha:')
-print(bp_alpha)
-print('Estimated beta:')
-print(param_est[:,:,1])
-print('Actual beta:')
-print(bp_beta)
-print('Estimated mu:')
-print(param_est[:,:,2])
-print('Actual mu:')
-print(bp_mu)
-print('Estimated alpha/beta:')
-print(param_est[:,:,0]/param_est[:,:,1])
-print('Actual alpha/beta:')
-print(bp_alpha/bp_beta)
+# #%% Check accuracy of parameter estimates from counts
+# print('Estimating parameters from counts')
+# #mu_est,ratio_est = estimate_hawkes_from_counts(agg_adj,agg_adj_pred,end_time)
+# mu_est,ratio_est = estimate_hawkes_from_counts(agg_adj,adj_sc_pred,end_time)
+# print('Estimated mu:')
+# print(mu_est)
+# print('Actual mu:')
+# print(bp_mu)
+# print('Estimated alpha/beta:')
+# print(ratio_est)
+# print('Actual alpha/beta:')
+# print(bp_alpha/bp_beta)
+#
+# block_pair_events = utils.event_dict_to_block_pair_events(event_dicts, adj_sc_pred, num_of_classes)
+# beta_est = np.zeros((num_of_classes,num_of_classes))
+# for a in range(num_of_classes):
+#     for b in range(num_of_classes):
+#         print(f'Estimating beta for block pair ({a},{b})')
+#         beta_est[a,b] = estimate_beta_from_events(block_pair_events[a][b],
+#                 mu_est[a,b], ratio_est[a,b], end_time)[0]
+# alpha_est = ratio_est*beta_est
+# print('Estimated beta:')
+# print(beta_est)
+# print('Actual beta:')
+# print(bp_beta)
+# print('Estimated alpha:')
+# print(alpha_est)
+# print('Actual alpha:')
+# print(bp_alpha)
+#
+# #%% Check accuracy of parameter estimates from events
+# print('Estimating parameters from events')
+# param_est = np.zeros((num_of_classes, num_of_classes, 3))
+# for a in range(num_of_classes):
+#     for b in range(num_of_classes):
+#         print(f'Estimating parameters for block pair ({a},{b})')
+#         param_est[a,b,:] = estimate_all_from_events(block_pair_events[a][b],
+#                  end_time)[0]
+# print('Estimated alpha:')
+# print(param_est[:,:,0])
+# print('Actual alpha:')
+# print(bp_alpha)
+# print('Estimated beta:')
+# print(param_est[:,:,1])
+# print('Actual beta:')
+# print(bp_beta)
+# print('Estimated mu:')
+# print(param_est[:,:,2])
+# print('Actual mu:')
+# print(bp_mu)
+# print('Estimated alpha/beta:')
+# print(param_est[:,:,0]/param_est[:,:,1])
+# print('Actual alpha/beta:')
+# print(bp_alpha/bp_beta)
 
 from scipy.optimize import check_grad
 from parameter_estimation import neg_log_likelihood_all, \
     neg_log_likelihood_deriv_all
+
+bp_size = len(np.where(adj_sc_pred == 0)[0]) * len(np.where(adj_sc_pred == 0)[0])
+if 0 == 0:
+    bp_size -= len(np.where(adj_sc_pred == 0)[0])
+
+block_pair_events = utils.event_dict_to_block_pair_events(event_dicts, adj_sc_pred, num_of_classes)
 print('Deviation between numerical gradient and gradient function:')
 print(check_grad(neg_log_likelihood_all, neg_log_likelihood_deriv_all, 
-                 (1e-2,2e-2,2e-5), block_pair_events[0][0], end_time))
+                 (1e-2,2e-2,2e-5), block_pair_events[0][0], end_time, None))
