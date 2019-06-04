@@ -84,7 +84,8 @@ def estimate_bp_hawkes_params(event_dict, node_membership, duration, num_classes
 
 def calc_full_log_likelihood(block_pair_events, node_membership,
                              bp_mu, bp_alpha, bp_beta,
-                             duration, num_classes):
+                             duration, num_classes,
+                             add_com_assig_log_prob=True):
     log_likelihood = 0
     for b_i in range(num_classes):
         for b_j in range(num_classes):
@@ -97,14 +98,15 @@ def calc_full_log_likelihood(block_pair_events, node_membership,
                                                                                    bp_beta[b_i, b_j], duration,
                                                                                    block_pair_size=bp_size)
 
-    # Adding the log probability of the community assignments to the full log likelihood
-    n_nodes = len(node_membership)
-    _, block_count = np.unique(node_membership, return_counts=True)
-    class_prob_mle = block_count / sum(block_count)
-    rv_multi = multinomial(n_nodes, class_prob_mle)
-    log_prob_community_assignment = rv_multi.logpmf(block_count)
+    if add_com_assig_log_prob:
+        # Adding the log probability of the community assignments to the full log likelihood
+        n_nodes = len(node_membership)
+        _, block_count = np.unique(node_membership, return_counts=True)
+        class_prob_mle = block_count / sum(block_count)
+        rv_multi = multinomial(n_nodes, class_prob_mle)
+        log_prob_community_assignment = rv_multi.logpmf(block_count)
 
-    log_likelihood += log_prob_community_assignment
+        log_likelihood += log_prob_community_assignment
 
     return log_likelihood
 

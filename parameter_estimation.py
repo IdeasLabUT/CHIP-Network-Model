@@ -165,7 +165,6 @@ def block_pair_full_hawkes_log_likelihood(bp_events, mu, alpha, beta, end_time, 
 
     if block_pair_size is not None:
         num_missing_node_pairs = block_pair_size - len(bp_events)
-        print("full ll", num_missing_node_pairs)
         ll += num_missing_node_pairs * -mu * end_time
 
     return ll
