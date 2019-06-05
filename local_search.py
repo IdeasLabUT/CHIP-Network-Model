@@ -1,3 +1,4 @@
+import time
 import numpy as np
 from sklearn.metrics import adjusted_rand_score
 from spectral_clustering import spectral_cluster
@@ -38,6 +39,8 @@ def chp_local_search(event_dict, n_classes, node_membership_init, duration, max_
                 if c_i == n_i_class:
                     continue
 
+                tic = time.time()
+
                 # update node_membership temporarily
                 node_membership[n_i] = c_i
 
@@ -59,6 +62,9 @@ def chp_local_search(event_dict, n_classes, node_membership_init, duration, max_
 
                 node_membership[n_i] = n_i_class
 
+                toc = time.time()
+                print(toc - tic)
+                
         # if no neighbor seem to increase log_lik, break. You're at a local optima.
         if best_neigh is None:
             if verbose:
@@ -83,10 +89,64 @@ def chp_local_search(event_dict, n_classes, node_membership_init, duration, max_
     return node_membership
 
 
+# The functions defined below are not being used.
+
+# This log-likelihood is optimized for the local search.
+def full_hawkes_log_likelihood(event_dict, event_adj, class_assignment, bp_size, bp_mu, bp_alpha, bp_beta, end_time):
+    ll_first_term_total = -1 * np.sum(bp_mu * bp_size) * end_time
+
+    ll = ll_first_term_total
+    tic = time.time()
+    non_zero_adj_idxs = np.where(event_adj != 0)
+    toc = time.time()
+    print(toc - tic)
+
+    tic = time.time()
+    for u, v in event_dict.keys():
+        mu = bp_mu[class_assignment[u], class_assignment[v]]
+        alpha = bp_alpha[class_assignment[u], class_assignment[v]]
+        beta = bp_beta[class_assignment[u], class_assignment[v]]
+
+        second_inner_sum = (alpha / beta) * np.sum(np.exp(-beta * (end_time - event_dict[(u, v)])) - 1)
+        third_inner_sum = np.sum(np.log(mu + alpha * estimate_utils.compute_wijs_recursive(event_dict[(u, v)], beta)))
+        ll += second_inner_sum + third_inner_sum
+    toc = time.time()
+
+    print(toc - tic)
+    return ll
+
+
+def calc_class_size(node_membership, n_classes):
+    classes, class_size = np.unique(node_membership, return_counts=True)
+    if len(classes) != n_classes:
+        exit("fix it")
+
+    return class_size
+
+
+def calc_bp_size(class_size, neigh_switch=None):
+    """
+    Calculates the block pair size based on a single membership change.
+    :param neigh_switch: tuple (old_block, new_block)
+    """
+
+    if neigh_switch is not None:
+        class_size[neigh_switch[0]] -= 1
+        class_size[neigh_switch[1]] += 1
+
+    bp_size = np.ones((n_classes, n_classes)) * class_size
+    # computing block size by |b_i| * |b_j|
+    bp_size = bp_size * bp_size.T
+    # Subtracting |b_i| from diagonals to get |b_i| * (|b_i| - 1) for diagonal block size
+    bp_size = bp_size - np.diag(bp_size)
+
+    return bp_size
+
+
 if __name__ == '__main__':
     n_classes = 4
     n_nodes = 64
-    duration = 800
+    duration = 200
 
     params = {'number_of_nodes': n_nodes,
               'alpha': 0.6,
@@ -95,11 +155,11 @@ if __name__ == '__main__':
               'mu_diag': 1.6,
               'end_time': duration,
               'class_probabilities': np.ones(n_classes) / n_classes,
-              'n_cores': 1}
+              'n_cores': -1}
 
     event_dict, true_class_assignments = utils.simulate_community_hawkes(params,
                                                                          network_name="local_seach_test_networks",
-                                                                         load_if_exists=True)
+                                                                         load_if_exists=False)
 
     agg_adj = utils.event_dict_to_aggregated_adjacency(n_nodes, event_dict)
     spectral_node_membership = spectral_cluster(agg_adj, num_classes=n_classes)

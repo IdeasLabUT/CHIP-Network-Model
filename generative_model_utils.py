@@ -225,6 +225,28 @@ def one_hot_to_class_assignment(node_membership):
     return np.argmax(node_membership, axis=1)
 
 
+def calc_block_pair_size(class_assignment, n_classes):
+    """
+    Calculates the size of each block pair based on the class assignment.
+    :param class_assignment: membership of every node to one of K classes. (1 x num_nodes)
+    :param n_classes:  (int) total number of classes
+    :return: K x K matrix, ij denotes the size of the block pair (b_i, b_j)
+    """
+
+    classes, class_size = np.unique(class_assignment, return_counts=True)
+    if len(classes) != n_classes:
+        # TODO: check if there is class missing. If yes, add it to classes and class_size
+        exit("Fix calc_block_pair_size")
+
+    bp_size = np.ones((n_classes, n_classes)) * class_size
+    # computing block size by |b_i| * |b_j|
+    bp_size = bp_size * bp_size.T
+    # Subtracting |b_i| from diagonals to get |b_i| * (|b_i| - 1) for diagonal block size
+    bp_size = bp_size - np.diag(bp_size)
+
+    return bp_size
+
+
 def scale_parameteres_by_block_pair_size(param, num_nodes, class_prob):
     """
     Calculates comparable hawkes parameters values based on the parameters for Block Hawkes model, for the Community
