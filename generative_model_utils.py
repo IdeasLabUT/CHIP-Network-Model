@@ -176,6 +176,7 @@ def event_dict_to_block_pair_events(event_dicts, class_assignment, n_classes, is
             block_pair_events[class_assignment[u]][class_assignment[v]].append([event_dicts[(u, v)]])
         else:
             block_pair_events[class_assignment[u]][class_assignment[v]].append(np.array(event_dicts[(u, v)]))
+            # block_pair_events[class_assignment[u]][class_assignment[v]].append(event_dicts[(u, v)])
 
     return block_pair_events
 

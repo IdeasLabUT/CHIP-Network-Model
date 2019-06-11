@@ -20,6 +20,7 @@ def calc_node_neigh_solutions(event_dict, n_classes, duration, node_membership, 
     log_lik = log_lik_init
     # node_membership = node_membership.copy()
 
+
     for n_i in node_batch:
         n_i_class = node_membership[n_i]
 
@@ -267,7 +268,7 @@ if __name__ == '__main__':
     print("Parallel")
     tic = time.time()
     local_search_node_membership = chp_local_search(event_dict, n_classes, spectral_node_membership, duration,
-                                                    max_iter=20, n_cores=34, verbose=True)
+                                                    max_iter=10, n_cores=34, verbose=True)
     toc = time.time()
     print(f"local search took {toc - tic:.2f}s.")
 
@@ -278,7 +279,7 @@ if __name__ == '__main__':
     print("Single core")
     tic = time.time()
     local_search_node_membership = chp_local_search_single_core(event_dict, n_classes, spectral_node_membership,
-                                                                duration, max_iter=20, verbose=True)
+                                                                duration, max_iter=10, verbose=True)
     toc = time.time()
     print(f"local search took {toc - tic:.2f}s.")
     sc_rand = adjusted_rand_score(true_class_assignments, local_search_node_membership)
