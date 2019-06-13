@@ -74,10 +74,10 @@ def test_spectral_clustering_on_generative_model(n, t, k):
     params = {'number_of_nodes': n,
               'end_time': t,
               'class_probabilities': np.ones(k) / k,
-              'alpha': 0.05,
+              'alpha': 0.06,
               'beta': 0.08,
-              'mu_diag': 0.075,
-              'mu_off_diag': 0.055,
+              'mu_diag': 0.085,
+              'mu_off_diag': 0.065,
               'scale': False}
 
     event_dict, true_class_assignments = utils.simulate_community_hawkes(params)
@@ -101,7 +101,7 @@ k_range = [12, 10, 8, 6, 4, 2]
 
 num_test_values = len(n_range)
 
-fixed_n = 64
+fixed_n = 128
 fixed_t = 64
 fixed_k = 4
 
@@ -111,20 +111,37 @@ n_cores = 34
 for fixed_var in ['n', 't', 'k']:
     print("Fixing:", fixed_var)
 
-    mean_sc_rand_scores = []
-    mean_sc_rand_scores_err = []
-
     n_range_to_test = n_range
     t_range_to_test = t_range
     k_range_to_test = k_range
 
     if fixed_var == 'n':
         n_range_to_test = [fixed_n]
+
+        fixed_value = fixed_n
+        ylables = t_range
+        xlables = k_range
+        xlab = "K"
+        ylab = "T"
+
     elif fixed_var == 't':
         t_range_to_test = [fixed_t]
+
+        fixed_value = fixed_t
+        ylables = n_range
+        xlables = k_range
+        xlab = "K"
+        ylab = "N"
+
     else:
         k_range_to_test = [fixed_k]
         t_range_to_test = t_range_to_test[::-1]
+
+        fixed_value = fixed_k
+        ylables = n_range
+        xlables = t_range
+        xlab = "T"
+        ylab = "N"
 
     if not plot_only:
         mean_sc_rand_scores = []
@@ -155,37 +172,19 @@ for fixed_var in ['n', 't', 'k']:
     with open(f'{result_file_path}/all_sims-fixed-{fixed_var}.pckl', 'rb') as handle:
         [mean_sc_rand_scores, mean_sc_rand_scores_err] = pickle.load(handle)
 
-    print(f"community model fixed {fixed_var}:")
+    print(f"community model fixed {fixed_var}: {fixed_value}")
     print(f"rand:", mean_sc_rand_scores)
     print(f"rand error:", mean_sc_rand_scores_err)
 
     # Plot Results
     fig, ax = plt.subplots()
 
-    if fixed_var == 'n':
-        ylables = t_range
-        xlables = k_range
-        xlab = "K"
-        ylab = "T"
-
-    elif fixed_var == 't':
-        ylables = n_range
-        xlables = k_range
-        xlab = "K"
-        ylab = "N"
-
-    else:
-        ylables = n_range
-        xlables = t_range
-        xlab = "T"
-        ylab = "N"
-
     im, _ = heatmap(mean_sc_rand_scores, ylables, xlables, ax=ax, cmap="coolwarm",
-                    cbarlabel=f"Spectral Clustering Adjusted Rand Index")
+                    cbarlabel=f"Adjusted Rand Index")
 
     plt.ylabel(ylab, fontsize=16)
     plt.xlabel(xlab, fontsize=16)
-    ax.set_title(f"CHP AS3 Fixed {fixed_var}")
+    ax.set_title(f"CHP SC AS3 Fixed {fixed_var.upper()}: ")
     fig.tight_layout()
     plt.savefig(f"{result_file_path}/plots/as3-fixed-{fixed_var}.pdf")
     # plt.show()
