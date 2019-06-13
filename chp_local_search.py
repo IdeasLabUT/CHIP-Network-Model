@@ -244,8 +244,8 @@ def calc_bp_size(class_size, neigh_switch=None):
 
 if __name__ == '__main__':
     n_classes = 4
-    n_nodes = 256
-    duration = 100
+    n_nodes = 1024
+    duration = 50
 
     params = {'number_of_nodes': n_nodes,
               'alpha': 0.6,

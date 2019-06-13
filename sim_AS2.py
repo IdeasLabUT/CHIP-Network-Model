@@ -6,21 +6,38 @@ import generative_model_utils as utils
 from sklearn.metrics import adjusted_rand_score
 from spectral_clustering import spectral_cluster
 
+
+'''
+** simulation AS2: fix $n,k,T$, then:
+
+(a) Increase mu_diag and mu_off_diag such that the ratio mu_off_diag/mu_diag remains the same.
+(b) Hold mu_off_diag fixed and only increase mu_diag slowly. 
+
+Expectation: We should see accuracy increase in both these cases. When mu_diag/mu_off_diag ratio is low, the algorithms 
+will do poorly, but as the ratio increases there is more signal and the algorithm will do well and go all the way to 1.
+'''
+
 result_file_path = '/shared/Results/CommunityHawkes/pickles/AS2'
 
-sim_type = 'a'
-# sim_type = 'b'
+# sim_type = 'a'
+sim_type = 'b'
 
-scalars_to_test = [0.001, 0.01, 0.05, 0.1, 1, 10, 25, 50, 100, 200]
+a_scalars_to_test = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+b_scalars_to_test = [1, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5]
+
 n_classes = 4
 num_simulation_per_duration = 100
-n_cores = 34
+n_cores = 25
+
+scalars_to_test = a_scalars_to_test if sim_type == 'a' else b_scalars_to_test
 
 
 def test_spectral_clustering_on_generative_model(scalar):
-    params = {'mu_off_diag': 0.6 * scalar,
-              'mu_diag': 1.8 if sim_type == 'b' else 1.8 * scalar,
-              'scale': True}
+    params = {'alpha': 0.05,
+              'beta': 0.08,
+              'mu_diag': 0.075 * scalar,
+              'mu_off_diag': 0.065 if sim_type == 'b' else 0.065 * scalar,
+              'scale': False}
 
     event_dict, true_class_assignments = utils.simulate_community_hawkes(params)
 
@@ -72,5 +89,7 @@ ax.set_xticks(ind)
 ax.set_xticklabels(scalars_to_test)
 ax.set_ylim(0, 1)
 ax.autoscale_view()
+plt.xlabel("Scalars")
+plt.ylabel("Mean Adjusted Rand Index")
 # plt.savefig(plot_path + "sc-vary.pdf")
 plt.show()
