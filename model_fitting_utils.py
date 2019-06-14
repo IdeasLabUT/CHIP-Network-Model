@@ -5,8 +5,9 @@ from scipy.stats import multinomial
 import generative_model_utils as utils
 import parameter_estimation as estimate_utils
 from spectral_clustering import spectral_cluster
-from model_fitting import fit_and_eval_community_hawkes
+from chp_model_fitting import fit_and_eval_community_hawkes
 from community_generative_model import community_generative_model
+from block_generative_model import block_generative_model
 
 
 def fit_community_model(event_dict, num_nodes, duration, num_classes, verbose=False):
@@ -131,7 +132,8 @@ def calc_per_event_log_likelihood(combined_log_likelihood, train_log_likelihood,
 
 def generate_fit_community_hawkes(event_dict, node_membership,
                                   bp_mu, bp_alpha, bp_beta,
-                                  duration, fit_generated_model, plot_hist, train_percentage=0.8, seed=None):
+                                  duration, fit_generated_model, plot_hist, train_percentage=0.8, n_cores=1,
+                                  seed=None):
     """
     Generates a community model the plots its count histogram against the original event_dict. (if plot_hist is True)
 
@@ -150,7 +152,7 @@ def generate_fit_community_hawkes(event_dict, node_membership,
     generated_node_membership, generated_event_dict = community_generative_model(n_nodes, class_prob,
                                                                                  bp_mu, bp_alpha, bp_beta,
                                                                                  burnin=None, end_time=duration,
-                                                                                 seed=seed)
+                                                                                 n_cores=n_cores, seed=seed)
 
     if plot_hist:
         generated_agg_adj = utils.event_dict_to_aggregated_adjacency(n_nodes, generated_event_dict, dtype=np.int)
@@ -165,7 +167,7 @@ def generate_fit_community_hawkes(event_dict, node_membership,
         plt.legend(loc='upper right')
         plt.xlabel('Event Count')
         plt.ylabel('Density')
-        plt.title(f'Histogram of the Count Matrix Real Vs. Generated Data - K: {len(class_prob)}'
+        plt.title(f'Histogram of the Count Matrix Real Vs. Generated CHP Model Data - K: {len(class_prob)}'
                   f'\n Mean Count -  Real: {np.mean(agg_adj):.3f} - Generated: {np.mean(generated_agg_adj):.3f}')
         plt.yscale("log")
         plt.show()
@@ -178,5 +180,43 @@ def generate_fit_community_hawkes(event_dict, node_membership,
 
         # print(utils.num_events_in_event_dict(ge))
         fit_and_eval_community_hawkes(gen_train_tuple, gen_test_tuple, gen_combined_tuple, gen_nodes_not_in_train)
+
+    return
+
+
+def generate_fit_block_hawkes(event_dict, node_membership,
+                              bp_mu, bp_alpha, bp_beta,
+                              duration, seed=None):
+
+    """
+    Generates a block model the plots its count histogram against the original event_dict.
+    """
+
+    # Generating a network
+    n_nodes = len(node_membership)
+
+    _, block_count = np.unique(node_membership, return_counts=True)
+    class_prob = block_count / sum(block_count)
+
+    generated_node_membership, generated_event_dict = block_generative_model(n_nodes, class_prob,
+                                                                             bp_mu, bp_alpha, bp_beta,
+                                                                             end_time=duration, seed=seed)
+
+    generated_agg_adj = utils.event_dict_to_aggregated_adjacency(n_nodes, generated_event_dict, dtype=np.int)
+    generated_deg_count_flattened = np.reshape(generated_agg_adj, (n_nodes * n_nodes))
+
+    agg_adj = utils.event_dict_to_aggregated_adjacency(n_nodes, event_dict, dtype=np.int)
+    deg_count_flattened = np.reshape(agg_adj, (n_nodes * n_nodes))
+
+    plt.hist(deg_count_flattened, bins=30, alpha=0.5, label='Real Data', color='blue', density=True)
+    plt.hist(generated_deg_count_flattened, bins=30, alpha=0.5, label='Generated Data', color='red', density=True)
+
+    plt.legend(loc='upper right')
+    plt.xlabel('Event Count')
+    plt.ylabel('Density')
+    plt.title(f'Histogram of the Count Matrix Real Vs. Generated Block Model Data - K: {len(class_prob)}'
+              f'\n Mean Count -  Real: {np.mean(agg_adj):.3f} - Generated: {np.mean(generated_agg_adj):.3f}')
+    plt.yscale("log")
+    plt.show()
 
     return

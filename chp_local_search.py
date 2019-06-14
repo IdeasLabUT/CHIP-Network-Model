@@ -6,7 +6,7 @@ import generative_model_utils as utils
 import parameter_estimation as estimate_utils
 from sklearn.metrics import adjusted_rand_score
 from spectral_clustering import spectral_cluster
-import community_model_fitting_utils as fit_utils
+import model_fitting_utils as fit_utils
 
 
 def calc_node_neigh_solutions(event_dict, n_classes, duration, node_membership, agg_adj, beta, log_lik_init, node_batch):

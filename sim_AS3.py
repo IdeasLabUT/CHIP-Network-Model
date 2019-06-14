@@ -78,7 +78,8 @@ def test_spectral_clustering_on_generative_model(n, t, k):
               'beta': 0.08,
               'mu_diag': 0.085,
               'mu_off_diag': 0.065,
-              'scale': False}
+              'scale': False,
+              'n_cores': 34}
 
     event_dict, true_class_assignments = utils.simulate_community_hawkes(params)
 
@@ -105,10 +106,11 @@ fixed_n = 128
 fixed_t = 64
 fixed_k = 4
 
-num_simulation_per_duration = 34
-n_cores = 34
+num_simulation_per_duration = 10
+n_cores = 1
 
-for fixed_var in ['n', 't', 'k']:
+# for fixed_var in ['n', 't', 'k']:
+for fixed_var in ['k']:
     print("Fixing:", fixed_var)
 
     n_range_to_test = n_range
@@ -184,7 +186,7 @@ for fixed_var in ['n', 't', 'k']:
 
     plt.ylabel(ylab, fontsize=16)
     plt.xlabel(xlab, fontsize=16)
-    ax.set_title(f"CHP SC AS3 Fixed {fixed_var.upper()}: ")
+    ax.set_title(f"CHP SC AS3 Fixed {fixed_var.upper()}: {fixed_value}")
     fig.tight_layout()
     plt.savefig(f"{result_file_path}/plots/as3-fixed-{fixed_var}.pdf")
     # plt.show()

@@ -1,6 +1,38 @@
 import numpy as np
 from scipy.optimize import minimize
 from scipy.stats import multinomial
+import generative_model_utils as utils
+from spectral_clustering import spectral_cluster, regularized_spectral_cluster
+
+
+def fit_block_model(event_dict, num_nodes, duration, num_classes, verbose=False):
+    # agg_adj = utils.event_dict_to_aggregated_adjacency(num_nodes, event_dict)
+    adj = utils.event_dict_to_adjacency(num_nodes, event_dict)
+
+    # Running spectral clustering
+    node_membership = regularized_spectral_cluster(adj, num_classes=num_classes)
+
+    bp_events = event_dict_to_combined_block_pair_events(event_dict, node_membership, num_classes)
+
+    bp_mu, bp_alpha, bp_beta = estimate_hawkes_params(bp_events, node_membership, duration, num_classes)
+
+    # Printing information about the fit
+    if verbose:
+        _, block_count = np.unique(node_membership, return_counts=True)
+        class_prob = block_count / sum(block_count)
+
+        print(f"Membership percentage: ", class_prob)
+
+        print("Mu:")
+        print(bp_mu)
+
+        print("\nAlpha:")
+        print(bp_alpha)
+
+        print("\nBeta:")
+        print(bp_beta)
+
+    return node_membership, bp_mu, bp_alpha, bp_beta, bp_events
 
 
 def estimate_hawkes_param_and_calc_log_likelihood(event_dict, node_membership, duration, num_classes,
@@ -65,8 +97,10 @@ def calc_full_log_likelihood(bp_events, node_membership, mu, alpha, beta, durati
 
 def event_dict_to_combined_block_pair_events(event_dict, class_assignment, n_classes):
     """
-    Converts event_dicts to list of event lists for each block pair.
+    BLOCK MODEL'S BLOCK PAIR EVENTS SHOULD NOT BE MISTAKEN FOR CHP MODEL'S BLOCK PAIR EVENTS! THEY ARE STRUCTURALLY
+    DIFFERENT, ALTHOUGH THEY BOTH CONTAIN THE SIMILAR INFORMATION.
 
+    Converts event_dicts to list of event lists for each block pair.
 
     :param event_dict: Edge dictionary of events between all node pair. Output of the generative models.
     :param class_assignment: membership of every node to one of K classes. num_nodes x 1 (class of node i)
