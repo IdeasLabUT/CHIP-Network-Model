@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import generative_model_utils as utils
 
 
-def load_core_reality_mining_based_on_dubois():
+def load_core_reality_mining_based_on_dubois(remove_nodes_not_in_train=False):
     """
     Loads only the interaction of the core people of the reality mining dataset.
 
@@ -59,7 +59,8 @@ def load_core_reality_mining_based_on_dubois():
             core_rec_dict.add(int(rm_data[i, 1]))
             core_rec_dict.add(int(rm_data[i, 2]))
 
-    return split_event_list_to_train_test(event_list, train_percentage=0.5, remove_nodes_not_in_train=False)
+    return split_event_list_to_train_test(event_list, train_percentage=0.5,
+                                          remove_nodes_not_in_train=remove_nodes_not_in_train)
 
 
 def load_reality_mining_test_train():
@@ -317,6 +318,9 @@ def split_event_list_to_train_test(event_list, train_percentage=0.8, remove_node
     """
     # sort by timestamp
     event_list = event_list[event_list[:, 2].argsort()]
+    # make the dataset to start from time 0
+    event_list[:, 2] = event_list[:, 2] - event_list[0, 2]
+
     combined_duration = event_list[-1, 2] - event_list[0, 2]
 
     split_point = np.int(event_list.shape[0] * train_percentage)
@@ -412,7 +416,8 @@ def load_facebook_wall(timestamp_max=1000):
 
 
 if __name__ == '__main__':
-    load_core_reality_mining_based_on_dubois()
+    pass
+    # load_core_reality_mining_based_on_dubois()
     # load_reality_mining_test_train()
     # plot_event_count_hist(reality_mining_event_dict, num_nodes, "Reality Mining's Core people")
 
@@ -433,8 +438,8 @@ if __name__ == '__main__':
 
     # ((enron_train_event_dict, enron_train_n_nodes, train_duration),
     #  (enron_test_event_dict, enron_test_n_nodes, test_duration),
-    #  (enron_combined_event_dict, enron_combined_n_nodes, combined_duration), nodes_not_in_train) = load_fb_train_test()
-    #
+    #  (enron_combined_event_dict, enron_combined_n_nodes, combined_duration), nodes_not_in_train) = load_core_reality_mining_based_on_dubois()
+    # 
     # print("Train -- Num Nodes:", enron_train_n_nodes,
     #       "Num Edges:", np.sum(utils.event_dict_to_aggregated_adjacency(enron_train_n_nodes, enron_train_event_dict)))
     # print("Test -- Num Nodes:", enron_test_n_nodes,

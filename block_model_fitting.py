@@ -95,13 +95,19 @@ if __name__ == "__main__":
     #                           k_values_to_test=[4],
     #                           plot_fitted_hist=True, verbose=True)
 
-    # Enron Dataset
-    print("Enron dataset")
-    enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train = \
-        dataset_utils.load_enron_train_test(remove_nodes_not_in_train=False)
-    fit_and_eval_block_hawkes(enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train,
-                              k_values_to_test=[4],
-                              plot_fitted_hist=True, verbose=True)
+    # # Enron Dataset
+    # print("Enron dataset")
+    # enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train = \
+    #     dataset_utils.load_enron_train_test(remove_nodes_not_in_train=False)
+    # fit_and_eval_block_hawkes(enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train,
+    #                           k_values_to_test=[4], plot_fitted_hist=True, verbose=True)
+
+    # Reality Mining
+    print("Reality Mining")
+    rm_train_tuple, rm_test_tuple, rm_combined_tuple, rm_nodes_not_in_train = \
+        dataset_utils.load_core_reality_mining_based_on_dubois(remove_nodes_not_in_train=False)
+    fit_and_eval_block_hawkes(rm_train_tuple, rm_test_tuple, rm_combined_tuple, rm_nodes_not_in_train,
+                              k_values_to_test=list(range(1, 11)), plot_fitted_hist=False, verbose=False)
 
     # # Simulated Data
     # print("Simulated Data:")
