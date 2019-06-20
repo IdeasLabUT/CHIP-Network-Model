@@ -1,13 +1,25 @@
 import numpy as np
+from datetime import datetime
 import matplotlib.pyplot as plt
 import generative_model_utils as utils
 
 
-def load_core_reality_mining():
+def load_core_reality_mining_based_on_dubois():
     """
     Loads only the interaction of the core people of the reality mining dataset.
-    :return: (dict) with (caller_id, receiver_id): [unix_timestamps] (event dict structure)
-             (int) number of nodes
+
+    Loads 2000 phone calls among the 89 recipients between October 2004 and February 2005 (Mtest = 1000).
+    The time stamp found to correspond to this description is start from 1098561155 to the end of the entire dataset.
+
+    Of the entire dataset:
+    first time stamp: 2004-09-24 00:00:59
+    last time stamp: 2005-01-07 23:56:18
+
+    :return: Three tuples one for each train, test and combined datasets. Each Tuple contains:
+         ((dict) with (caller_id, receiver_id): [unix_timestamps] (event dict structure),
+         (int) number of nodes,
+         (float) duration)
+         (list) nodes_not_in_train
     """
     attributes_file_path = '/shared/DataSets/RealityMining/Dubois2013/all.attributes.txt'
     edges_file_path = '/shared/DataSets/RealityMining/Dubois2013/voice-all.edges'
@@ -26,20 +38,28 @@ def load_core_reality_mining():
     # Sorting by unix_timestamp
     rm_data = rm_data[rm_data[:, 0].argsort()]
 
-    event_dict = {}
+    # t_from = datetime(2004, 11, 23, 15, 52, 34).timestamp()
+    t_from = 1098561155
 
+    recipients_node_id = set()
+
+    # Finding the 89 core recipients
     for i in range(rm_data.shape[0]):
-        if rm_data[i, 1] in core_nodes_id and rm_data[i, 2] in core_nodes_id:
+        if rm_data[i, 2] in core_nodes_id:
+            recipients_node_id.add(int(rm_data[i, 2]))
 
-            # if rm_data[i, 0] > 1096588800 and rm_data[i, 0] < 1104537600:
-            #     cnt += 1
+    event_list = np.zeros((2000, 3), dtype=np.int)
+    core_rec_dict = set()
+    cnt = 0
+    for i in range(rm_data.shape[0]):
+        if t_from <= rm_data[i, 0] and rm_data[i, 1] in recipients_node_id and rm_data[i, 2] in recipients_node_id:
+            event_list[cnt] = [rm_data[i, 1], rm_data[i, 2], rm_data[i, 0]]
+            cnt += 1
 
-            if (rm_data[i, 1], rm_data[i, 2]) not in event_dict:
-                event_dict[(rm_data[i, 1], rm_data[i, 2])] = []
+            core_rec_dict.add(int(rm_data[i, 1]))
+            core_rec_dict.add(int(rm_data[i, 2]))
 
-            event_dict[(rm_data[i, 1], rm_data[i, 2])].append(rm_data[i, 0])
-
-    return event_dict, len(core_nodes_id)
+    return split_event_list_to_train_test(event_list, train_percentage=0.5, remove_nodes_not_in_train=False)
 
 
 def load_reality_mining_test_train():
@@ -292,7 +312,8 @@ def load_test_train_combined(train, test, node_id_map):
 
 def split_event_list_to_train_test(event_list, train_percentage=0.8, remove_nodes_not_in_train=False):
     """
-    Given an event_list it splits it into train and test, ready for model fitting.
+    Given an event_list (list of [sender_id, receiver_id, timestamp]) it splits it into train and test,
+    ready for model fitting.
     """
     # sort by timestamp
     event_list = event_list[event_list[:, 2].argsort()]
@@ -314,11 +335,11 @@ def split_event_list_to_train_test(event_list, train_percentage=0.8, remove_node
 
     # Combined
     if remove_nodes_not_in_train:
+        combined_node_id_map = train_node_id_map
+    else:
         all_nodes = list(train_nodes_set.union(test_nodes_set))
         combined_node_id_map = get_node_map(all_nodes)
         all_nodes.sort()
-    else:
-        combined_node_id_map = train_node_id_map
 
     nodes_not_in_train = []
     for n in test_nodes_set.difference(train_nodes_set):
@@ -355,51 +376,6 @@ def plot_event_count_hist(event_dict, num_nodes, dset_title_name):
     plt.show()
 
 
-# def load_facebook_wall():
-#     jan_1_2007 = 1167609600
-#     jan_1_2008 = 1199145600
-#     file_path = '/shared/DataSets/FacebookViswanath2009/raw/facebook-wall.txt'
-#
-#     # load the core dataset. sender_id  receiver_id unix_timestamp
-#     data = np.loadtxt(file_path, np.int)
-#     # Sorting by unix_timestamp
-#     data = data[data[:, 2].argsort()]
-#
-#     # filtering date
-#     data = data[np.where(np.logical_and(data[:, 2] >= jan_1_2007, data[:, 2] <= jan_1_2008))[0], :]
-#
-#     # remove self-edges
-#     data = data[np.where(data[:, 0] != data[:, 1])[0], :]
-#
-#     # filtering nodes
-#     sender_nodes, nodes_out_degree = np.unique(data[:, 0], return_counts=True)
-#     receiver_nodes, nodes_in_degree = np.unique(data[:, 1], return_counts=True)
-#     nodes_to_include = set(sender_nodes[nodes_out_degree > 9]).intersection(receiver_nodes[nodes_in_degree > 9])
-#
-#     # Adjust first timestamp to start from 0
-#     data[:, 2] = data[:, 2] - data[0, 2]
-#
-#     # Spilt into train and test
-#     num_test_events = 10000
-#     combined_data = data
-#     full_node_id_map, _ = get_facebook_node_map(data)
-#
-#     train_data = data[:-num_test_events, :]
-#     train_node_id_map, train_nodes_set = get_facebook_node_map(train_data)
-#
-#     test_data = data[num_test_events:, :]
-#     test_node_id_map, test_nodes_set = get_facebook_node_map(test_data)
-#
-#     nodes_not_in_train = []
-#     for n in test_nodes_set.difference(train_nodes_set):
-#         nodes_not_in_train.append(full_node_id_map[n])
-#
-#
-#     print(len(nodes_to_include))
-#     # print(node_out_degree)
-#     # print(data.shape[0])
-#
-#
 def load_facebook_wall(timestamp_max=1000):
     file_path = '/shared/DataSets/FacebookViswanath2009/raw/facebook-wall.txt'
 
@@ -436,7 +412,8 @@ def load_facebook_wall(timestamp_max=1000):
 
 
 if __name__ == '__main__':
-    # reality_mining_event_dict, num_nodes = load_core_reality_mining()
+    load_core_reality_mining_based_on_dubois()
+    # load_reality_mining_test_train()
     # plot_event_count_hist(reality_mining_event_dict, num_nodes, "Reality Mining's Core people")
 
     # enron_event_dict, num_nodes = load_enron()
@@ -454,14 +431,14 @@ if __name__ == '__main__':
     # print(np.sum(utils.event_dict_to_aggregated_adjacency(enron_test_n_nodes, enron_test_event_dict)))
     # print(np.sum(utils.event_dict_to_aggregated_adjacency(enron_combined_n_nodes, enron_combined_event_dict)))
 
-    ((enron_train_event_dict, enron_train_n_nodes, train_duration),
-     (enron_test_event_dict, enron_test_n_nodes, test_duration),
-     (enron_combined_event_dict, enron_combined_n_nodes, combined_duration), nodes_not_in_train) = load_fb_train_test()
-
-    print("Train -- Num Nodes:", enron_train_n_nodes,
-          "Num Edges:", np.sum(utils.event_dict_to_aggregated_adjacency(enron_train_n_nodes, enron_train_event_dict)))
-    print("Test -- Num Nodes:", enron_test_n_nodes,
-          "Num Edges:", np.sum(utils.event_dict_to_aggregated_adjacency(enron_test_n_nodes, enron_test_event_dict)))
-    print("Combined -- Num Nodes:", enron_combined_n_nodes,
-          "Num Edges:", np.sum(utils.event_dict_to_aggregated_adjacency(enron_combined_n_nodes, enron_combined_event_dict)))
+    # ((enron_train_event_dict, enron_train_n_nodes, train_duration),
+    #  (enron_test_event_dict, enron_test_n_nodes, test_duration),
+    #  (enron_combined_event_dict, enron_combined_n_nodes, combined_duration), nodes_not_in_train) = load_fb_train_test()
+    #
+    # print("Train -- Num Nodes:", enron_train_n_nodes,
+    #       "Num Edges:", np.sum(utils.event_dict_to_aggregated_adjacency(enron_train_n_nodes, enron_train_event_dict)))
+    # print("Test -- Num Nodes:", enron_test_n_nodes,
+    #       "Num Edges:", np.sum(utils.event_dict_to_aggregated_adjacency(enron_test_n_nodes, enron_test_event_dict)))
+    # print("Combined -- Num Nodes:", enron_combined_n_nodes,
+    #       "Num Edges:", np.sum(utils.event_dict_to_aggregated_adjacency(enron_combined_n_nodes, enron_combined_event_dict)))
 

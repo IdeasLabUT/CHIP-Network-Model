@@ -79,7 +79,7 @@ def test_spectral_clustering_on_generative_model(n, t, k):
               'mu_diag': 0.085,
               'mu_off_diag': 0.065,
               'scale': False,
-              'n_cores': 34}
+              'n_cores': 1}
 
     event_dict, true_class_assignments = utils.simulate_community_hawkes(params)
 
@@ -93,7 +93,7 @@ def test_spectral_clustering_on_generative_model(n, t, k):
 
 result_file_path = '/shared/Results/CommunityHawkes/pickles/AS3'
 
-plot_only = False
+plot_only = True
 
 # Number of test values for all variable must be the same
 n_range = [2048, 1024, 512, 256, 128, 64]
@@ -102,15 +102,15 @@ k_range = [12, 10, 8, 6, 4, 2]
 
 num_test_values = len(n_range)
 
-fixed_n = 128
+fixed_n = 256
 fixed_t = 64
-fixed_k = 4
+fixed_k = 8
 
-num_simulation_per_duration = 10
-n_cores = 1
+num_simulation_per_duration = 30
+n_cores = 30
 
-# for fixed_var in ['n', 't', 'k']:
-for fixed_var in ['k']:
+for fixed_var in ['n', 't', 'k']:
+# for fixed_var in ['n']:
     print("Fixing:", fixed_var)
 
     n_range_to_test = n_range
@@ -141,7 +141,7 @@ for fixed_var in ['k']:
 
         fixed_value = fixed_k
         ylables = n_range
-        xlables = t_range
+        xlables = t_range[::-1]
         xlab = "T"
         ylab = "N"
 
@@ -183,6 +183,12 @@ for fixed_var in ['k']:
 
     im, _ = heatmap(mean_sc_rand_scores, ylables, xlables, ax=ax, cmap="coolwarm",
                     cbarlabel=f"Adjusted Rand Index")
+
+    # Loop over data dimensions and create text annotations.
+    for i in range(len(n_range)):
+        for j in range(len(n_range)):
+            text = ax.text(j, i, np.format_float_scientific(mean_sc_rand_scores_err[i, j], exp_digits=1, precision=1),
+                           ha="center", va="center", color="w")
 
     plt.ylabel(ylab, fontsize=16)
     plt.xlabel(xlab, fontsize=16)
