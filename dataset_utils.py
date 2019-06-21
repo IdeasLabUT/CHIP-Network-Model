@@ -6,6 +6,8 @@ import generative_model_utils as utils
 
 def load_core_reality_mining_based_on_dubois(remove_nodes_not_in_train=False):
     """
+    Due to issues with DoBios' REM paper, this method's network doesn't match the papers. DO NOT USE.
+
     Loads only the interaction of the core people of the reality mining dataset.
 
     Loads 2000 phone calls among the 89 recipients between October 2004 and February 2005 (Mtest = 1000).
@@ -63,77 +65,22 @@ def load_core_reality_mining_based_on_dubois(remove_nodes_not_in_train=False):
                                           remove_nodes_not_in_train=remove_nodes_not_in_train)
 
 
-def load_reality_mining_test_train():
+def load_reality_mining_test_train(remove_nodes_not_in_train):
     """
-    TODO: This code is not complete due to issues with DuBios's paper.
-
-    Loads the pre-split dataset for test and train of reality mining.
-    :return: (dict) with (caller_id, receiver_id): [unix_timestamps] (event dict structure)
-             (int) number of nodes
-    """
-
+        Loads Reality Mining dataset.
+        :return: Three tuples one for each train, test and combined datasets. Each Tuple contains:
+                 ((dict) with (caller_id, receiver_id): [unix_timestamps] (event dict structure),
+                 (int) number of nodes,
+                 (float) duration)
+                 (list) nodes_not_in_train
+        """
     train_file_path = '/shared/DataSets/RealityMining/Dubois2013/train_reality.csv'
     test_file_path = '/shared/DataSets/RealityMining/Dubois2013/test_reality.csv'
 
-    # load the core dataset. caller_id,receiver_id,unix_timestamp
-    train_data = np.loadtxt(train_file_path, np.float, delimiter=',', usecols=(0, 1, 2))
-    # Sorting by unix_timestamp
-    train_data = train_data[train_data[:, 2].argsort()]
-    train_nodes = set()
+    # Timestamps are adjusted to start from 0 and go up to 1000.
+    combined_duration = 1000.0
 
-    train_event_dict = {}
-    for i in range(train_data.shape[0]):
-        caller_id = np.int(train_data[i, 0])
-        receiver_id = np.int(train_data[i, 1])
-
-        train_nodes.add(caller_id)
-        train_nodes.add(receiver_id)
-
-        if (caller_id, receiver_id) not in train_event_dict:
-            train_event_dict[(caller_id, receiver_id)] = []
-
-        train_event_dict[(caller_id, receiver_id)].append(train_data[i, 0])
-
-
-    # load the core dataset. caller_id,receiver_id,unix_timestamp
-    test_data = np.loadtxt(test_file_path, np.float, delimiter=',', usecols=(0, 1, 2))
-    # Sorting by unix_timestamp
-    test_data = test_data[test_data[:, 2].argsort()]
-    test_nodes = set()
-
-    test_event_dict = {}
-    for i in range(test_data.shape[0]):
-        caller_id = np.int(test_data[i, 0])
-        receiver_id = np.int(test_data[i, 1])
-
-        test_nodes.add(caller_id)
-        test_nodes.add(receiver_id)
-
-        if (caller_id, receiver_id) not in test_event_dict:
-            test_event_dict[(caller_id, receiver_id)] = []
-
-        test_event_dict[(caller_id, receiver_id)].append(test_data[i, 0])
-
-    print(test_nodes)
-    print(len(test_nodes))
-
-    print(train_nodes)
-    print(len(train_nodes))
-
-    print(test_nodes.difference(train_nodes))
-    print(train_nodes.difference(test_nodes))
-
-    cnt = 0
-    for n in test_nodes.difference(train_nodes):
-        for u, v in test_event_dict:
-            if n == u or n == v:
-                cnt += len(test_event_dict[(u, v)])
-
-    print(cnt)
-    print(test_data.shape[0])
-    print(train_data.shape[0])
-
-    print(test_data.shape[0] + train_data.shape[0])
+    return load_train_test(train_file_path, test_file_path, combined_duration, remove_nodes_not_in_train)
 
 
 def load_enron():

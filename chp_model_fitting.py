@@ -106,7 +106,7 @@ if __name__ == "__main__":
     # Reality Mining
     print("Reality Mining")
     rm_train_tuple, rm_test_tuple, rm_combined_tuple, rm_nodes_not_in_train = \
-        dataset_utils.load_core_reality_mining_based_on_dubois(remove_nodes_not_in_train=False)
+        dataset_utils.load_reality_mining_test_train(remove_nodes_not_in_train=False)
     fit_and_eval_community_hawkes(rm_train_tuple, rm_test_tuple, rm_combined_tuple, rm_nodes_not_in_train,
                                   k_values_to_test=list(range(1, 11)), plot_fitted_hist=False, verbose=False)
 
