@@ -7,14 +7,18 @@ import model_fitting_utils as model_utils
 
 def fit_and_eval_community_hawkes(train_tuple, test_tuple, combined_tuple, nodes_not_in_train,
                                   k_values_to_test=(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+                                  local_search_max_iter=0, local_search_n_cores=-1,
                                   fit_generated_model=False, plot_fitted_hist=False,
                                   verbose=False):
     """
     Fits the community Hawkes model to train and evaluates the log-likelihood on the test, by evaluating the
     log-likelihood on the combined dataset and subtracting the likelihood of train, dividing by number of events in test
+
     :param train_tuple, test_tuple, combined_tuple: A tuple of (event dict, number of nodes, duration)
     :param nodes_not_in_train: Nodes that are in the test data, but not in the train
     :param k_values_to_test: iterable obj of number of communities to fit
+    :param local_search_max_iter: if >0, then the model is fitted using local search, else local search is not used.
+    :param local_search_n_cores: Number of cores to be used for local search. Ignored if local_search_max_iter <= 0.
     :param plot_fitted_hist: If True, plots a histogram of the event count of read vs. fitted model.
     :param fit_generated_model: If True, generates a community hawkes from train fitted values,
                                 then fits and evaluates the generated model itself. Uses the same generated model as
@@ -41,6 +45,7 @@ def fit_and_eval_community_hawkes(train_tuple, test_tuple, combined_tuple, nodes
         # Fitting the model to the train data
         train_node_membership, train_bp_mu, train_bp_alpha, train_bp_beta, train_block_pair_events = \
             model_utils.fit_community_model(train_event_dict, train_num_nodes, train_duration, num_classes,
+                                            local_search_max_iter, local_search_n_cores,
                                             verbose=verbose)
 
         # Add nodes that were not in train to the largest block
@@ -108,7 +113,9 @@ if __name__ == "__main__":
     rm_train_tuple, rm_test_tuple, rm_combined_tuple, rm_nodes_not_in_train = \
         dataset_utils.load_reality_mining_test_train(remove_nodes_not_in_train=False)
     fit_and_eval_community_hawkes(rm_train_tuple, rm_test_tuple, rm_combined_tuple, rm_nodes_not_in_train,
-                                  k_values_to_test=list(range(1, 11)), plot_fitted_hist=False, verbose=False)
+                                  k_values_to_test=list(range(1, 11)),
+                                  local_search_max_iter=100000, local_search_n_cores=34,
+                                  plot_fitted_hist=False, verbose=False)
 
     # Simulated Data
     # print("Simulated Data:")

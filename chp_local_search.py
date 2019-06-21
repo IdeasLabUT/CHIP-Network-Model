@@ -52,7 +52,8 @@ def calc_node_neigh_solutions(event_dict, n_classes, duration, node_membership, 
     return best_neigh
 
 
-def chp_local_search(event_dict, n_classes, node_membership_init, duration, max_iter=100, n_cores=-1, verbose=True):
+def chp_local_search(event_dict, n_classes, node_membership_init, duration, max_iter=100, n_cores=-1, verbose=True,
+                     return_fitted_param=False):
     n_nodes = len(node_membership_init)
     nodes = np.arange(n_nodes)
     node_membership = node_membership_init
@@ -110,6 +111,9 @@ def chp_local_search(event_dict, n_classes, node_membership_init, duration, max_
     if verbose:
         print(f"likelihood went from {init_log_lik:.4f} to {log_lik:.4f}. "
               f"{100 * np.abs((log_lik - init_log_lik) / init_log_lik):.2f}% increase.")
+
+    if return_fitted_param:
+        return node_membership, mu, alpha, beta
 
     return node_membership
 

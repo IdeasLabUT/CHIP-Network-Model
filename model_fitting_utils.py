@@ -4,38 +4,50 @@ import matplotlib.pyplot as plt
 from scipy.stats import multinomial
 import generative_model_utils as utils
 import parameter_estimation as estimate_utils
+import chp_local_search as cls
 from spectral_clustering import spectral_cluster
 from chp_model_fitting import fit_and_eval_community_hawkes
 from community_generative_model import community_generative_model
 from block_generative_model import block_generative_model
 
 
-def fit_community_model(event_dict, num_nodes, duration, num_classes, verbose=False):
+def fit_community_model(event_dict, num_nodes, duration, num_classes, local_search_max_iter, local_search_n_cores,
+                        verbose=False):
     agg_adj = utils.event_dict_to_aggregated_adjacency(num_nodes, event_dict)
     # adj = utils.event_dict_to_adjacency(num_nodes, event_dict)
 
     # Running spectral clustering
     node_membership = spectral_cluster(agg_adj, num_classes)
 
-    bp_mu, bp_alpha_beta_ratio = estimate_utils.estimate_hawkes_from_counts(agg_adj, node_membership,
-                                                                            duration,
-                                                                            1e-10 / duration)
+    if local_search_max_iter > 0 and num_classes > 1:
+        node_membership, bp_mu, bp_alpha, bp_beta = cls.chp_local_search(event_dict, num_classes, node_membership,
+                                                                         duration,
+                                                                         max_iter=local_search_max_iter,
+                                                                         n_cores=local_search_n_cores,
+                                                                         return_fitted_param=True, verbose=False)
 
-    bp_beta = np.zeros((num_classes, num_classes), dtype=np.float)
-    block_pair_events = utils.event_dict_to_block_pair_events(event_dict, node_membership, num_classes)
+        block_pair_events = utils.event_dict_to_block_pair_events(event_dict, node_membership, num_classes)
 
-    for b_i in range(num_classes):
-        for b_j in range(num_classes):
-            bp_size = len(np.where(node_membership == b_i)[0]) * len(np.where(node_membership == b_j)[0])
-            if b_i == b_j:
-                bp_size -= len(np.where(node_membership == b_i)[0])
+    else:
+        bp_mu, bp_alpha_beta_ratio = estimate_utils.estimate_hawkes_from_counts(agg_adj, node_membership,
+                                                                                duration,
+                                                                                1e-10 / duration)
+        bp_beta = np.zeros((num_classes, num_classes), dtype=np.float)
 
-            bp_beta[b_i, b_j], _ = estimate_utils.estimate_beta_from_events(block_pair_events[b_i][b_j],
-                                                                            bp_mu[b_i, b_j],
-                                                                            bp_alpha_beta_ratio[b_i, b_j],
-                                                                            duration, bp_size)
+        block_pair_events = utils.event_dict_to_block_pair_events(event_dict, node_membership, num_classes)
 
-    bp_alpha = bp_alpha_beta_ratio * bp_beta
+        for b_i in range(num_classes):
+            for b_j in range(num_classes):
+                bp_size = len(np.where(node_membership == b_i)[0]) * len(np.where(node_membership == b_j)[0])
+                if b_i == b_j:
+                    bp_size -= len(np.where(node_membership == b_i)[0])
+
+                bp_beta[b_i, b_j], _ = estimate_utils.estimate_beta_from_events(block_pair_events[b_i][b_j],
+                                                                                bp_mu[b_i, b_j],
+                                                                                bp_alpha_beta_ratio[b_i, b_j],
+                                                                                duration, bp_size)
+
+        bp_alpha = bp_alpha_beta_ratio * bp_beta
 
     # Printing information about the fit
     if verbose:
