@@ -52,8 +52,8 @@ def calc_node_neigh_solutions(event_dict, n_classes, duration, node_membership, 
     return best_neigh
 
 
-def chp_local_search(event_dict, n_classes, node_membership_init, duration, max_iter=100, n_cores=-1, verbose=True,
-                     return_fitted_param=False):
+def chp_local_search(event_dict, n_classes, node_membership_init, duration, max_iter=100, n_cores=-1,
+                     return_fitted_param=False, verbose=True):
     n_nodes = len(node_membership_init)
     nodes = np.arange(n_nodes)
     node_membership = node_membership_init

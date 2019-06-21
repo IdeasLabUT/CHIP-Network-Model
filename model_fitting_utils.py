@@ -1,10 +1,10 @@
 import numpy as np
 import dataset_utils
+import chp_local_search as cls
 import matplotlib.pyplot as plt
 from scipy.stats import multinomial
 import generative_model_utils as utils
 import parameter_estimation as estimate_utils
-import chp_local_search as cls
 from spectral_clustering import spectral_cluster
 from chp_model_fitting import fit_and_eval_community_hawkes
 from community_generative_model import community_generative_model

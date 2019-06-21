@@ -1,20 +1,30 @@
 import numpy as np
+import block_local_search as bls
 from scipy.optimize import minimize
 from scipy.stats import multinomial
 import generative_model_utils as utils
 from spectral_clustering import spectral_cluster, regularized_spectral_cluster
 
 
-def fit_block_model(event_dict, num_nodes, duration, num_classes, verbose=False):
+def fit_block_model(event_dict, num_nodes, duration, num_classes, local_search_max_iter, local_search_n_cores,
+                    verbose=False):
     # agg_adj = utils.event_dict_to_aggregated_adjacency(num_nodes, event_dict)
     adj = utils.event_dict_to_adjacency(num_nodes, event_dict)
 
     # Running spectral clustering
     node_membership = regularized_spectral_cluster(adj, num_classes=num_classes)
 
-    bp_events = event_dict_to_combined_block_pair_events(event_dict, node_membership, num_classes)
+    if local_search_max_iter > 0 and num_classes > 1:
+        node_membership, bp_mu, bp_alpha, bp_beta = bls.block_local_search(event_dict, num_classes, node_membership,
+                                                                           duration,
+                                                                           local_search_max_iter, local_search_n_cores,
+                                                                           return_fitted_param=True, verbose=False)
+        bp_events = event_dict_to_combined_block_pair_events(event_dict, node_membership, num_classes)
 
-    bp_mu, bp_alpha, bp_beta = estimate_hawkes_params(bp_events, node_membership, duration, num_classes)
+    else:
+        bp_events = event_dict_to_combined_block_pair_events(event_dict, node_membership, num_classes)
+
+        bp_mu, bp_alpha, bp_beta = estimate_hawkes_params(bp_events, node_membership, duration, num_classes)
 
     # Printing information about the fit
     if verbose:
@@ -46,7 +56,7 @@ def estimate_hawkes_param_and_calc_log_likelihood(event_dict, node_membership, d
                                               bp_mu, bp_alpha, bp_beta,
                                               duration, num_classes, add_com_assig_log_prob)
 
-    return log_likelihood
+    return log_likelihood, (bp_mu, bp_alpha, bp_beta)
 
 
 def estimate_hawkes_params(bp_events, node_membership, duration, num_classes):

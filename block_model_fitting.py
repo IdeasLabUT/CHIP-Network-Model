@@ -9,6 +9,7 @@ from block_generative_model import block_generative_model
 
 def fit_and_eval_block_hawkes(train_tuple, test_tuple, combined_tuple, nodes_not_in_train,
                               k_values_to_test=(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+                              local_search_max_iter=0, local_search_n_cores=-1,
                               plot_fitted_hist=False, verbose=False):
 
     """
@@ -17,6 +18,8 @@ def fit_and_eval_block_hawkes(train_tuple, test_tuple, combined_tuple, nodes_not
     :param train_tuple, test_tuple, combined_tuple: A tuple of (event dict, number of nodes, duration)
     :param nodes_not_in_train: Nodes that are in the test data, but not in the train
     :param k_values_to_test: iterable obj of number of communities to fit
+    :param local_search_max_iter: if >0, then the model is fitted using local search, else local search is not used.
+    :param local_search_n_cores: Number of cores to be used for local search. Ignored if local_search_max_iter <= 0.
     :param plot_fitted_hist: If True, plots a histogram of the event count of read vs. fitted model.
     :param verbose: Prints details of the fit along the way.
 
@@ -40,6 +43,7 @@ def fit_and_eval_block_hawkes(train_tuple, test_tuple, combined_tuple, nodes_not
         # Fitting the model to the train data
         train_node_membership, train_bp_mu, train_bp_alpha, train_bp_beta, train_block_pair_events = \
             estimate_utils.fit_block_model(train_event_dict, train_num_nodes, train_duration, num_classes,
+                                           local_search_max_iter, local_search_n_cores,
                                            verbose=verbose)
 
         # Add nodes that were not in train to the largest block
@@ -60,7 +64,8 @@ def fit_and_eval_block_hawkes(train_tuple, test_tuple, combined_tuple, nodes_not
         # Calculate log-likelihood given the train dataset
         train_log_likelihood = estimate_utils.calc_full_log_likelihood(train_block_pair_events, train_node_membership,
                                                                        train_bp_mu, train_bp_alpha, train_bp_beta,
-                                                                       train_duration, num_classes)
+                                                                       train_duration, num_classes,
+                                                                       add_com_assig_log_prob=True)
 
         # Calculate per event log likelihood
         ll_per_event = model_utils.calc_per_event_log_likelihood(combined_log_likelihood, train_log_likelihood,
@@ -107,6 +112,7 @@ if __name__ == "__main__":
     rm_train_tuple, rm_test_tuple, rm_combined_tuple, rm_nodes_not_in_train = \
         dataset_utils.load_reality_mining_test_train(remove_nodes_not_in_train=False)
     fit_and_eval_block_hawkes(rm_train_tuple, rm_test_tuple, rm_combined_tuple, rm_nodes_not_in_train,
+                              local_search_max_iter=100000, local_search_n_cores=34,
                               k_values_to_test=list(range(1, 11)), plot_fitted_hist=False, verbose=False)
 
     # # Simulated Data

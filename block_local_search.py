@@ -31,10 +31,11 @@ def calc_node_neigh_solutions(event_dict, n_classes, duration, node_membership, 
             node_membership[n_i] = c_i
 
             # Eval the aprox log_lik of this neighbor, by est all block parameters.
-            neigh_log_lik = block_estimate_utils.estimate_hawkes_param_and_calc_log_likelihood(event_dict,
-                                                                                               node_membership,
-                                                                                               duration, n_classes,
-                                                                                               False)
+            (neigh_log_lik,
+             fitted_params) = block_estimate_utils.estimate_hawkes_param_and_calc_log_likelihood(event_dict,
+                                                                                                 node_membership,
+                                                                                                 duration, n_classes,
+                                                                                                 False)
 
             # if log_lik if this neighbor is better than the "so far" best neighbor, use this neighbors as the best.
             if log_lik < neigh_log_lik:
@@ -46,15 +47,17 @@ def calc_node_neigh_solutions(event_dict, n_classes, duration, node_membership, 
     return best_neigh
 
 
-def block_local_search(event_dict, n_classes, node_membership_init, duration, max_iter=100, n_cores=-1, verbose=True):
+def block_local_search(event_dict, n_classes, node_membership_init, duration, max_iter=100, n_cores=-1,
+                       return_fitted_param=False, verbose=True):
     n_nodes = len(node_membership_init)
     nodes = np.arange(n_nodes)
     node_membership = node_membership_init
 
     # estimate initial params of block model and its log-likelihood
-    init_log_lik = block_estimate_utils.estimate_hawkes_param_and_calc_log_likelihood(event_dict, node_membership,
-                                                                                      duration, n_classes,
-                                                                                      add_com_assig_log_prob=False)
+    (init_log_lik,
+     fitted_params) = block_estimate_utils.estimate_hawkes_param_and_calc_log_likelihood(event_dict, node_membership,
+                                                                                         duration, n_classes,
+                                                                                         add_com_assig_log_prob=False)
     log_lik = init_log_lik
     n_cores = n_cores if n_cores > 0 else multiprocessing.cpu_count()
     batch_size = np.int(n_nodes / n_cores) + 1
@@ -84,13 +87,22 @@ def block_local_search(event_dict, n_classes, node_membership_init, duration, ma
 
         # if a good neighbor was found, update best log_lik, and go for the next iteration.
         node_membership[best_node_to_switch] = best_class_to_switch_to
-        log_lik = block_estimate_utils.estimate_hawkes_param_and_calc_log_likelihood(event_dict, node_membership,
-                                                                                     duration, n_classes,
-                                                                                     add_com_assig_log_prob=False)
+        (log_lik,
+         fitted_params) = block_estimate_utils.estimate_hawkes_param_and_calc_log_likelihood(event_dict,
+                                                                                             node_membership,
+                                                                                             duration, n_classes,
+                                                                                             False)
+
+        if iter == max_iter - 1:
+            print("Warning: Max iter reached!")
 
     if verbose:
         print(f"likelihood went from {init_log_lik:.4f} to {log_lik:.4f}. "
               f"{100 * np.abs((log_lik - init_log_lik) / init_log_lik):.2f}% increase.")
+
+    if return_fitted_param:
+        mu, alpha, beta = fitted_params
+        return node_membership, mu, alpha, beta
 
     return node_membership
 
