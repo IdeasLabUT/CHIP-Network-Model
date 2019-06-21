@@ -104,6 +104,9 @@ def chp_local_search(event_dict, n_classes, node_membership_init, duration, max_
         log_lik = fit_utils.calc_full_log_likelihood(block_pair_events, node_membership, mu, alpha, beta,
                                                      duration, n_classes, add_com_assig_log_prob=False)
 
+        if iter == max_iter - 1:
+            print("Warning: Max iter reached!")
+
     if verbose:
         print(f"likelihood went from {init_log_lik:.4f} to {log_lik:.4f}. "
               f"{100 * np.abs((log_lik - init_log_lik) / init_log_lik):.2f}% increase.")
