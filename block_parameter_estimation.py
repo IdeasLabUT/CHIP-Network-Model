@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 import block_local_search as bls
 from scipy.optimize import minimize
@@ -157,13 +158,11 @@ def block_pair_conditional_log_likelihood(bp_events, mu, alpha, beta, end_time, 
     ll = 0
     bp_n_events = len(bp_events)
 
-    # TODO: what to do when we have beta, alpha or mu == 0?
-    if mu == 0:
+    if mu <= 0 or alpha < 0 or beta <= 0:
+        print("Errorddsd")
         mu = 1e-10 / end_time
-
-    if alpha == 0 or beta == 0:
         alpha = 0
-        beta = 1  # Doesn't matter what beta is since alpha is set to 0.
+        beta = 1  # doesn't matter what beta is since alpha is set to 0.
 
     if bp_n_events > 0:
         # first sum
@@ -194,10 +193,19 @@ def estimate_all_bp_from_events(bp_events, end_time, block_pair_size, init_param
                    bounds=((0, None), (0, None), (0, None)), jac=None,
                    args=(bp_events, end_time, block_pair_size))
 
+    alpha, beta, mu = res.x
+
+    # TODO: what to do when we have beta, alpha or mu == 0?
+    if mu <= 0 or alpha <= 0 or beta <= 0:
+        print("here")
+        mu = 1e-10 / end_time
+        alpha = 0
+        beta = 1  # doesn't matter what beta is since alpha is set to 0.
+
+    res.x = (alpha, beta, mu)
+
     if return_detail:
         return res.x, res
-
-    alpha, beta, mu = res.x
 
     return mu, alpha, beta
 

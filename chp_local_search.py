@@ -20,9 +20,12 @@ def calc_node_neigh_solutions(event_dict, n_classes, duration, node_membership, 
     log_lik = log_lik_init
     # node_membership = node_membership.copy()
 
-
     for n_i in node_batch:
         n_i_class = node_membership[n_i]
+
+        # Adding a constraint to maintain the number of blocks.
+        if np.sum(node_membership == n_i_class) <= 1:
+            continue
 
         for c_i in range(n_classes):
             if c_i == n_i_class:

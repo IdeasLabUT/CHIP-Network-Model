@@ -14,16 +14,16 @@ plot_only = False
 
 num_simulation_per_duration = 10
 sim_n_cores = 1
-per_sim_n_cores = 34
+per_sim_n_cores = 26
 
-number_of_nodes_list = [32, 64, 128, 256]
+number_of_nodes_list = [32, 64, 128, 256, 512, 1024]
 n_classes = 4
-duration = 200
+duration = 50
 
 params = {'alpha': 0.06,
           'beta': 0.08,
-          'mu_diag': 0.085,
-          'mu_off_diag': 0.05,
+          'mu_diag': 0.065,
+          'mu_off_diag': 0.055,
           'scale': False,
           'end_time': duration,
           'class_probabilities': np.ones(n_classes) / n_classes,

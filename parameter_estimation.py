@@ -32,15 +32,25 @@ def estimate_hawkes_from_counts(agg_adj, class_vec, duration, default_mu=None):
                 # the diagonal entries of the adjacency matrix in our
                 # calculations, so extract indices for the lower and upper
                 # triangular portions
+
                 num_nodes_in_a = nodes_in_a.size
+
+                # if block size = 1, no need to compute params of that block with itself, set it to the default.
+                if num_nodes_in_a <= 1:
+                    sample_mean[a, b] = 0
+                    sample_var[a, b] = 0
+                    continue
+
                 lower_indices = np.tril_indices(num_nodes_in_a,-1)
                 upper_indices = np.triu_indices(num_nodes_in_a,1)
                 agg_adj_block_no_diag = np.r_[agg_adj_block[lower_indices],
                                               agg_adj_block[upper_indices]]
+
                 sample_mean[a,b] = np.mean(agg_adj_block_no_diag)
                 sample_var[a,b] = np.var(agg_adj_block_no_diag,ddof=1)
-                
+
             else:
+
                 sample_mean[a,b] = np.mean(agg_adj_block)
                 sample_var[a,b] = np.var(agg_adj_block,ddof=1)
 
@@ -50,9 +60,12 @@ def estimate_hawkes_from_counts(agg_adj, class_vec, duration, default_mu=None):
         mu = np.sqrt(sample_mean**3 / sample_var) / duration
         alpha_beta_ratio = 1 - np.sqrt(sample_mean / sample_var)
 
+    # If sample_var is 0, depending on sample mean, mu and the ratio can be nan or inf. Set them to default values.
     if default_mu is not None:
         mu[np.isnan(mu)] = default_mu
+        mu[np.isinf(mu)] = default_mu
         alpha_beta_ratio[np.isnan(alpha_beta_ratio)] = 0
+        alpha_beta_ratio[np.isinf(alpha_beta_ratio)] = 0
 
         # If ratio is negative, set it to 0
         alpha_beta_ratio[alpha_beta_ratio < 0] = 0
