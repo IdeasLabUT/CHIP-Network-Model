@@ -26,7 +26,13 @@ def estimate_hawkes_from_counts(agg_adj, class_vec, duration, default_mu=None):
             nodes_in_a = community_membership[a]
             nodes_in_b = community_membership[b]
 
-            agg_adj_block = agg_adj[nodes_in_a[:,np.newaxis],nodes_in_b]
+            # if both block sizes = 1, no need to compute params of that block pair, set it to the default.
+            if nodes_in_a.size <= 1 and nodes_in_b.size <= 1:
+                sample_mean[a, b] = 0
+                sample_var[a, b] = 0
+                continue
+
+            agg_adj_block = agg_adj[nodes_in_a[:, np.newaxis], nodes_in_b]
             if a == b:
                 # For diagonal blocks, need to make sure we're not including
                 # the diagonal entries of the adjacency matrix in our
@@ -34,13 +40,6 @@ def estimate_hawkes_from_counts(agg_adj, class_vec, duration, default_mu=None):
                 # triangular portions
 
                 num_nodes_in_a = nodes_in_a.size
-
-                # if block size = 1, no need to compute params of that block with itself, set it to the default.
-                if num_nodes_in_a <= 1:
-                    sample_mean[a, b] = 0
-                    sample_var[a, b] = 0
-                    continue
-
                 lower_indices = np.tril_indices(num_nodes_in_a,-1)
                 upper_indices = np.triu_indices(num_nodes_in_a,1)
                 agg_adj_block_no_diag = np.r_[agg_adj_block[lower_indices],
