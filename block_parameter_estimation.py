@@ -158,6 +158,10 @@ def block_pair_conditional_log_likelihood(bp_events, mu, alpha, beta, end_time, 
     ll = 0
     bp_n_events = len(bp_events)
 
+    # if maximum number of possible node pairs is 0, then log-likelihood
+    if block_pair_size == 0:
+        return 0
+
     if bp_n_events > 0:
         # first sum
         ll += (alpha / beta) * np.sum(np.exp(-beta * (end_time - bp_events)) - 1)
@@ -165,11 +169,11 @@ def block_pair_conditional_log_likelihood(bp_events, mu, alpha, beta, end_time, 
         # second recursive sum
         ll += np.sum(np.log(mu + alpha * compute_wijs_recursive(bp_events, beta)))
 
+        # second part of the log-likelihood
+        ll -= bp_n_events * np.log(block_pair_size)
+
     # third term
     ll -= mu * end_time
-
-    # second part of the log-likelihood
-    ll -= bp_n_events * np.log(block_pair_size)
 
     return ll
 

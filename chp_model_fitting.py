@@ -32,7 +32,7 @@ def fit_and_eval_community_hawkes(train_tuple, test_tuple, combined_tuple, nodes
     test_event_dict, test_num_nodes, test_duration = test_tuple
     combined_event_dict, combined_num_nodes, combined_duration = combined_tuple
 
-    total_tic = time.clock()
+    total_tic = time.time()
     print("Log-likelihoods per event:")
 
     lls_per_event = []
@@ -40,7 +40,7 @@ def fit_and_eval_community_hawkes(train_tuple, test_tuple, combined_tuple, nodes
         if verbose:
             print("K:", num_classes)
 
-        tic = time.clock()
+        tic = time.time()
 
         # Fitting the model to the train data
         train_node_membership, train_bp_mu, train_bp_alpha, train_bp_beta, train_block_pair_events = \
@@ -71,7 +71,7 @@ def fit_and_eval_community_hawkes(train_tuple, test_tuple, combined_tuple, nodes
         ll_per_event = model_utils.calc_per_event_log_likelihood(combined_log_likelihood, train_log_likelihood,
                                                                  test_event_dict, test_num_nodes)
 
-        toc = time.clock()
+        toc = time.time()
         lls_per_event.append(ll_per_event)
 
         # Print train and test log-likelihood per event
@@ -85,7 +85,7 @@ def fit_and_eval_community_hawkes(train_tuple, test_tuple, combined_tuple, nodes
                                                   fit_generated_model, plot_fitted_hist, train_percentage=0.8,
                                                   n_cores=26)
 
-    total_toc = time.clock()
+    total_toc = time.time()
 
     print(f"Total time elapsed: {total_toc - total_tic:.2f}s")
 
