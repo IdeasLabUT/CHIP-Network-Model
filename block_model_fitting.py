@@ -112,8 +112,8 @@ if __name__ == "__main__":
     rm_train_tuple, rm_test_tuple, rm_combined_tuple, rm_nodes_not_in_train = \
         dataset_utils.load_reality_mining_test_train(remove_nodes_not_in_train=False)
     fit_and_eval_block_hawkes(rm_train_tuple, rm_test_tuple, rm_combined_tuple, rm_nodes_not_in_train,
-                              local_search_max_iter=100000, local_search_n_cores=34,
-                              k_values_to_test=list(range(1, 11)), plot_fitted_hist=False, verbose=True)
+                              local_search_max_iter=0, local_search_n_cores=34,
+                              k_values_to_test=list(range(1, 11)), plot_fitted_hist=False, verbose=False)
 
     # # Simulated Data
     # print("Simulated Data:")

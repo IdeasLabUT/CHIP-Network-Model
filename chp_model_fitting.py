@@ -114,7 +114,7 @@ if __name__ == "__main__":
         dataset_utils.load_reality_mining_test_train(remove_nodes_not_in_train=False)
     fit_and_eval_community_hawkes(rm_train_tuple, rm_test_tuple, rm_combined_tuple, rm_nodes_not_in_train,
                                   k_values_to_test=list(range(1, 11)),
-                                  local_search_max_iter=100000, local_search_n_cores=34,
+                                  local_search_max_iter=0, local_search_n_cores=34,
                                   plot_fitted_hist=False, verbose=False)
 
     # Simulated Data

@@ -24,7 +24,7 @@ def calc_node_neigh_solutions(event_dict, n_classes, duration, node_membership, 
         n_i_class = node_membership[n_i]
 
         # Adding a constraint to maintain the number of blocks.
-        if np.sum(node_membership == n_i_class) <= 1:
+        if np.sum(node_membership == n_i_class) <= 2:
             continue
 
         for c_i in range(n_classes):
