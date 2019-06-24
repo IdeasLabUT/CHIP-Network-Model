@@ -1,7 +1,7 @@
 import warnings
 import numpy as np
 import block_local_search as bls
-from scipy.optimize import minimize
+from scipy.optimize import minimize, Bounds
 from scipy.stats import multinomial
 import generative_model_utils as utils
 from spectral_clustering import spectral_cluster, regularized_spectral_cluster
@@ -158,12 +158,6 @@ def block_pair_conditional_log_likelihood(bp_events, mu, alpha, beta, end_time, 
     ll = 0
     bp_n_events = len(bp_events)
 
-    if mu <= 0 or alpha < 0 or beta <= 0:
-        print("Errorddsd")
-        mu = 1e-10 / end_time
-        alpha = 0
-        beta = 1  # doesn't matter what beta is since alpha is set to 0.
-
     if bp_n_events > 0:
         # first sum
         ll += (alpha / beta) * np.sum(np.exp(-beta * (end_time - bp_events)) - 1)
@@ -184,20 +178,28 @@ def neg_log_likelihood_all_bp(param, bp_events, end_time, block_pair_size):
     alpha = param[0]
     beta = param[1]
     mu = param[2]
+
+    # If the bounds for minimize are violated, return 0, the largest value possible.
+    if mu <= 0 or alpha < 0 or beta <= 0:
+        return 0.
+
     return -block_pair_conditional_log_likelihood(bp_events, mu, alpha, beta,
                                                   end_time, block_pair_size)
 
 
 def estimate_all_bp_from_events(bp_events, end_time, block_pair_size, init_param=(1e-2,2e-2,2e-5), return_detail=False):
+    min_mu = 1e-10 / end_time
+    min_beta = 1e-20
+    min_alpha = 0
+
     res = minimize(neg_log_likelihood_all_bp, init_param, method='L-BFGS-B',
-                   bounds=((0, None), (0, None), (0, None)), jac=None,
+                   bounds=((min_alpha, None), (min_beta, None), (min_mu, None)), jac=None,
                    args=(bp_events, end_time, block_pair_size))
 
     alpha, beta, mu = res.x
 
     # TODO: what to do when we have beta, alpha or mu == 0?
-    if mu <= 0 or alpha <= 0 or beta <= 0:
-        print("here")
+    if mu < min_mu or alpha < 0 or beta <= min_beta:
         mu = 1e-10 / end_time
         alpha = 0
         beta = 1  # doesn't matter what beta is since alpha is set to 0.
@@ -208,35 +210,3 @@ def estimate_all_bp_from_events(bp_events, end_time, block_pair_size, init_param
         return res.x, res
 
     return mu, alpha, beta
-
-
-# def block_pair_conditional_log_likelihood(bp_events, mu, alpha, beta, end_time, block_pair_size):
-#     """
-#
-#     :param block_pair_size: Size of the block pair. bp_events may not include an entry for node_pairs with no
-#                             interactions, in that case, we need to add (-mu * end_time) to the likelihood for each
-#                             missing node pair.
-#     """
-#     ll = 0
-#     bp_n_events = 0
-#
-#     for np_events in bp_events:
-#         ll += -mu * end_time
-#
-#         if len(np_events) == 0:
-#             continue
-#
-#         bp_n_events += len(np_events)
-#
-#         second_inner_sum = (alpha / beta) * np.sum(np.exp(-beta * (end_time - np_events)) - 1)
-#         third_inner_sum = np.sum(np.log(mu + alpha * compute_wijs_recursive(np_events, beta)))
-#
-#         ll += second_inner_sum + third_inner_sum
-#
-#     num_missing_node_pairs = block_pair_size - len(bp_events)
-#     ll += num_missing_node_pairs * -mu * end_time
-#
-#     # second part of the log-likelihood
-#     ll -= bp_n_events * np.log(block_pair_size)
-#
-#     return ll
