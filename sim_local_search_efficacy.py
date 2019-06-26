@@ -14,16 +14,17 @@ plot_only = False
 
 num_simulation_per_duration = 10
 sim_n_cores = 1
-per_sim_n_cores = 26
+per_sim_n_cores = 25
 
-number_of_nodes_list = [32, 64, 128, 256, 512, 1024]
+# number_of_nodes_list = [32, 64, 128, 256, 512]
+number_of_nodes_list = [20, 50, 80, 120, 160]
 n_classes = 4
-duration = 50
+duration = 100
 
 params = {'alpha': 0.06,
           'beta': 0.08,
-          'mu_diag': 0.065,
-          'mu_off_diag': 0.055,
+          'mu_diag': 0.075,
+          'mu_off_diag': 0.07,
           'scale': False,
           'end_time': duration,
           'class_probabilities': np.ones(n_classes) / n_classes,
@@ -60,15 +61,13 @@ if not plot_only:
 
         if sim_n_cores > 1:
             results = Parallel(n_jobs=sim_n_cores)(delayed(test_spectral_clustering_on_generative_model)
-                                               (number_of_nodes)
-                                               for i in range(num_simulation_per_duration))
+                                                   (number_of_nodes)
+                                                   for i in range(num_simulation_per_duration))
         else:
             results = []
 
             for i in range(num_simulation_per_duration):
                 results.append(test_spectral_clustering_on_generative_model(number_of_nodes))
-
-        print(f"Done simulating with {number_of_nodes} nodes.")
 
         # each row is adj_sc_rand, agg_adj_sc_rand
         results = np.asarray(results, dtype=np.float)
@@ -79,17 +78,23 @@ if not plot_only:
         mean_ls_rand.append(np.mean(results[:, 1]))
         mean_ls_rand_err.append(2 * np.std(results[:, 1]) / np.sqrt(len(results[:, 1])))
 
+        print(f"Done simulating with {number_of_nodes} nodes.")
+        print(f"SC Rand: {mean_sc_rand[-1]}")
+        print(f"SC LS Rand: {mean_ls_rand[-1]}")
+
     with open(f'{result_file_path}/{pickle_file_name}', 'wb') as handle:
         pickle.dump([mean_sc_rand,
                      mean_sc_rand_err,
                      mean_ls_rand,
-                     mean_ls_rand_err], handle, protocol=pickle.HIGHEST_PROTOCOL)
+                     mean_ls_rand_err,
+                     params], handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 with open(f'{result_file_path}/{pickle_file_name}', 'rb') as handle:
     [mean_sc_rand,
      mean_sc_rand_err,
      mean_ls_rand,
-     mean_ls_rand_err] = pickle.load(handle)
+     mean_ls_rand_err,
+     params] = pickle.load(handle)
 
 
 print(f"community model:")

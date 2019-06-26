@@ -17,7 +17,7 @@ def fit_community_model(event_dict, num_nodes, duration, num_classes, local_sear
     # adj = utils.event_dict_to_adjacency(num_nodes, event_dict)
 
     # Running spectral clustering
-    node_membership = spectral_cluster(agg_adj, num_classes)
+    node_membership = spectral_cluster(agg_adj, num_classes, verbose=True)
 
     if local_search_max_iter > 0 and num_classes > 1:
         node_membership, bp_mu, bp_alpha, bp_beta = cls.chp_local_search(event_dict, num_classes, node_membership,

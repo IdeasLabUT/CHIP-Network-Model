@@ -1,4 +1,5 @@
 import numpy as np
+import networkx as nx
 from datetime import datetime
 import matplotlib.pyplot as plt
 import generative_model_utils as utils
@@ -327,7 +328,7 @@ def plot_event_count_hist(event_dict, num_nodes, dset_title_name):
     plt.show()
 
 
-def load_facebook_wall(timestamp_max=1000):
+def load_facebook_wall(timestamp_max=1000, largest_connected_component_only=False):
     file_path = '/shared/DataSets/FacebookViswanath2009/raw/facebook-wall.txt'
 
     # load the core dataset. receiver_id sender_id unix_timestamp
@@ -335,6 +336,16 @@ def load_facebook_wall(timestamp_max=1000):
 
     # remove self-edges
     data = data[np.where(data[:, 0] != data[:, 1])[0], :]
+
+    if largest_connected_component_only:
+        # finding the nodes in the largest connected component
+        fb_net = nx.Graph()
+        for i in range(data.shape[0]):
+            fb_net.add_edge(data[i, 1], data[i, 0])
+
+        largest_cc = max(nx.connected_components(fb_net), key=len)
+        edge_idx_in_largest_cc = np.array([node_id in largest_cc for node_id in data[:, 0]])
+        data = data[edge_idx_in_largest_cc, :]
 
     # Sorting by unix_timestamp and adjusting first timestamp to start from 0
     data = data[data[:, 2].argsort()]
@@ -362,8 +373,9 @@ def load_facebook_wall(timestamp_max=1000):
     return event_dict, len(node_set), duration
 
 
+
 if __name__ == '__main__':
-    pass
+    load_facebook_wall(largest_connected_component_only=True)
     # load_core_reality_mining_based_on_dubois()
     # load_reality_mining_test_train()
     # plot_event_count_hist(reality_mining_event_dict, num_nodes, "Reality Mining's Core people")

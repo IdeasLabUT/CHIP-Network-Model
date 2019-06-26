@@ -2,15 +2,21 @@ import numpy as np
 from sklearn.cluster import KMeans
 from scipy.sparse.linalg import svds
 from sklearn.preprocessing import normalize
+import matplotlib.pyplot as plt
 
 
-def spectral_cluster(adj, num_classes=2, n_kmeans_init=10, normalize_z=True, verbose=False):
+def spectral_cluster(adj, num_classes=2, n_kmeans_init=10, normalize_z=True, verbose=False, plot_eigenvalues=False):
     # Compute largest num_classes singular values and vectors of adjacency matrix
     u, s, v = svds(adj, k=num_classes)
     v = v.T
 
     if verbose:
         print("Eigenvalues: \n", s)
+
+    if plot_eigenvalues:
+        plt.scatter(np.arange(num_classes, 0, -1), s, marker='*', )
+        plt.show()
+
 
     # Sort in decreasing order of magnitude
     sorted_ind = np.argsort(-s)
