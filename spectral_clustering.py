@@ -17,7 +17,6 @@ def spectral_cluster(adj, num_classes=2, n_kmeans_init=10, normalize_z=True, ver
         plt.scatter(np.arange(num_classes, 0, -1), s, marker='*', )
         plt.show()
 
-
     # Sort in decreasing order of magnitude
     sorted_ind = np.argsort(-s)
     u = u[:, sorted_ind]
