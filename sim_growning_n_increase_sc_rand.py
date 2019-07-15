@@ -8,18 +8,18 @@ from spectral_clustering import spectral_cluster
 
 result_file_path = '/shared/Results/CommunityHawkes/pickles/growing_n_increase_sc_rand'
 
-agg_adj_should_fail = False
+agg_adj_should_fail = True
 plot_only = False
 
-# number_of_nodes_list = [8, 16, 32, 64, 128, 256, 512, 1024, 2048]
-number_of_nodes_list = [10000]
+number_of_nodes_list = [8, 16, 32, 64, 128, 256, 512]
+# number_of_nodes_list = [10000]
 # number_of_nodes_list = 2 ** np.arange(9, 14)
-n_classes = 10
+n_classes = 4
 class_prob = np.ones(n_classes) / n_classes
 
-num_simulation_per_duration = 1
-sim_n_cores = 1
-chp_n_cores = 34
+num_simulation_per_duration = 100
+sim_n_cores = 25
+chp_n_cores = 1
 
 
 def test_spectral_clustering_on_generative_model(n_nodes):
@@ -38,32 +38,33 @@ def test_spectral_clustering_on_generative_model(n_nodes):
                   'alpha': 0.001,
                   'beta': 0.008,
                   'mu_off_diag': 0.001,
-                  # 'mu_diag': 0.001,
-                  'mu_diag': 0.002,
-                  # 'alpha_diag': 0.006,
+                  'mu_diag': 0.001,
+                  # 'mu_diag': 0.002,
+                  'alpha_diag': 0.006,
                   'scale': False,
                   'end_time': 400,
                   'class_probabilities': class_prob,
                   'n_cores': chp_n_cores}
 
-    event_dict, true_class_assignments = utils.simulate_community_hawkes(params, network_name="10-block-10k-nodes-higher-mu-diff")
+    # event_dict, true_class_assignments = utils.simulate_community_hawkes(params, network_name="10-block-10k-nodes-higher-mu-diff")
+    event_dict, true_class_assignments = utils.simulate_community_hawkes(params)
 
     # Spectral clustering on adjacency matrix
     adj = utils.event_dict_to_adjacency(n_nodes, event_dict)
-    adj_sc_pred = spectral_cluster(adj, num_classes=n_classes, verbose=True)
+    adj_sc_pred = spectral_cluster(adj, num_classes=n_classes, verbose=False)
     adj_sc_rand = adjusted_rand_score(true_class_assignments, adj_sc_pred)
 
     # Spectral clustering on aggregated adjacency matrix
     agg_adj = utils.event_dict_to_aggregated_adjacency(n_nodes, event_dict)
-    agg_adj_pred = spectral_cluster(agg_adj, num_classes=n_classes, verbose=True)
+    agg_adj_pred = spectral_cluster(agg_adj, num_classes=n_classes, verbose=False)
     agg_adj_sc_rand = adjusted_rand_score(true_class_assignments, agg_adj_pred)
 
     return adj_sc_rand, agg_adj_sc_rand
 
 
 # Save results
-# file_name = "all_sims_agg_adj_fail.pckl" if agg_adj_should_fail else "all_sims_adj_fail.pckl"
-file_name = "very-large-n.pckl"
+file_name = "all_sims_agg_adj_fail_100_sim.pckl" if agg_adj_should_fail else "all_sims_adj_fail_100_sim.pckl"
+# file_name = "very-large-n.pckl"
 
 if not plot_only:
     mean_adj_sc_rand_scores = []
@@ -76,8 +77,8 @@ if not plot_only:
 
         if sim_n_cores > 1:
             results = Parallel(n_jobs=sim_n_cores)(delayed(test_spectral_clustering_on_generative_model)
-                                               (number_of_nodes)
-                                               for i in range(num_simulation_per_duration))
+                                                   (number_of_nodes)
+                                                   for i in range(num_simulation_per_duration))
         else:
             results = []
 
@@ -133,7 +134,7 @@ plt.xlabel("Number of Nodes", fontsize=16)
 
 ax.autoscale_view()
 
-# plot_name = "agg_adj_fail" if agg_adj_should_fail else "adj_fail"
-plot_name = "very-large-n"
+plot_name = "agg_adj_fail_100_sim" if agg_adj_should_fail else "adj_fail_100_sim"
+# plot_name = "very-large-n"
 plt.savefig(f"{result_file_path}/plots/{plot_name}.pdf")
 plt.show()

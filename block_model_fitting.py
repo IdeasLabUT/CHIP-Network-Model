@@ -1,4 +1,5 @@
 import time
+import pickle
 import numpy as np
 import dataset_utils
 import generative_model_utils as utils
@@ -79,6 +80,12 @@ def fit_and_eval_block_hawkes(train_tuple, test_tuple, combined_tuple, nodes_not
         print(f"K: {num_classes} - Train ll: {train_log_likelihood / train_n_events:.4f}", end=' - ')
         print(f"Test ll: {ll_per_event:.3f} - Took: {toc - tic:.2f}s")
 
+        # Save results
+        result_file_path = '/shared/Results/CommunityHawkes/fb'
+        with open(f'{result_file_path}/k{num_classes}-model-params.pckl', 'wb') as handle:
+            pickle.dump([train_node_membership, train_bp_mu, train_bp_alpha, train_bp_beta, train_block_pair_events],
+                        handle, protocol=pickle.HIGHEST_PROTOCOL)
+
         if plot_fitted_hist:
             model_utils.generate_fit_block_hawkes(train_event_dict, train_node_membership,
                                                   train_bp_mu, train_bp_alpha, train_bp_beta,
@@ -97,15 +104,17 @@ if __name__ == "__main__":
     fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
         dataset_utils.load_fb_train_test(remove_nodes_not_in_train=False)
     fit_and_eval_block_hawkes(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
-                              k_values_to_test=[4],
-                              plot_fitted_hist=False, verbose=True)
+                              local_search_max_iter=500, local_search_n_cores=25,
+                              k_values_to_test=[2],
+                              plot_fitted_hist=False, verbose=False)
 
     # # Enron Dataset
     # print("Enron dataset")
     # enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train = \
     #     dataset_utils.load_enron_train_test(remove_nodes_not_in_train=False)
     # fit_and_eval_block_hawkes(enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train,
-    #                           k_values_to_test=[4], plot_fitted_hist=True, verbose=True)
+    #                           local_search_max_iter=100000, local_search_n_cores=35,
+    #                           k_values_to_test=list(range(1, 11)), plot_fitted_hist=False, verbose=False)
 
     # # Reality Mining
     # print("Reality Mining")

@@ -10,21 +10,21 @@ from chp_local_search import chp_local_search
 result_file_path = '/shared/Results/CommunityHawkes/pickles/local_search_efficacy'
 pickle_file_name = 'ls_efficacy'
 plot_name = 'ls_efficacy'
-plot_only = False
+plot_only = True
 
-num_simulation_per_duration = 10
+num_simulation_per_duration = 15
 sim_n_cores = 1
-per_sim_n_cores = 25
+per_sim_n_cores = 35
 
 # number_of_nodes_list = [32, 64, 128, 256, 512]
-number_of_nodes_list = [20, 50, 80, 120, 160]
+number_of_nodes_list = [20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
 n_classes = 4
 duration = 100
 
-params = {'alpha': 0.06,
-          'beta': 0.08,
-          'mu_diag': 0.075,
-          'mu_off_diag': 0.07,
+params = {'alpha': 0.16,
+          'beta': 0.18,
+          'mu_diag': 0.175,
+          'mu_off_diag': 0.12,
           'scale': False,
           'end_time': duration,
           'class_probabilities': np.ones(n_classes) / n_classes,
@@ -101,7 +101,7 @@ print(f"community model:")
 print("Number of nodes:", number_of_nodes_list)
 print(f"SC Rand:", mean_sc_rand)
 print(f"LS Rand:", mean_ls_rand)
-
+print(params)
 
 # Plot Results
 fig, ax = plt.subplots()

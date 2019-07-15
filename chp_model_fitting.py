@@ -93,20 +93,21 @@ def fit_and_eval_community_hawkes(train_tuple, test_tuple, combined_tuple, nodes
 
 
 if __name__ == "__main__":
-    # Facebook Dataset
-    print("Facebook wall-post dataset")
-    fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
-        dataset_utils.load_fb_train_test(remove_nodes_not_in_train=False)
-    fit_and_eval_community_hawkes(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
-                                  k_values_to_test=np.arange(1, 11),
-                                  plot_fitted_hist=False, verbose=False)
+    pass
+    # # Facebook Dataset
+    # print("Facebook wall-post dataset")
+    # fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
+    #     dataset_utils.load_fb_train_test(remove_nodes_not_in_train=False)
+    # fit_and_eval_community_hawkes(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
+    #                               k_values_to_test=np.arange(1, 11),
+    #                               plot_fitted_hist=False, verbose=False)
 
     # # Enron Dataset
     # print("Enron dataset")
     # enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train = \
     #     dataset_utils.load_enron_train_test(remove_nodes_not_in_train=False)
     # fit_and_eval_community_hawkes(enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train,
-    #                               k_values_to_test=list(range(1, 11)), plot_fitted_hist=False, verbose=True)
+    #                               k_values_to_test=list(range(1, 11)), plot_fitted_hist=False, verbose=False)
 
     # # Reality Mining
     # print("Reality Mining")
@@ -114,7 +115,7 @@ if __name__ == "__main__":
     #     dataset_utils.load_reality_mining_test_train(remove_nodes_not_in_train=False)
     # fit_and_eval_community_hawkes(rm_train_tuple, rm_test_tuple, rm_combined_tuple, rm_nodes_not_in_train,
     #                               k_values_to_test=list(range(1, 11)),
-    #                               local_search_max_iter=1000000, local_search_n_cores=34,
+    #                               local_search_max_iter=0, local_search_n_cores=34,
     #                               plot_fitted_hist=False, verbose=False)
 
     # Simulated Data

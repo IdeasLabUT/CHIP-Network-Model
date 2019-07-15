@@ -19,15 +19,20 @@ will do poorly, but as the ratio increases there is more signal and the algorith
 
 result_file_path = '/shared/Results/CommunityHawkes/pickles/AS2'
 
-# sim_type = 'a'
-sim_type = 'b'
+sim_type = 'a'
+# sim_type = 'b'
+
+plot_only = False
+
+plot_name = "fixed_ratio" if sim_type == 'a' else "increase_mu_diag"
 
 a_scalars_to_test = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+# a_scalars_to_test = [1, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40]
 b_scalars_to_test = [1, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5]
 
 n_classes = 4
 num_simulation_per_duration = 100
-n_cores = 25
+n_cores = 34
 
 scalars_to_test = a_scalars_to_test if sim_type == 'a' else b_scalars_to_test
 
@@ -49,25 +54,25 @@ def test_spectral_clustering_on_generative_model(scalar):
     return agg_adj_sc_rand
 
 
-mean_sc_rand_scores = []
-mean_sc_rand_scores_err = []
+if not plot_only:
+    mean_sc_rand_scores = []
+    mean_sc_rand_scores_err = []
 
-for scalar in scalars_to_test:
+    for scalar in scalars_to_test:
 
-    results = Parallel(n_jobs=n_cores)(delayed(test_spectral_clustering_on_generative_model)
-                                       (scalar) for i in range(num_simulation_per_duration))
+        results = Parallel(n_jobs=n_cores)(delayed(test_spectral_clustering_on_generative_model)
+                                           (scalar) for i in range(num_simulation_per_duration))
 
-    print(f"Done simulating with {scalar} scalar.")
+        print(f"Done simulating with {scalar} scalar.")
 
-    results = np.asarray(results, dtype=np.float)
+        results = np.asarray(results, dtype=np.float)
 
-    mean_sc_rand_scores.append(np.mean(results))
-    mean_sc_rand_scores_err.append(2 * np.std(results) / np.sqrt(len(results)))
+        mean_sc_rand_scores.append(np.mean(results))
+        mean_sc_rand_scores_err.append(2 * np.std(results) / np.sqrt(len(results)))
 
-
-# Save results
-with open(f'{result_file_path}/all_sims-{sim_type}.pckl', 'wb') as handle:
-    pickle.dump([mean_sc_rand_scores, mean_sc_rand_scores_err], handle, protocol=pickle.HIGHEST_PROTOCOL)
+    # Save results
+    with open(f'{result_file_path}/all_sims-{sim_type}.pckl', 'wb') as handle:
+        pickle.dump([mean_sc_rand_scores, mean_sc_rand_scores_err], handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 with open(f'{result_file_path}/all_sims-{sim_type}.pckl', 'rb') as handle:
     [mean_sc_rand_scores, mean_sc_rand_scores_err] = pickle.load(handle)
@@ -82,14 +87,18 @@ print(f"rand error:", mean_sc_rand_scores_err)
 # Plot Results
 fig, ax = plt.subplots()
 ind = np.arange(len(scalars_to_test))    # the x locations for the groups
-p1 = ax.bar(ind, mean_sc_rand_scores, color='r', yerr=mean_sc_rand_scores_err)
+p1 = ax.bar(ind, mean_sc_rand_scores, color='c', yerr=mean_sc_rand_scores_err)
 
-ax.set_title(f'AS2 {sim_type} Community Model\'s Mean Adjusted Rand Scores')
+# ax.set_title(f'AS2 {sim_type} Community Model\'s Mean Adjusted Rand Scores')
 ax.set_xticks(ind)
-ax.set_xticklabels(scalars_to_test)
+ax.tick_params(labelsize=12)
+ax.set_xticklabels(scalars_to_test, fontsize=12)
+plt.xlabel("Scalars", fontsize=16)
+plt.ylabel("Mean Adjusted Rand Score", fontsize=16)
+
 ax.set_ylim(0, 1)
+
 ax.autoscale_view()
-plt.xlabel("Scalars")
-plt.ylabel("Mean Adjusted Rand Index")
-# plt.savefig(plot_path + "sc-vary.pdf")
+
+plt.savefig(result_file_path + "/plots/" + plot_name + ".pdf")
 plt.show()

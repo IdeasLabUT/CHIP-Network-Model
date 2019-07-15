@@ -10,10 +10,10 @@ from spectral_clustering import spectral_cluster
 
 result_file_path = '/shared/Results/CommunityHawkes/pickles/fb_chp_fit'
 
-fit_chp = True
+fit_chp = False
 load_fb = True
 plot_hawkes_params = True
-verbose = False
+verbose = True
 num_classes = 10
 
 # load Facebook Wall-posts
@@ -29,6 +29,7 @@ if fit_chp or load_fb:
         print("Num Nodes:", fb_num_node, "Duration:", fb_duration,
               "Num Edges:", num_events)
 
+exit()
 # fit Facebook Wall-posts
 if fit_chp:
     tic = time.time()

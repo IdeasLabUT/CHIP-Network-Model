@@ -58,7 +58,6 @@ num_simulation_per_duration = 30
 n_cores = 30
 
 for fixed_var in ['n', 't', 'k']:
-# for fixed_var in ['n']:
     print("Fixing:", fixed_var)
 
     n_range_to_test = n_range
@@ -130,7 +129,7 @@ for fixed_var in ['n', 't', 'k']:
     fig, ax = plt.subplots()
 
     im, _ = heatmap(mean_sc_rand_scores, ylables, xlables, ax=ax, cmap="coolwarm",
-                    cbarlabel=f"Adjusted Rand Index")
+                    cbarlabel=f"Adjusted Rand Score")
 
     # Loop over data dimensions and create text annotations.
     for i in range(len(n_range)):
@@ -140,7 +139,7 @@ for fixed_var in ['n', 't', 'k']:
 
     plt.ylabel(ylab, fontsize=16)
     plt.xlabel(xlab, fontsize=16)
-    ax.set_title(f"CHP SC AS3 Fixed {fixed_var.upper()}: {fixed_value}")
+    # ax.set_title(f"CHP SC AS3 Fixed {fixed_var.upper()}: {fixed_value}")
     fig.tight_layout()
     plt.savefig(f"{result_file_path}/plots/as3-fixed-{fixed_var}.pdf")
     # plt.show()

@@ -22,7 +22,7 @@ def calc_node_neigh_solutions(event_dict, n_classes, duration, node_membership, 
 
     for n_i in node_batch:
         n_i_class = node_membership[n_i]
-
+        tic = time.time()
         # Adding a constraint to maintain the number of blocks.
         if np.sum(node_membership == n_i_class) <= 2:
             continue
@@ -47,12 +47,13 @@ def calc_node_neigh_solutions(event_dict, n_classes, duration, node_membership, 
                 best_neigh = (n_i, c_i, log_lik)
 
             node_membership[n_i] = n_i_class
+        print("t:", time.time() - tic)
 
     return best_neigh
 
 
 def block_local_search(event_dict, n_classes, node_membership_init, duration, max_iter=100, n_cores=-1,
-                       return_fitted_param=False, verbose=True):
+                       return_fitted_param=False, verbose=False):
     n_nodes = len(node_membership_init)
     nodes = np.arange(n_nodes)
     node_membership = node_membership_init
@@ -71,11 +72,14 @@ def block_local_search(event_dict, n_classes, node_membership_init, duration, ma
         if verbose:
             print(f"Iteration {iter}...", end='\r')
 
+        tic = time.time()
         # for each of the (k-1)*n neighboring solutions
         possible_solutions = Parallel(n_jobs=n_cores)(delayed(calc_node_neigh_solutions)
                                                       (event_dict, n_classes, duration, node_membership, log_lik,
                                                        nodes[batch_size * ii: batch_size * (ii + 1)])
                                                       for ii in range(n_cores))
+        toc = time.time()
+        print(f"Iter {iter}, took: {(toc - tic)/3600:.3f}h")
 
         possible_solutions = np.array(possible_solutions)
 

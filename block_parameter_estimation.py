@@ -1,7 +1,8 @@
+import time
 import warnings
 import numpy as np
 import block_local_search as bls
-from scipy.optimize import minimize, Bounds
+from scipy.optimize import minimize
 from scipy.stats import multinomial
 import generative_model_utils as utils
 from spectral_clustering import spectral_cluster, regularized_spectral_cluster
@@ -48,7 +49,6 @@ def fit_block_model(event_dict, num_nodes, duration, num_classes, local_search_m
 
 def estimate_hawkes_param_and_calc_log_likelihood(event_dict, node_membership, duration, num_classes,
                                                   add_com_assig_log_prob=False):
-
     bp_events = event_dict_to_combined_block_pair_events(event_dict, node_membership, num_classes)
 
     bp_mu, bp_alpha, bp_beta = estimate_hawkes_params(bp_events, node_membership, duration, num_classes)
@@ -136,24 +136,31 @@ def event_dict_to_combined_block_pair_events(event_dict, class_assignment, n_cla
     return block_pair_events
 
 
-def compute_wijs_recursive(bp_events, beta):
+def compute_wijs_recursive(bp_events, beta, cache=None):
     n_events = len(bp_events)
     if n_events < 1:
         return 0
 
     wijs = np.zeros(n_events)
+    if cache is not None:
+        wijs[1:] = np.exp(-beta * cache['inter_event_times'])
+    else:
+        wijs[1:] = np.exp(-beta * (bp_events[1:] - bp_events[:-1]))
+
     for i in range(1, n_events):
-        wijs[i] = np.exp(-beta * (bp_events[i] - bp_events[i - 1])) * (1 + wijs[i - 1])
+        wijs[i] *= (1 + wijs[i - 1])
 
     return wijs
 
 
-def block_pair_conditional_log_likelihood(bp_events, mu, alpha, beta, end_time, block_pair_size):
+def block_pair_conditional_log_likelihood(bp_events, mu, alpha, beta, end_time, block_pair_size, cache=None):
     """
 
     :param block_pair_size: Size of the block pair. bp_events may not include an entry for node_pairs with no
                             interactions, in that case, we need to add (-mu * end_time) to the likelihood for each
                             missing node pair.
+    :param cache: Only use for optimization. cache['wijs'] will be updated by the new wijs if beta_changed, if not
+                  it will be used to compute the ll.
     """
     ll = 0
     bp_n_events = len(bp_events)
@@ -167,7 +174,12 @@ def block_pair_conditional_log_likelihood(bp_events, mu, alpha, beta, end_time, 
         ll += (alpha / beta) * np.sum(np.exp(-beta * (end_time - bp_events)) - 1)
 
         # second recursive sum
-        ll += np.sum(np.log(mu + alpha * compute_wijs_recursive(bp_events, beta)))
+        if cache is not None:
+            if cache['beta_changed']:
+                cache['wijs'] = compute_wijs_recursive(bp_events, beta, cache=cache)
+            ll += np.sum(np.log(mu + alpha * cache['wijs']))
+        else:
+            ll += np.sum(np.log(mu + alpha * compute_wijs_recursive(bp_events, beta)))
 
         # second part of the log-likelihood
         ll -= bp_n_events * np.log(block_pair_size)
@@ -178,7 +190,7 @@ def block_pair_conditional_log_likelihood(bp_events, mu, alpha, beta, end_time, 
     return ll
 
 
-def neg_log_likelihood_all_bp(param, bp_events, end_time, block_pair_size):
+def neg_log_likelihood_all_bp(param, bp_events, end_time, block_pair_size, cache):
     alpha = param[0]
     beta = param[1]
     mu = param[2]
@@ -187,8 +199,14 @@ def neg_log_likelihood_all_bp(param, bp_events, end_time, block_pair_size):
     if mu <= 0 or alpha < 0 or beta <= 0:
         return 0.
 
+    if cache['prev_beta'] == beta:
+        cache['beta_changed'] = False
+    else:
+        cache['prev_beta'] = beta
+        cache['beta_changed'] = True
+
     return -block_pair_conditional_log_likelihood(bp_events, mu, alpha, beta,
-                                                  end_time, block_pair_size)
+                                                  end_time, block_pair_size, cache=cache)
 
 
 def estimate_all_bp_from_events(bp_events, end_time, block_pair_size, init_param=(1e-2,2e-2,2e-5), return_detail=False):
@@ -196,9 +214,16 @@ def estimate_all_bp_from_events(bp_events, end_time, block_pair_size, init_param
     min_beta = 1e-20
     min_alpha = 0
 
+    cache = {'prev_beta': 0,
+             "beta_changed": True,
+             "wijs": [],
+             'inter_event_times': bp_events[1:] - bp_events[:-1],
+             'cnt': 0,
+             'c': 0}
+
     res = minimize(neg_log_likelihood_all_bp, init_param, method='L-BFGS-B',
-                   bounds=((min_alpha, None), (min_beta, None), (min_mu, None)), jac=None,
-                   args=(bp_events, end_time, block_pair_size))
+                   bounds=((min_alpha, None), (min_beta, None), (min_mu, None)), jac=None, options={'maxiter': 1500},
+                   args=(bp_events, end_time, block_pair_size, cache))
 
     alpha, beta, mu = res.x
 

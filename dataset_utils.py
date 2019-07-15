@@ -331,7 +331,7 @@ def plot_event_count_hist(event_dict, num_nodes, dset_title_name):
 def load_facebook_wall(timestamp_max=1000, largest_connected_component_only=False):
     file_path = '/shared/DataSets/FacebookViswanath2009/raw/facebook-wall.txt'
 
-    # load the core dataset. receiver_id sender_id unix_timestamp
+    # receiver_id sender_id unix_timestamp
     data = np.loadtxt(file_path, np.float)
 
     # remove self-edges
@@ -375,6 +375,7 @@ def load_facebook_wall(timestamp_max=1000, largest_connected_component_only=Fals
 
 
 if __name__ == '__main__':
+
     load_facebook_wall(largest_connected_component_only=True)
     # load_core_reality_mining_based_on_dubois()
     # load_reality_mining_test_train()
