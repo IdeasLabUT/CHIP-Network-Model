@@ -22,7 +22,7 @@ def calc_node_neigh_solutions(event_dict, n_classes, duration, node_membership, 
 
     for n_i in node_batch:
         n_i_class = node_membership[n_i]
-        tic = time.time()
+
         # Adding a constraint to maintain the number of blocks.
         if np.sum(node_membership == n_i_class) <= 2:
             continue
@@ -47,7 +47,6 @@ def calc_node_neigh_solutions(event_dict, n_classes, duration, node_membership, 
                 best_neigh = (n_i, c_i, log_lik)
 
             node_membership[n_i] = n_i_class
-        print("t:", time.time() - tic)
 
     return best_neigh
 

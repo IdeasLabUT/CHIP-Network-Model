@@ -152,8 +152,8 @@ def generate_fit_community_hawkes(event_dict, node_membership,
     Also, fits a community model to the generated data itself (if fit_generated_model is True), this is done by
     converting the generated event_dict to event_list and split it to train\test and fit it using model_fitting.
     """
-    if not fit_generated_model and not plot_hist:
-        return
+    # if not fit_generated_model and not plot_hist:
+    #     return
 
     # Generating a network
     n_nodes = len(node_membership)
@@ -193,7 +193,7 @@ def generate_fit_community_hawkes(event_dict, node_membership,
         # print(utils.num_events_in_event_dict(ge))
         fit_and_eval_community_hawkes(gen_train_tuple, gen_test_tuple, gen_combined_tuple, gen_nodes_not_in_train)
 
-    return
+    return generated_node_membership, generated_event_dict
 
 
 def generate_fit_block_hawkes(event_dict, node_membership,
@@ -232,3 +232,21 @@ def generate_fit_block_hawkes(event_dict, node_membership,
     plt.show()
 
     return
+
+
+def log_binning(counter, bin_count=35):
+    keys = counter[0]
+    values = counter[1]
+
+    max_x = np.log10(max(keys))
+    max_y = np.log10(max(values))
+    max_base = max([max_x, max_y])
+
+    min_x = np.log10(min(keys))
+
+    bins = np.logspace(min_x, max_base, num=bin_count)
+
+    bin_means_y = np.histogram(keys, bins, weights=values)[0] / np.histogram(keys, bins)[0]
+    bin_means_x = np.histogram(keys, bins, weights=keys)[0] / np.histogram(keys, bins)[0]
+
+    return bin_means_x, bin_means_y

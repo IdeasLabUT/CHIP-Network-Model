@@ -14,7 +14,13 @@ def spectral_cluster(adj, num_classes=2, n_kmeans_init=10, normalize_z=True, ver
         print("Eigenvalues: \n", s)
 
     if plot_eigenvalues:
-        plt.scatter(np.arange(num_classes, 0, -1), s, marker='*', )
+        plt.scatter(np.arange(num_classes, 0, -1), s, marker='*', color='blue')
+        plt.xlabel('Rank', fontsize=16)
+        plt.ylabel('Singular Values', fontsize=16)
+        plt.tight_layout()
+        plt.rc('xtick', labelsize=12)
+        plt.rc('ytick', labelsize=12)
+        # plt.savefig('/shared/Results/CommunityHawkes/pickles/fb_chp_fit/singular_values.pdf')
         plt.show()
 
     # Sort in decreasing order of magnitude

@@ -105,7 +105,7 @@ if __name__ == "__main__":
         dataset_utils.load_fb_train_test(remove_nodes_not_in_train=False)
     fit_and_eval_block_hawkes(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
                               local_search_max_iter=500, local_search_n_cores=25,
-                              k_values_to_test=[2],
+                              k_values_to_test=[3],
                               plot_fitted_hist=False, verbose=False)
 
     # # Enron Dataset

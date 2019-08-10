@@ -131,11 +131,11 @@ for fixed_var in ['n', 't', 'k']:
     im, _ = heatmap(mean_sc_rand_scores, ylables, xlables, ax=ax, cmap="coolwarm",
                     cbarlabel=f"Adjusted Rand Score")
 
-    # Loop over data dimensions and create text annotations.
-    for i in range(len(n_range)):
-        for j in range(len(n_range)):
-            text = ax.text(j, i, np.format_float_scientific(mean_sc_rand_scores_err[i, j], exp_digits=1, precision=1),
-                           ha="center", va="center", color="w")
+    # # Loop over data dimensions and create text annotations.
+    # for i in range(len(n_range)):
+    #     for j in range(len(n_range)):
+    #         text = ax.text(j, i, np.format_float_scientific(mean_sc_rand_scores_err[i, j], exp_digits=1, precision=1),
+    #                        ha="center", va="center", color="w")
 
     plt.ylabel(ylab, fontsize=16)
     plt.xlabel(xlab, fontsize=16)

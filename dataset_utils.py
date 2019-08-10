@@ -328,7 +328,14 @@ def plot_event_count_hist(event_dict, num_nodes, dset_title_name):
     plt.show()
 
 
-def load_facebook_wall(timestamp_max=1000, largest_connected_component_only=False):
+def load_facebook_wall(timestamp_max=1000, largest_connected_component_only=False, train_percentage=None):
+    """
+    :param timestamp_max:
+    :param largest_connected_component_only:
+    :param train_percentage: If None, returns the entire dataset as a single dataset, else returns a train/test/combined
+                             dataset based on the train_percentage.
+    """
+
     file_path = '/shared/DataSets/FacebookViswanath2009/raw/facebook-wall.txt'
 
     # receiver_id sender_id unix_timestamp
@@ -355,6 +362,9 @@ def load_facebook_wall(timestamp_max=1000, largest_connected_component_only=Fals
         # Scale timestamps to 0 to timestamp_max
         data[:, 2] = (data[:, 2] - min(data[:, 2])) / (max(data[:, 2]) - min(data[:, 2])) * timestamp_max
 
+    if train_percentage is not None:
+        return split_event_list_to_train_test(data, train_percentage=train_percentage)
+    
     duration = data[-1, 2]
 
     node_set = set(data[:, 0].astype(np.int)).union(data[:, 1].astype(np.int))
