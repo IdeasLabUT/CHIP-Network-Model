@@ -342,7 +342,7 @@ def simulate_community_hawkes(params=None, network_name=None, load_if_exists=Fal
 
     :return: event_dict, node_membership
     """
-    generated_network_path = '/shared/Results/CommunityHawkes/generated_networks/'
+    generated_network_path = './storage/results/generated_networks/'
 
     default_params = {'seed': None,
                       'number_of_nodes': 128,

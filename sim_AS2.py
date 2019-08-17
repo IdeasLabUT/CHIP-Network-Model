@@ -22,7 +22,7 @@ from sklearn.metrics import adjusted_rand_score
 from spectral_clustering import spectral_cluster
 
 
-result_file_path = '/shared/Results/CommunityHawkes/pickles/AS2'
+result_file_path = './storage/results/AS2'
 
 also_use_unweighted_adjacency = True
 

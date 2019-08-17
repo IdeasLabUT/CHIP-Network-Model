@@ -44,7 +44,7 @@ def test_spectral_clustering_on_generative_model(n, t, k):
     return agg_adj_sc_rand
 
 
-result_file_path = '/shared/Results/CommunityHawkes/pickles/AS3'
+result_file_path = './storage/results/AS3'
 
 plot_only = True
 

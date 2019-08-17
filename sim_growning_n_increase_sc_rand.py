@@ -14,7 +14,7 @@ from sklearn.metrics import adjusted_rand_score
 from spectral_clustering import spectral_cluster
 
 
-result_file_path = '/shared/Results/CommunityHawkes/pickles/growing_n_increase_sc_rand'
+result_file_path = './storage/results/growing_n_increase_sc_rand'
 
 agg_adj_should_fail = True
 plot_only = False

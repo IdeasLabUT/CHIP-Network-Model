@@ -16,7 +16,7 @@ import model_fitting_utils as model_utils
 from parameter_estimation import estimate_hawkes_from_counts
 
 
-result_file_path = '/shared/Results/CommunityHawkes/pickles/count_based_estimate'
+result_file_path = './storage/results/count_based_estimate'
 
 estimate_alpha_beta = True
 plot_only = True
