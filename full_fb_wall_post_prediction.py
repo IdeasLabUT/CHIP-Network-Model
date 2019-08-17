@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+"Exploratory Analysis of the Facebook Wall Posts Dataset using CHIP", comparison of the log-likelihoods of
+the weighted vs. unweighted adjacency matrices.
+
+Here we fit CHIP to the largest connected component of the Facebook wall-post dataset in a train/test setting to
+evaluate the log-likelihood of the model on the test set.
+
+@author: Makan Arastuie
+"""
+
 import time
 import pickle
 import numpy as np
@@ -9,14 +20,15 @@ import model_fitting_utils as fitting_utils
 import parameter_estimation as estimate_utils
 from spectral_clustering import spectral_cluster
 
-result_file_path = '/shared/Results/CommunityHawkes/pickles/fb_chp_fit'
 
-use_agg_adj = False
-fit_chp = True
+result_file_path = '/shared/Results/CommunityHawkes/pickles/fb_chip_fit'
+
+use_agg_adj = True
+fit_chip = True
 load_fb = True
 plot_hawkes_params = False
 plot_node_membership = False
-simulate_chp = True
+simulate_chip = True
 verbose = False
 num_classes = 10
 
@@ -26,7 +38,7 @@ tic = time.time()
 ((train_event_dict, train_num_nodes, train_duration),
  (test_event_dict, test_num_nodes, test_duration),
  (combined_event_dict, combined_num_events, combined_duration),
- nodes_not_in_train) = dataset_utils.load_facebook_wall(largest_connected_component_only=True, train_percentage=0.6)
+ nodes_not_in_train) = dataset_utils.load_facebook_wall(largest_connected_component_only=True, train_percentage=0.8)
 toc = time.time()
 print(f"Loaded the dataset in {toc - tic:.1f}s")
 
@@ -38,7 +50,7 @@ print("Test: ", "Num Nodes:", test_num_nodes, "Duration:", test_duration, "Num E
 
 
 # fit Facebook Wall-posts
-if fit_chp:
+if fit_chip:
     tic = time.time()
     train_agg_adj = utils.event_dict_to_aggregated_adjacency(train_num_nodes, train_event_dict)
 

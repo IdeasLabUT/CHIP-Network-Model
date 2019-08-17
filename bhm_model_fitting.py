@@ -9,7 +9,7 @@ import numpy as np
 import dataset_utils
 import generative_model_utils as utils
 import model_fitting_utils as model_utils
-import block_parameter_estimation as estimate_utils
+import bhm_parameter_estimation as estimate_utils
 
 
 def fit_and_eval_block_hawkes(train_tuple, test_tuple, combined_tuple, nodes_not_in_train,
@@ -18,7 +18,7 @@ def fit_and_eval_block_hawkes(train_tuple, test_tuple, combined_tuple, nodes_not
                               plot_fitted_hist=False, verbose=False):
 
     """
-    Fits the block Hawkes model to train and evaluates the log-likelihood on the test, by evaluating the
+    Fits the Block Hawkes model (BHM) to train and evaluates the log-likelihood on the test, by evaluating the
     log-likelihood on the combined dataset and subtracting the likelihood of train, dividing by number of events in test
 
     :param train_tuple, test_tuple, combined_tuple: A tuple of (event dict, number of nodes, duration)

@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+"""
+Empirically analyzing the efficacy of local search on rand score after spectral clustering, to see at which point local
+search is no longer necessary.
+
+@author: Makan Arastuie
+"""
+
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
@@ -5,7 +13,8 @@ from joblib import Parallel, delayed
 import generative_model_utils as utils
 from sklearn.metrics import adjusted_rand_score
 from spectral_clustering import spectral_cluster
-from chp_local_search import chp_local_search
+from chip_local_search import chip_local_search
+
 
 result_file_path = '/shared/Results/CommunityHawkes/pickles/local_search_efficacy'
 pickle_file_name = 'ls_efficacy'
@@ -41,8 +50,8 @@ def test_spectral_clustering_on_generative_model(n_nodes):
     sc_node_membership = spectral_cluster(agg_adj, num_classes=n_classes, verbose=False)
     sc_rand = adjusted_rand_score(true_class_assignments, sc_node_membership)
 
-    ls_node_membership = chp_local_search(event_dict, n_classes, sc_node_membership, duration,
-                                          max_iter=10000, n_cores=per_sim_n_cores, verbose=False)
+    ls_node_membership = chip_local_search(event_dict, n_classes, sc_node_membership, duration,
+                                           max_iter=10000, n_cores=per_sim_n_cores, verbose=False)
     ls_rand = adjusted_rand_score(true_class_assignments, ls_node_membership)
 
     return sc_rand, ls_rand

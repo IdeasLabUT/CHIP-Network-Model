@@ -1,3 +1,18 @@
+# -*- coding: utf-8 -*-
+"""
+"Effects of Diagonal and Off-diagonal Mu's on Community Detection"
+
+** simulation AS2: fix $n,k,T$, then:
+
+(a) Increase mu_diag and mu_off_diag such that the ratio mu_off_diag/mu_diag remains the same.
+(b) Hold mu_off_diag fixed and only increase mu_diag slowly.
+
+Expectation: We should see accuracy increase in both these cases. When mu_diag/mu_off_diag ratio is low, the algorithms
+will do poorly, but as the ratio increases there is more signal and the algorithm will do well and go all the way to 1.
+
+@author: Makan Arastuie
+"""
+
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
@@ -6,16 +21,6 @@ import generative_model_utils as utils
 from sklearn.metrics import adjusted_rand_score
 from spectral_clustering import spectral_cluster
 
-
-'''
-** simulation AS2: fix $n,k,T$, then:
-
-(a) Increase mu_diag and mu_off_diag such that the ratio mu_off_diag/mu_diag remains the same.
-(b) Hold mu_off_diag fixed and only increase mu_diag slowly. 
-
-Expectation: We should see accuracy increase in both these cases. When mu_diag/mu_off_diag ratio is low, the algorithms 
-will do poorly, but as the ratio increases there is more signal and the algorithm will do well and go all the way to 1.
-'''
 
 result_file_path = '/shared/Results/CommunityHawkes/pickles/AS2'
 
@@ -28,8 +33,7 @@ plot_only = True
 
 plot_name = "fixed_ratio" if sim_type == 'a' else "increase_mu_diag"
 
-# a_scalars_to_test = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100]
-# a_scalars_to_test = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 20, 24]
+# a_scalars_to_test = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
 a_scalars_to_test = [1, 5, 10, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180]
 b_scalars_to_test = [1, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5]
 

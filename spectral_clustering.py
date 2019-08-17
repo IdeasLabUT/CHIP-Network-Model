@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+@author: Kevin Xu and Makan Arastuie
+"""
+
 import numpy as np
 from sklearn.cluster import KMeans
 from scipy.sparse.linalg import svds
@@ -6,6 +11,18 @@ import matplotlib.pyplot as plt
 
 
 def spectral_cluster(adj, num_classes=2, n_kmeans_init=10, normalize_z=True, verbose=False, plot_eigenvalues=False):
+    """
+    Runs spectral clustering on weighted or unweighted adjacency matrix
+
+    :param adj: weighted, unweighted or regularized adjacency matrix
+    :param num_classes: number of classes for spectral clustering
+    :param n_kmeans_init: number of initializations for k-means
+    :param normalize_z: If True, vector z is normalized to sum to 1
+    :param verbose: if True, prints the eigenvalues
+    :param plot_eigenvalues: if True, plots the first `num_classes` singular values
+
+    :return: predicted clustering membership
+    """
     # Compute largest num_classes singular values and vectors of adjacency matrix
     u, s, v = svds(adj, k=num_classes)
     v = v.T
@@ -20,7 +37,7 @@ def spectral_cluster(adj, num_classes=2, n_kmeans_init=10, normalize_z=True, ver
         plt.tight_layout()
         plt.rc('xtick', labelsize=12)
         plt.rc('ytick', labelsize=12)
-        # plt.savefig('/shared/Results/CommunityHawkes/pickles/fb_chp_fit/singular_values.pdf')
+        # plt.savefig('/shared/Results/CommunityHawkes/pickles/fb_chip_fit/singular_values.pdf')
         plt.show()
 
     # Sort in decreasing order of magnitude
@@ -40,6 +57,17 @@ def spectral_cluster(adj, num_classes=2, n_kmeans_init=10, normalize_z=True, ver
 
 
 def regularized_spectral_cluster(adj, num_classes=2, tau=None, n_kmeans_init=10, normalize_z=True):
+    """
+    Runs regularized spectral clustering on weighted or unweighted adjacency matrix
+
+    :param adj: weighted, unweighted or regularized adjacency matrix
+    :param num_classes: number of classes for spectral clustering
+    :param tau: regularization parameter
+    :param n_kmeans_init: number of initializations for k-means
+    :param normalize_z: If True, vector z is normalized to sum to 1
+
+    :return: predicted clustering membership
+    """
     node_outdegree = np.sum(adj, axis=1)
     node_indegree = np.sum(adj, axis=0)
 

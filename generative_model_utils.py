@@ -1,8 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+@author: Makan Arastuie
+"""
+
 import os
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
-import community_generative_model as chp
+import chip_generative_model as chip
 from tick.hawkes import SimuHawkesExpKernels
 
 
@@ -10,12 +15,13 @@ def assign_class_membership(num_nodes, class_prob, one_hot=True):
     """
     Randomly assigns num_node nodes to one of the classes based on class_prob.
 
-    :rtype: `node_membership`: membership of every node to one of K classes. num_nodes x num_classes (if one_hot)
-            `community_membership`: list of nodes belonging to each class. num_classes x (varying size list)
     :param num_nodes: (int) Total number of nodes
     :param class_prob: (list) Probability of class memberships from class 0 to K - 1
     :param one_hot: (bool) if True, node memberships will be returned with one hot encoding, otherwise a class number
                         will be returned
+
+    :return: `node_membership`: membership of every node to one of K classes. num_nodes x num_classes (if one_hot)
+        `community_membership`: list of nodes belonging to each class. num_classes x (varying size list)
     """
     num_classes = len(class_prob)
 
@@ -35,6 +41,7 @@ def node_membership_to_community_membership(node_membership, n_classes, is_one_h
                             num_nodes x 1 otherwise
     :param n_classes: Number of classes
     :param is_one_hot: True, if node_membership of one_hot encoded
+
     :return: list of nodes belonging to each class. num_classes x (varying size list)
     """
     community_membership = []
@@ -52,6 +59,14 @@ def node_membership_to_community_membership(node_membership, n_classes, is_one_h
 
 
 def simulate_univariate_hawkes(mu, alpha, beta, run_time, seed=None):
+    """
+    Simulates a univariate Hawkes based on the parameters.
+
+    :param mu, alpha, beta: parameters of the Hawkes process
+    :param run_time: End time of the simulation
+    :param seed: (optional) Seed for the random process.
+    :return: Hawkes event times
+    """
     # this is due to tick's implementation of Hawkes process
     alpha = alpha / beta
 
@@ -78,6 +93,8 @@ def generate_random_hawkes_params(num_classes, mu_range, alpha_range, beta_range
     :param alpha_range: (tuple) (min, max) range of alpha.
     :param beta_range: (tuple) (min, max) range of beta.
     :param seed: seed of random generation
+
+    :return: mu, alpha, beta
     """
     np.random.seed(seed)
 
@@ -95,6 +112,7 @@ def generate_theta_params_for_degree_corrected_community(num_nodes, dist, norm_s
     :param num_nodes: (int) Number of nodes in the network
     :param dist: (string) distribution to be drawn from. Either "exp" or "dirichlet"
     :param norm_sum_to: (string) Normalize all theta to sum to either "1" or "n" (number of nodes)
+
     :return: (list) theta values for each node
     """
 
@@ -116,10 +134,12 @@ def generate_theta_params_for_degree_corrected_community(num_nodes, dist, norm_s
 
 def event_dict_to_adjacency(num_nodes, event_dicts, dtype=np.float):
     """
+    Converts event dict to unweighted adjacency matrix
 
     :param num_nodes: (int) Total number of nodes
     :param event_dicts: Edge dictionary of events between all node pair. Output of the generative models.
     :param dtype: data type of the adjacency matrix. Float is needed for the spectral clustering algorithm.
+
     :return: np array (num_nodes x num_nodes) Adjacency matrix with 1 between nodes where there is at least one event.
     """
     adjacency_matrix = np.zeros((num_nodes, num_nodes), dtype=dtype)
@@ -133,10 +153,12 @@ def event_dict_to_adjacency(num_nodes, event_dicts, dtype=np.float):
 
 def event_dict_to_aggregated_adjacency(num_nodes, event_dicts, dtype=np.float):
     """
+    Converts event dict to weighted/aggregated adjacency matrix
 
     :param num_nodes: (int) Total number of nodes
     :param event_dicts: Edge dictionary of events between all node pair. Output of the generative models.
     :param dtype: data type of the adjacency matrix. Float is needed for the spectral clustering algorithm.
+
     :return: np array (num_nodes x num_nodes) Adjacency matrix where element ij denotes the number of events between
                                               nodes i an j.
     """
@@ -151,7 +173,6 @@ def event_dict_to_aggregated_adjacency(num_nodes, event_dicts, dtype=np.float):
 def event_dict_to_block_pair_events(event_dicts, class_assignment, n_classes, is_for_tick=False):
     """
     Converts event_dicts to list of event lists for each block pair.
-
 
     :param event_dicts: Edge dictionary of events between all node pair. Output of the generative models.
     :param class_assignment: membership of every node to one of K classes. num_nodes x 1 (class of node i)
@@ -176,7 +197,6 @@ def event_dict_to_block_pair_events(event_dicts, class_assignment, n_classes, is
             block_pair_events[class_assignment[u]][class_assignment[v]].append([event_dicts[(u, v)]])
         else:
             block_pair_events[class_assignment[u]][class_assignment[v]].append(np.array(event_dicts[(u, v)]))
-            # block_pair_events[class_assignment[u]][class_assignment[v]].append(event_dicts[(u, v)])
 
     return block_pair_events
 
@@ -198,7 +218,9 @@ def num_events_in_event_dict(event_dict):
 def event_dict_to_event_list(event_dict):
     """
     Converts an event_dict to a list of events [from, to, timestamp] ordered by timestamp
+
     :param event_dict: Edge dictionary of events between all node pair. Output of the generative models.
+
     :return: np.array num_events x 3 float
     """
     num_events = num_events_in_event_dict(event_dict)
@@ -221,6 +243,7 @@ def one_hot_to_class_assignment(node_membership):
     converts one-hot encoding of node_membership to class assignment
 
     :param node_membership: One-hot encoding of node_membership
+
     :return: 1-D np array with class of each node.
     """
     return np.argmax(node_membership, axis=1)
@@ -229,14 +252,15 @@ def one_hot_to_class_assignment(node_membership):
 def calc_block_pair_size(class_assignment, n_classes):
     """
     Calculates the size of each block pair based on the class assignment.
+
     :param class_assignment: membership of every node to one of K classes. (1 x num_nodes)
     :param n_classes:  (int) total number of classes
+
     :return: K x K matrix, ij denotes the size of the block pair (b_i, b_j)
     """
 
     classes, class_size = np.unique(class_assignment, return_counts=True)
     if len(classes) != n_classes:
-        # TODO: check if there is class missing. If yes, add it to classes and class_size
         exit("Fix calc_block_pair_size")
 
     bp_size = np.ones((n_classes, n_classes)) * class_size
@@ -252,10 +276,12 @@ def scale_parameteres_by_block_pair_size(param, num_nodes, class_prob):
     """
     Calculates comparable hawkes parameters values based on the parameters for Block Hawkes model, for the Community
         Hawkes model, by dividing the parameter for each block pair by the expected size of that block pair.
+
     :param param: K x K matrix, ij denotes the hawkes parameter of the Block Hawkes process for block pair (b_i, b_j)
     :param num_nodes: (int) Total number of nodes
     :param class_prob: (list) Probability of class memberships from class 0 to K - 1
-    :return: K x K matrix, ij denotes the mu of the Community Hawkes process for block pair (b_i, b_j)
+
+    :return: K x K matrix, ij denotes the mu of CHIP model for block pair (b_i, b_j)
     """
     num_classes = len(class_prob)
 
@@ -274,6 +300,12 @@ def scale_parameteres_by_block_pair_size(param, num_nodes, class_prob):
 
 
 def plot_degree_count_histogram(aggregated_adjacency):
+    """
+    Plots a histogram of the weighted adjacency matrix.
+
+    :param aggregated_adjacency: np array (num_nodes x num_nodes) Adjacency matrix where element ij denotes the
+                                 number of events between nodes i an j.
+    """
     n = aggregated_adjacency.shape[0]
     deg_count_flattened = np.reshape(aggregated_adjacency, (n * n))
 
@@ -300,6 +332,16 @@ def asymptotic_var(mu, alpha, beta, run_time):
 
 
 def simulate_community_hawkes(params=None, network_name=None, load_if_exists=False, verbose=False):
+    """
+    Simulates or loads a CHIP model based on the passed parameters.
+
+    :param params: (dict) optional. Check variable `default_params` in the function for a list of parameters to change
+    :param network_name: optional. name of the network to save or load.
+    :param load_if_exists: If true, a network with `network_name` will be loaded if it exists.
+    :param verbose: if True, details will be printed to the console.
+
+    :return: event_dict, node_membership
+    """
     generated_network_path = '/shared/Results/CommunityHawkes/generated_networks/'
 
     default_params = {'seed': None,
@@ -349,7 +391,7 @@ def simulate_community_hawkes(params=None, network_name=None, load_if_exists=Fal
         bp_alpha = scale_parameteres_by_block_pair_size(bp_alpha, n_scale, class_probabilities)
         bp_beta = scale_parameteres_by_block_pair_size(bp_beta, n_scale, class_probabilities)
 
-    node_membership, event_dict = chp.community_generative_model(number_of_nodes,
+    node_membership, event_dict = chip.community_generative_model(number_of_nodes,
                                                                  class_probabilities,
                                                                  bp_mu, bp_alpha, bp_beta,
                                                                  burnin, end_time,

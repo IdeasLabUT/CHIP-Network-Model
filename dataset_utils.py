@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+@author: Makan Arastuie
+"""
+
 import numpy as np
 import networkx as nx
 from datetime import datetime
@@ -7,7 +12,7 @@ import generative_model_utils as utils
 
 def load_core_reality_mining_based_on_dubois(remove_nodes_not_in_train=False):
     """
-    Due to issues with DoBios' REM paper, this method's network doesn't match the papers. DO NOT USE.
+    Due to inconsistencies of the DoBios' REM paper, this method's network doesn't match the papers. DO NOT USE.
 
     Loads only the interaction of the core people of the reality mining dataset.
 
@@ -17,6 +22,8 @@ def load_core_reality_mining_based_on_dubois(remove_nodes_not_in_train=False):
     Of the entire dataset:
     first time stamp: 2004-09-24 00:00:59
     last time stamp: 2005-01-07 23:56:18
+
+    :param remove_nodes_not_in_train: if True, removes the nodes that do not appear in the training set.
 
     :return: Three tuples one for each train, test and combined datasets. Each Tuple contains:
          ((dict) with (caller_id, receiver_id): [unix_timestamps] (event dict structure),
@@ -69,6 +76,9 @@ def load_core_reality_mining_based_on_dubois(remove_nodes_not_in_train=False):
 def load_reality_mining_test_train(remove_nodes_not_in_train):
     """
         Loads Reality Mining dataset.
+
+        :param remove_nodes_not_in_train: if True, removes the nodes that do not appear in the training set.
+
         :return: Three tuples one for each train, test and combined datasets. Each Tuple contains:
                  ((dict) with (caller_id, receiver_id): [unix_timestamps] (event dict structure),
                  (int) number of nodes,
@@ -113,6 +123,9 @@ def load_enron():
 def load_enron_train_test(remove_nodes_not_in_train=False):
     """
     Loads Enron dataset.
+
+    :param remove_nodes_not_in_train: if True, removes the nodes that do not appear in the training set.
+
     :return: Three tuples one for each train, test and combined datasets. Each Tuple contains:
              ((dict) with (caller_id, receiver_id): [unix_timestamps] (event dict structure),
              (int) number of nodes,
@@ -131,6 +144,9 @@ def load_enron_train_test(remove_nodes_not_in_train=False):
 def load_fb_train_test(remove_nodes_not_in_train=False):
     """
     Loads FB dataset.
+
+    :param remove_nodes_not_in_train: if True, removes the nodes that do not appear in the training set.
+
     :return: Three tuples one for each train, test and combined datasets. Each Tuple contains:
              ((dict) with (caller_id, receiver_id): [unix_timestamps] (event dict structure),
              (int) number of nodes,
@@ -149,6 +165,11 @@ def load_fb_train_test(remove_nodes_not_in_train=False):
 def load_train_test(train_file_path, test_file_path, combined_duration, remove_nodes_not_in_train):
     """
     Loads datasets already split into train and test, such as Enron and FB.
+
+    :param train_file_path: path to the train dataset.
+    :param test_file_path: path to the test dataset.
+    :param combined_duration: Entire duration of the network, train + test.
+    :param remove_nodes_not_in_train: if True, removes the nodes that do not appear in the training set.
 
     :return: Three tuples one for each train, test and combined datasets. Each Tuple contains:
              ((dict) with (caller_id, receiver_id): [unix_timestamps] (event dict structure),
@@ -172,9 +193,10 @@ def load_train_test(train_file_path, test_file_path, combined_duration, remove_n
 
 def load_and_combine_nodes_for_test_train(train_path, test_path, remove_nodes_not_in_train):
     """
-    Loads the set of nodes in both train and test datasets and maps all the node ids to start form 0 to num total nodes.
-    :param train_path
-    :param test_path
+    Loads the set of nodes in both train and test datasets and maps all the node ids to start form 0 to num total nodes
+
+    :param train_file_path: path to the train dataset.
+    :param test_file_path: path to the test dataset.
     :param remove_nodes_not_in_train: if True, all the nodes in test and combined that are not in train, will be removed
     :return `full_node_id_map` dict mapping node id in the entire dataset to a range from 0 to n_full
             `train_node_id_map` dict mapping node id in the train dataset to a range from 0 to n_train
@@ -212,6 +234,12 @@ def load_and_combine_nodes_for_test_train(train_path, test_path, remove_nodes_no
 
 
 def get_node_map(node_set):
+    """
+    Maps every node to an ID.
+
+    :param node_set: set of all nodes to be mapped.
+    :return: dict of original node index as key and the mapped ID as value.
+    """
     nodes = list(node_set)
     nodes.sort()
 
@@ -223,6 +251,15 @@ def get_node_map(node_set):
 
 
 def load_test_train_data(file, node_id_map, prev_event_dict=None):
+    """
+    Loads a train or test dataset based on the node_id_map.
+
+    :param file: path to the dataset or a loaded dataset.
+    :param node_id_map: (dict) dict of every node to its id.
+    :param prev_event_dict: (dict) Optional. An event dict to add the dataset to
+
+    :return: event_dict, duration
+    """
     # File can be both the file path or an ordered event_list
     if isinstance(file, str):
         # load the core dataset. sender_id,receiver_id,unix_timestamp
@@ -253,6 +290,15 @@ def load_test_train_data(file, node_id_map, prev_event_dict=None):
 
 
 def load_test_train_combined(train, test, node_id_map):
+    """
+    Combines train and test dataset to get the full dataset.
+
+    :param train: path to the train dataset or the loaded dataset itself.
+    :param test: path to the test dataset or the loaded dataset itself.
+    :param node_id_map: (dict) dict of every node to its id.
+
+    :return: combined_event_dict
+    """
     combined_event_dict, _ = load_test_train_data(train, node_id_map)
     combined_event_dict, _ = load_test_train_data(test, node_id_map, combined_event_dict)
 
@@ -263,6 +309,16 @@ def split_event_list_to_train_test(event_list, train_percentage=0.8, remove_node
     """
     Given an event_list (list of [sender_id, receiver_id, timestamp]) it splits it into train and test,
     ready for model fitting.
+
+    :param event_list: a list of all events [sender_id, receiver_id, timestamp].
+    :param train_percentage: (float) top `train_percentage` of the event list will be returned as the training data
+    :param remove_nodes_not_in_train: if True, all the nodes in test and combined that are not in train, will be removed
+
+    :return: Three tuples one for each train, test and combined datasets. Each Tuple contains:
+         ((dict) with (caller_id, receiver_id): [unix_timestamps] (event dict structure),
+         (int) number of nodes,
+         (float) duration)
+         (list) nodes_not_in_train
     """
     # sort by timestamp
     event_list = event_list[event_list[:, 2].argsort()]
@@ -310,9 +366,11 @@ def split_event_list_to_train_test(event_list, train_percentage=0.8, remove_node
 def plot_event_count_hist(event_dict, num_nodes, dset_title_name):
     """
     Plot Histogram of Event Count
+
     :param event_dict: event_dict of interactions
     :param num_nodes: number of nodes in the dataset
     :param dset_title_name: Name of the dataset to be added to the title
+
     :rtype: None (show hist)
     """
     event_agg_adj = utils.event_dict_to_aggregated_adjacency(num_nodes, event_dict)
@@ -330,8 +388,8 @@ def plot_event_count_hist(event_dict, num_nodes, dset_title_name):
 
 def load_facebook_wall(timestamp_max=1000, largest_connected_component_only=False, train_percentage=None):
     """
-    :param timestamp_max:
-    :param largest_connected_component_only:
+    :param timestamp_max: The time unit of the last timestamp. Used to scale all other timestamps.
+    :param largest_connected_component_only: if True, only the largest connected component will be loaded.
     :param train_percentage: If None, returns the entire dataset as a single dataset, else returns a train/test/combined
                              dataset based on the train_percentage.
     """
@@ -383,7 +441,7 @@ def load_facebook_wall(timestamp_max=1000, largest_connected_component_only=Fals
     return event_dict, len(node_set), duration
 
 
-
+# Various examples of loading datasets
 if __name__ == '__main__':
 
     load_facebook_wall(largest_connected_component_only=True)

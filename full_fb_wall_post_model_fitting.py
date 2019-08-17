@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+"Exploratory Analysis of the Facebook Wall Posts Dataset using CHIP"
+
+Here we fit CHIP to the largest connected component of the Facebook wall-post dataset and analyze various aspects of
+the fitted model.
+
+@author: Makan Arastuie
+"""
+
 import time
 import pickle
 import numpy as np
@@ -9,21 +19,22 @@ import model_fitting_utils as fitting_utils
 import parameter_estimation as estimate_utils
 from spectral_clustering import spectral_cluster
 
-result_file_path = '/shared/Results/CommunityHawkes/pickles/fb_chp_fit'
 
-fit_chp = False
+result_file_path = '/shared/Results/CommunityHawkes/pickles/fb_chip_fit'
+
+fit_chip = False
 load_fb = True
 plot_hawkes_params = True
 plot_node_membership = True
 plot_num_events = True
-simulate_chp = False
+simulate_chip = False
 verbose = False
 num_classes = 10
 
 # load Facebook Wall-posts
-if fit_chp or load_fb or simulate_chp:
+if fit_chip or load_fb or simulate_chip:
     tic = time.time()
-    fb_event_dict, fb_num_node, fb_duration = dataset_utils.load_facebook_wall(largest_connected_component_only=False)
+    fb_event_dict, fb_num_node, fb_duration = dataset_utils.load_facebook_wall(largest_connected_component_only=True)
     toc = time.time()
 
     print(f"Loaded the dataset in {toc - tic:.1f}s")
@@ -34,7 +45,7 @@ if fit_chp or load_fb or simulate_chp:
               "Num Edges:", num_events)
 
 # fit Facebook Wall-posts
-if fit_chp:
+if fit_chip:
     tic = time.time()
     agg_adj = utils.event_dict_to_aggregated_adjacency(fb_num_node, fb_event_dict)
     adj = utils.event_dict_to_adjacency(fb_num_node, fb_event_dict)
@@ -46,7 +57,7 @@ if fit_chp:
     tic_tot = time.time()
     tic = time.time()
     # Running spectral clustering
-    node_membership = spectral_cluster(agg_adj, num_classes=10, verbose=False, plot_eigenvalues=False)
+    node_membership = spectral_cluster(agg_adj, num_classes=10, verbose=False, plot_eigenvalues=True)
 
     toc = time.time()
 
@@ -132,11 +143,11 @@ if plot_num_events:
 
     fig, ax = plt.subplots()
     labels = np.arange(1, num_classes + 1)
-    im, _ = heatmap(num_events_block_pair, labels, labels, ax=ax, cmap="Greys", cbarlabel="Number of Events")
+    im, _ = heatmap(num_events_block_pair, labels, labels, ax=ax, cmap="Greys", cbarlabel=" ")
 
     fig.tight_layout()
-    plt.show()
-    # plt.savefig(f"{result_file_path}/plots/m-k-{num_classes}.pdf")
+    # plt.show()
+    plt.savefig(f"{result_file_path}/plots/num_block_pair_events.pdf")
 
     # plot block pair average number of events per node pair
     blocks, counts = np.unique(node_membership, return_counts=True)
@@ -149,10 +160,11 @@ if plot_num_events:
     fig, ax = plt.subplots()
     labels = np.arange(1, num_classes + 1)
     im, _ = heatmap(mean_num_events_block_pair, labels, labels, ax=ax, cmap="Greys",
-                    cbarlabel="Number of Events Per Node Pair")
+                    cbarlabel=" ")
 
     fig.tight_layout()
-    plt.show()
+    plt.savefig(f"{result_file_path}/plots/mean_num_node_pair_event.pdf")
+    # plt.show()
 
 if plot_node_membership:
     # # Node membership percentage
@@ -176,8 +188,8 @@ if plot_node_membership:
     plt.ylabel("Percentage of Total Population", fontsize=16)
     ax.set_ylim(0, 25)
     ax.autoscale_view()
-    # plt.savefig(f"{result_file_path}/plots/block_size.pdf")
-    plt.show()
+    plt.savefig(f"{result_file_path}/plots/block_size.pdf")
+    # plt.show()
 
 # Plot Results
 if plot_hawkes_params:
@@ -194,8 +206,8 @@ if plot_hawkes_params:
 
         # ax.set_title(f"Full Facebook wall-posts {param.capitalize()}")
         fig.tight_layout()
-        # plt.savefig(f"{result_file_path}/plots/{param}-k-{num_classes}.pdf")
-        plt.show()
+        plt.savefig(f"{result_file_path}/plots/{param}-k-{num_classes}.pdf")
+        # plt.show()
 
     # plot m
     fig, ax = plt.subplots()
@@ -204,27 +216,26 @@ if plot_hawkes_params:
                     cbarlabel=r"$m$")
 
     fig.tight_layout()
-    plt.show()
-    # plt.savefig(f"{result_file_path}/plots/m-k-{num_classes}.pdf")
+    # plt.show()
+    plt.savefig(f"{result_file_path}/plots/m-k-{num_classes}.pdf")
 
 
-if simulate_chp:
-    # # Generating a CHP model with fitted parameters
+if simulate_chip:
+    # # Generating a CHIP model with fitted parameters
     # [generated_node_membership,
     #  generated_event_dict] = fitting_utils.generate_fit_community_hawkes(fb_event_dict, node_membership,
     #                                                                      hawkes_params['mu'], hawkes_params['alpha'],
     #                                                                      hawkes_params['beta'], fb_duration,
-    #                                                                      fit_generated_model=False, plot_hist=False,
-    #                                                                      n_cores=25)
+    #                                                                      plot_hist=False, n_cores=25)
     #
     # with open(f'{result_file_path}/generated_model.pckl', 'wb') as handle:
     #     pickle.dump([generated_node_membership, generated_event_dict], handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    # Loading a CHP model with fitted parameters
+    # Loading a CHIP model with fitted parameters
     with open(f'{result_file_path}/generated_model.pckl', 'rb') as handle:
         generated_node_membership, generated_event_dict = pickle.load(handle)
 
-    # Generating a CHP model with fitted parameters
+    # Generating a CHIP model with fitted parameters
     generated_agg_adj = utils.event_dict_to_aggregated_adjacency(fb_num_node, generated_event_dict, dtype=np.int)
     generated_deg_count_flattened = np.reshape(generated_agg_adj, (fb_num_node * fb_num_node))
 
@@ -237,7 +248,7 @@ if simulate_chp:
     # plt.legend(loc='upper right')
     # plt.xlabel('Event Count')
     # plt.ylabel('Density')
-    # plt.title(f'Histogram of the Count Matrix Real Vs. Generated CHP Model Data - K: {num_classes}'
+    # plt.title(f'Histogram of the Count Matrix Real Vs. Generated CHIP Model Data - K: {num_classes}'
     #           f'\n Mean Count -  Real: {np.mean(fb_agg_adj):.3f} - Generated: {np.mean(generated_agg_adj):.3f}')
     # plt.yscale("log")
     # plt.show()

@@ -8,10 +8,10 @@ import numpy as np
 import multiprocessing
 from joblib import Parallel, delayed
 import generative_model_utils as utils
-import bhm_generative_model as block_model
+import bhm_generative_model as bhm
 from sklearn.metrics import adjusted_rand_score
 from spectral_clustering import regularized_spectral_cluster
-import block_parameter_estimation as block_estimate_utils
+import bhm_parameter_estimation as bhm_estimate_utils
 
 
 def calc_node_neigh_solutions(event_dict, n_classes, duration, node_membership, log_lik_init, node_batch):
@@ -48,10 +48,10 @@ def calc_node_neigh_solutions(event_dict, n_classes, duration, node_membership, 
 
             # Eval the aprox log_lik of this neighbor, by est all block parameters.
             (neigh_log_lik,
-             fitted_params) = block_estimate_utils.estimate_hawkes_param_and_calc_log_likelihood(event_dict,
-                                                                                                 node_membership,
-                                                                                                 duration, n_classes,
-                                                                                                 False)
+             fitted_params) = bhm_estimate_utils.estimate_hawkes_param_and_calc_log_likelihood(event_dict,
+                                                                                               node_membership,
+                                                                                               duration, n_classes,
+                                                                                               False)
 
             # if log_lik if this neighbor is better than the "so far" best neighbor, use this neighbors as the best.
             if log_lik < neigh_log_lik:
@@ -86,9 +86,9 @@ def block_local_search(event_dict, n_classes, node_membership_init, duration, ma
 
     # estimate initial params of block model and its log-likelihood
     (init_log_lik,
-     fitted_params) = block_estimate_utils.estimate_hawkes_param_and_calc_log_likelihood(event_dict, node_membership,
-                                                                                         duration, n_classes,
-                                                                                         add_com_assig_log_prob=False)
+     fitted_params) = bhm_estimate_utils.estimate_hawkes_param_and_calc_log_likelihood(event_dict, node_membership,
+                                                                                       duration, n_classes,
+                                                                                       add_com_assig_log_prob=False)
     log_lik = init_log_lik
     n_cores = n_cores if n_cores > 0 else multiprocessing.cpu_count()
     batch_size = np.int(n_nodes / n_cores) + 1
@@ -122,10 +122,10 @@ def block_local_search(event_dict, n_classes, node_membership_init, duration, ma
         # if a good neighbor was found, update best log_lik, and go for the next iteration.
         node_membership[best_node_to_switch] = best_class_to_switch_to
         (log_lik,
-         fitted_params) = block_estimate_utils.estimate_hawkes_param_and_calc_log_likelihood(event_dict,
-                                                                                             node_membership,
-                                                                                             duration, n_classes,
-                                                                                             False)
+         fitted_params) = bhm_estimate_utils.estimate_hawkes_param_and_calc_log_likelihood(event_dict,
+                                                                                           node_membership,
+                                                                                           duration, n_classes,
+                                                                                           False)
 
         if iter == max_iter - 1:
             print("Warning: Max iter reached!")
@@ -159,9 +159,9 @@ if __name__ == '__main__':
     bp_mu = np.ones((n_classes, n_classes), dtype=np.float) * mu_off_diag
     np.fill_diagonal(bp_mu, mu_diag)
 
-    true_class_assignments, event_dict = block_model.block_generative_model(n_nodes, class_probs,
-                                                                            bp_mu, bp_alpha, bp_beta,
-                                                                            duration, seed=seed)
+    true_class_assignments, event_dict = bhm.block_generative_model(n_nodes, class_probs,
+                                                                    bp_mu, bp_alpha, bp_beta,
+                                                                    duration, seed=seed)
     true_class_assignments = utils.one_hot_to_class_assignment(true_class_assignments)
 
     binary_adj = utils.event_dict_to_adjacency(n_nodes, event_dict)

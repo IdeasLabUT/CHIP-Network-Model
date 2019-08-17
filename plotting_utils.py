@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+@author: Makan Arastuie
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -5,6 +10,8 @@ import matplotlib.pyplot as plt
 def heatmap(data, row_labels, col_labels, ax=None,
             cbar_kw={}, cbarlabel="", **kwargs):
     """
+    Based on https://matplotlib.org/3.1.1/gallery/images_contours_and_fields/image_annotated_heatmap.html
+
     Create a heatmap from a numpy array and two lists of labels.
 
     Parameters
@@ -33,8 +40,8 @@ def heatmap(data, row_labels, col_labels, ax=None,
     im = ax.imshow(data, **kwargs)
 
     # Create colorbar
-    # cbar = ax.figure.colorbar(im, ax=ax, **cbar_kw, format='%.0e')
-    cbar = ax.figure.colorbar(im, ax=ax, **cbar_kw)
+    cbar = ax.figure.colorbar(im, ax=ax, **cbar_kw, format='%.0e')
+    # cbar = ax.figure.colorbar(im, ax=ax, **cbar_kw)
     cbar.ax.set_ylabel(cbarlabel, rotation=-90, va="bottom", fontsize=20)
     cbar.ax.tick_params(labelsize=12)
 

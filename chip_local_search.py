@@ -71,8 +71,8 @@ def calc_node_neigh_solutions(event_dict, n_classes, duration, node_membership, 
     return best_neigh
 
 
-def chp_local_search(event_dict, n_classes, node_membership_init, duration, max_iter=100, n_cores=-1,
-                     return_fitted_param=False, verbose=True):
+def chip_local_search(event_dict, n_classes, node_membership_init, duration, max_iter=100, n_cores=-1,
+                      return_fitted_param=False, verbose=True):
     """
     Performs local search / hill climbing to increase log-likelihood of the model by switching the community of a single
     node at a time. For every neighboring solution only mu and m are estimated, beta is fixed to the base solution to
@@ -153,7 +153,7 @@ def chp_local_search(event_dict, n_classes, node_membership_init, duration, max_
     return node_membership
 
 
-def chp_local_search_single_core(event_dict, n_classes, node_membership_init, duration, max_iter=100, verbose=True):
+def chip_local_search_single_core(event_dict, n_classes, node_membership_init, duration, max_iter=100, verbose=True):
     """
     This function is only here for speed comparisons against the multi-core version. All parameters are the same as
     `chip_local_search`.
@@ -259,8 +259,8 @@ if __name__ == '__main__':
 
     print("Parallel")
     tic = time.time()
-    local_search_node_membership = chp_local_search(event_dict, n_classes, spectral_node_membership, duration,
-                                                    max_iter=10, n_cores=34, verbose=True)
+    local_search_node_membership = chip_local_search(event_dict, n_classes, spectral_node_membership, duration,
+                                                     max_iter=10, n_cores=34, verbose=True)
     toc = time.time()
     print(f"local search took {toc - tic:.2f}s.")
 
@@ -270,8 +270,8 @@ if __name__ == '__main__':
 
     print("Single core")
     tic = time.time()
-    local_search_node_membership = chp_local_search_single_core(event_dict, n_classes, spectral_node_membership,
-                                                                duration, max_iter=10, verbose=True)
+    local_search_node_membership = chip_local_search_single_core(event_dict, n_classes, spectral_node_membership,
+                                                                 duration, max_iter=10, verbose=True)
     toc = time.time()
     print(f"local search took {toc - tic:.2f}s.")
     sc_rand = adjusted_rand_score(true_class_assignments, local_search_node_membership)

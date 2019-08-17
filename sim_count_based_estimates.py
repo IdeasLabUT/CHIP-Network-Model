@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+"Hawkes Process Parameter Estimation"
+
+Empirically analyzing the consistency of the CHIP parameter estimators.
+
+@author: Makan Arastuie
+"""
+
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
@@ -5,6 +14,7 @@ from joblib import Parallel, delayed
 import generative_model_utils as utils
 import model_fitting_utils as model_utils
 from parameter_estimation import estimate_hawkes_from_counts
+
 
 result_file_path = '/shared/Results/CommunityHawkes/pickles/count_based_estimate'
 

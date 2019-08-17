@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+"Spectral Clustering on Weighted vs. Unweighted Adjacency Matrix"
+
+@author: Makan Arastuie
+"""
+
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
@@ -5,6 +12,7 @@ from joblib import Parallel, delayed
 import generative_model_utils as utils
 from sklearn.metrics import adjusted_rand_score
 from spectral_clustering import spectral_cluster
+
 
 result_file_path = '/shared/Results/CommunityHawkes/pickles/growing_n_increase_sc_rand'
 
@@ -19,7 +27,7 @@ class_prob = np.ones(n_classes) / n_classes
 
 num_simulation_per_duration = 100
 sim_n_cores = 25
-chp_n_cores = 1
+chip_n_cores = 1
 
 
 def test_spectral_clustering_on_generative_model(n_nodes):
@@ -32,7 +40,7 @@ def test_spectral_clustering_on_generative_model(n_nodes):
                   'scale': False,
                   'end_time': 400,
                   'class_probabilities': class_prob,
-                  'n_cores': chp_n_cores}
+                  'n_cores': chip_n_cores}
     else:
         params = {'number_of_nodes': n_nodes,
                   'alpha': 0.001,
@@ -44,9 +52,11 @@ def test_spectral_clustering_on_generative_model(n_nodes):
                   'scale': False,
                   'end_time': 400,
                   'class_probabilities': class_prob,
-                  'n_cores': chp_n_cores}
+                  'n_cores': chip_n_cores}
 
-    # event_dict, true_class_assignments = utils.simulate_community_hawkes(params, network_name="10-block-10k-nodes-higher-mu-diff")
+    # event_dict, true_class_assignments = utils.simulate_community_hawkes(
+    #     params, network_name="10-block-10k-nodes-higher-mu-diff")
+
     event_dict, true_class_assignments = utils.simulate_community_hawkes(params)
 
     # Spectral clustering on adjacency matrix

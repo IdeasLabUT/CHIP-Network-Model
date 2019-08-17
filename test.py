@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+@author: Makan Arastuie
+"""
+
 import numpy as np
 import multiprocessing
 import matplotlib.pyplot as plt
@@ -5,8 +10,8 @@ from joblib import Parallel, delayed
 import generative_model_utils as utils
 from sklearn.metrics import adjusted_rand_score
 from spectral_clustering import spectral_cluster, regularized_spectral_cluster
-from block_generative_model import block_generative_model
-from community_generative_model import community_generative_model, degree_corrected_community_generative_model
+from bhm_generative_model import block_generative_model
+from chip_generative_model import community_generative_model, degree_corrected_community_generative_model
 
 
 def test_spectral_clustering_on_generative_model(generative_model, regularized,

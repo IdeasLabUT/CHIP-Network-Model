@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun May 19 21:34:50 2019
-
-@author: kevin
+@authors: kevin Xu and Makan Arastuie
 """
 
 import warnings
@@ -10,11 +8,21 @@ import numpy as np
 import tick.hawkes as tick
 import matplotlib.pyplot as plt
 import generative_model_utils as utils
-from community_generative_model import community_generative_model
+from chip_generative_model import community_generative_model
 from scipy.optimize import minimize_scalar, minimize
 
 
 def estimate_hawkes_from_counts(agg_adj, class_vec, duration, default_mu=None):
+    """
+    Estimates CHIP's mu and m.
+
+    :param agg_adj: weighted adjacency of the network
+    :param class_vec: (list) membership of every node to one of K classes.
+    :param duration: duration of the network
+    :param default_mu: default mu values for block pairs with sample variance of 0.
+
+    :return: mu, m
+    """
     num_classes = class_vec.max()+1
     sample_mean = np.zeros((num_classes,num_classes))
     sample_var = np.zeros((num_classes,num_classes))
@@ -82,6 +90,7 @@ def estimate_hawkes_kernel(event_dicts, class_assignment, n_classes, bp_beta, le
     :param bp_beta: K x K matrix where entry ij denotes the beta/decay of Hawkes process for block pair (b_i, b_j)
     :param learner_param_dict: dict of parameters for tick's hawkes kernel. If `None` default values will be used.
                                 Check tick's `HawkesExpKern` for parameters. Check `default_param` for defaults.
+
     :return: `mu_estimate` and `alpha_estimates` both K x K matrices where entry ij denotes the estimated mu and alpha
              of the Hawkes process for block pair (b_i, b_j).
     """
@@ -120,6 +129,14 @@ def estimate_hawkes_kernel(event_dicts, class_assignment, n_classes, bp_beta, le
 
 
 def compute_wijs(np_events, beta):
+    """
+    Computes the recursive portion of the Hawkes log-likelihood, non-recursively.
+
+    :param np_events: event list / list of timestamps of events from a node in block i to a node in block j.
+    :param beta: beta of the block pair ij
+    :return: recursive sum of the CHIP Hawkes log-likelihood
+    """
+
     n_events = len(np_events)
     if n_events < 1:
         return 0
@@ -132,6 +149,16 @@ def compute_wijs(np_events, beta):
 
 
 def compute_wijs_recursive(np_events, beta):
+    """
+    Computes the recursive portion of the Hawkes log-likelihood, recursively (using last computed value, not an actual
+    recursive function)
+
+    :param np_events: event list / list of timestamps of events from a node in block i to a node in block j.
+    :param beta: beta of the block pair ij
+
+    :return: recursive sum of the CHIP Hawkes log-likelihood
+    """
+
     n_events = len(np_events)
     if n_events < 1:
         return 0
@@ -143,25 +170,18 @@ def compute_wijs_recursive(np_events, beta):
     return wijs
 
 
-def compute_vijs(np_events, beta):
-    n_events = len(np_events)
-    if n_events < 1:
-        return 0
-
-    vijs = np.zeros(n_events)
-    for q in range(1, n_events):
-        q_shifted_events = np_events[q] - np_events[:q]
-        vijs[q] = np.sum(q_shifted_events * np.exp(-beta * q_shifted_events))
-
-    return vijs
-
-
 def block_pair_full_hawkes_log_likelihood(bp_events, mu, alpha, beta, end_time, block_pair_size=None):
     """
 
+    :param bp_events: (list) n_classes x n_classes where entry ij is a list of event lists between nodes in
+                          block i to nodes in block j
+    :param mu, alpha, beta: Hawkes parameters of the block pair ij
+    :param end_time: duration of the network / the last available timestamp
     :param block_pair_size: Size of the block pair. bp_events may not include an entry for node_pairs with no
-                            interactions, in that case, we need to add (-mu * end_time) to the likelihood for each
-                            missing node pair.
+                        interactions, in that case, we need to add (-mu * end_time) to the likelihood for each
+                        missing node pair
+
+    :return: CHIP Hawkes log likelihood of a block pair
     """
     ll = 0
     for np_events in bp_events:
@@ -183,11 +203,39 @@ def block_pair_full_hawkes_log_likelihood(bp_events, mu, alpha, beta, end_time, 
 
 
 def neg_log_likelihood_beta(beta, bp_events, mu, alpha_beta_ratio, end_time, block_pair_size):
+    """
+    Returns negative log-likelihood of `block_pair_full_hawkes_log_likelihood`, instead of alpha requires m.
+    Check `block_pair_full_hawkes_log_likelihood` doc string for parameters.
+
+    :param alpha_beta_ratio: m of the block pair ij
+    :return: Negative CHIP Hawkes log-likelihood
+    """
     alpha = alpha_beta_ratio*beta
     return -block_pair_full_hawkes_log_likelihood(bp_events, mu, alpha, beta, end_time, block_pair_size)
 
 
+def estimate_beta_from_events(bp_events, mu, alpha_beta_ratio, end_time, block_pair_size=None, tol=1e-3):
+    """
+    Uses scipy minimize_scalar to as a line search to find beta.
+    Check `block_pair_full_hawkes_log_likelihood` doc string for parameters.
+
+    :param alpha_beta_ratio: m of the block pair ij
+    :param tol: tol of minimize_scalar.
+    :return: beta and details on minimize_scalar
+    """
+    res = minimize_scalar(neg_log_likelihood_beta, method='bounded', bounds=(0, 10),
+                          args=(bp_events, mu, alpha_beta_ratio, end_time, block_pair_size))
+    return res.x, res
+
+
 def neg_log_likelihood_all(param, bp_events, end_time, block_pair_size=None):
+    """
+    Returns negative log-likelihood of `block_pair_full_hawkes_log_likelihood`.
+    Check `block_pair_full_hawkes_log_likelihood` doc string for parameters.
+
+    :param param: tuple of Hawkes parameters (alpha, beta, mu)
+    :return: negative log-likelihood of CHIP Hawkes
+    """
     alpha = param[0]
     beta = param[1]
     mu = param[2]
@@ -195,17 +243,35 @@ def neg_log_likelihood_all(param, bp_events, end_time, block_pair_size=None):
                                                   end_time, block_pair_size)
 
 
-def estimate_beta_from_events(bp_events, mu, alpha_beta_ratio, end_time, block_pair_size=None, tol=1e-3):
-    res = minimize_scalar(neg_log_likelihood_beta, method='bounded', bounds=(0, 10),
-                          args=(bp_events, mu, alpha_beta_ratio, end_time, block_pair_size))
-    return res.x, res
-
-
 def estimate_all_from_events(bp_events, end_time, init_param=(1e-2,2e-2,2e-5), block_pair_size=None, tol=1e-3):
+    """
+    Estimates mu, alpha and beta for a single CHIP block-pair using L-BFGS-B.
+    Check `block_pair_full_hawkes_log_likelihood` doc string for parameters.
+
+
+    :param init_param: tuple of initial parameters for the CHIP Hawkes (alpha, beta, mu)
+    :param tol: tol of scipy.minimize
+
+    :return: alpha, beta, mu and details of the L-BFGS-B method.
+    """
     res = minimize(neg_log_likelihood_all, init_param, method='L-BFGS-B',
                    bounds=((0, None), (0, None), (0, None)), jac=None,
                    args=(bp_events, end_time, block_pair_size))
     return res.x, res
+
+
+##### Delete everything below this point in Github master
+def compute_vijs(np_events, beta):
+    n_events = len(np_events)
+    if n_events < 1:
+        return 0
+
+    vijs = np.zeros(n_events)
+    for q in range(1, n_events):
+        q_shifted_events = np_events[q] - np_events[:q]
+        vijs[q] = np.sum(q_shifted_events * np.exp(-beta * q_shifted_events))
+
+    return vijs
 
 
 def neg_log_likelihood_deriv_all(param, bp_events, end_time, block_pair_size=None):

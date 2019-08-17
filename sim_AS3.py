@@ -1,3 +1,18 @@
+# -*- coding: utf-8 -*-
+"""
+"Community Detection with Varying T, n and k"
+
+** simulation AS3: fix parameter values, draw a heatmap in each case. The following setup is such that the lower left
+corner will be the hard regime, so highest mis-clustering rate and and right top corner will be the easy regime with
+lower mis-clustering rate.
+
+(a) fix $n$ increasing $T$ and decreasing $k$.
+(b) fix $T$, increasing $n$ and decreasing $k$.
+(c) fix $k$, increasing $n$ and increasing $T$.
+
+@author: Makan Arastuie
+"""
+
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,16 +22,6 @@ import generative_model_utils as utils
 from sklearn.metrics import adjusted_rand_score
 from spectral_clustering import spectral_cluster
 
-
-'''
-** simulation AS3: fix parameter values, draw a heatmap in each case. The following setup is such that the lower left 
-corner will be the hard regime, so highest mis-clustering rate and and right top corner will be the easy regime with 
-lower mis-clustering rate. 
-
-(a) fix $n$ increasing $T$ and decreasing $k$.
-(b) fix $T$, increasing $n$ and decreasing $k$. 
-(c) fix $k$, increasing $n$ and increasing $T$.
-'''
 
 def test_spectral_clustering_on_generative_model(n, t, k):
     params = {'number_of_nodes': n,
@@ -139,7 +144,7 @@ for fixed_var in ['n', 't', 'k']:
 
     plt.ylabel(ylab, fontsize=16)
     plt.xlabel(xlab, fontsize=16)
-    # ax.set_title(f"CHP SC AS3 Fixed {fixed_var.upper()}: {fixed_value}")
+    # ax.set_title(f"CHIP SC AS3 Fixed {fixed_var.upper()}: {fixed_value}")
     fig.tight_layout()
     plt.savefig(f"{result_file_path}/plots/as3-fixed-{fixed_var}.pdf")
     # plt.show()

@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+@author: Makan Arastuie
+"""
+
 import numpy as np
 import multiprocessing
 import matplotlib.pyplot as plt

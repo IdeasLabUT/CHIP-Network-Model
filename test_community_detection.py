@@ -10,7 +10,7 @@ degree.
 import numpy as np
 import matplotlib.pyplot as plt
 import generative_model_utils as utils
-from community_generative_model import community_generative_model
+from chip_generative_model import community_generative_model
 from spectral_clustering import spectral_cluster
 from sklearn.metrics import adjusted_rand_score
 from parameter_estimation import estimate_hawkes_from_counts, \

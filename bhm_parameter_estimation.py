@@ -5,7 +5,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import block_local_search as bls
+import bhm_local_search as bls
 from scipy.optimize import minimize
 from scipy.stats import multinomial
 import generative_model_utils as utils
