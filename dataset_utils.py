@@ -3,14 +3,24 @@
 @author: Makan Arastuie
 """
 
+import os
+import sys
+import urllib
 import numpy as np
 import networkx as nx
 from datetime import datetime
 import matplotlib.pyplot as plt
-import generative_model_utils as utils
+# import generative_model_utils as utils
 
 
-def load_reality_mining_test_train(remove_nodes_not_in_train):
+def get_script_path():
+    """
+    :return: the path of the current script
+    """
+    return os.path.dirname(os.path.realpath(sys.argv[0]))
+
+
+def load_reality_mining_test_train(remove_nodes_not_in_train=False):
     """
         Loads Reality Mining dataset.
 
@@ -22,8 +32,8 @@ def load_reality_mining_test_train(remove_nodes_not_in_train):
                  (float) duration)
                  (list) nodes_not_in_train
         """
-    train_file_path = '/shared/DataSets/RealityMining/Dubois2013/train_reality.csv'
-    test_file_path = '/shared/DataSets/RealityMining/Dubois2013/test_reality.csv'
+    train_file_path = f'{get_script_path()}/storage/datasets/reality-mining/train_reality.csv'
+    test_file_path = f'{get_script_path()}/storage/datasets/reality-mining/test_reality.csv'
 
     # Timestamps are adjusted to start from 0 and go up to 1000.
     combined_duration = 1000.0
@@ -43,8 +53,8 @@ def load_enron_train_test(remove_nodes_not_in_train=False):
              (float) duration)
              (list) nodes_not_in_train
     """
-    train_file_path = '/shared/DataSets/EnronPriebe2009/train_enron.csv'
-    test_file_path = '/shared/DataSets/EnronPriebe2009/test_enron.csv'
+    train_file_path = f'{get_script_path()}/storage/datasets/enron/train_enron.csv'
+    test_file_path = f'{get_script_path()}/storage/datasets/enron/test_enron.csv'
 
     # Timestamps are adjusted to start from 0 and go up to 1000.
     combined_duration = 1000.0
@@ -64,8 +74,8 @@ def load_fb_train_test(remove_nodes_not_in_train=False):
              (float) duration)
              (list) nodes_not_in_train
     """
-    train_file_path = '/shared/DataSets/FacebookViswanath2009/train_FB_event_mat.csv'
-    test_file_path = '/shared/DataSets/FacebookViswanath2009/test_FB_event_mat.csv'
+    train_file_path = f'{get_script_path()}/storage/datasets/facebook-wallposts/train_FB_event_mat.csv'
+    test_file_path = f'{get_script_path()}/storage/datasets/facebook-wallposts/test_FB_event_mat.csv'
 
     # Timestamps are adjusted to start from 0 and go up to 8759.9.
     combined_duration = 8759.9
@@ -299,13 +309,22 @@ def plot_event_count_hist(event_dict, num_nodes, dset_title_name):
 
 def load_facebook_wall(timestamp_max=1000, largest_connected_component_only=False, train_percentage=None):
     """
+    First downloads the dataset if it is not in the "storage/datasets/facebook-wallposts" directory, then loads the
+    dataset.
+
     :param timestamp_max: The time unit of the last timestamp. Used to scale all other timestamps.
     :param largest_connected_component_only: if True, only the largest connected component will be loaded.
     :param train_percentage: If None, returns the entire dataset as a single dataset, else returns a train/test/combined
                              dataset based on the train_percentage.
     """
+    file_path = f"{get_script_path()}/storage/datasets/facebook-wallposts/facebook-wallpost.txt.gz"
 
-    file_path = '/shared/DataSets/FacebookViswanath2009/raw/facebook-wall.txt'
+    # Downloading the dataset it is not in the storage directory
+    if not os.path.exists(file_path):
+        print("Downloading Facebook wall-posts dataset from "
+              "http://socialnetworks.mpi-sws.mpg.de/data/facebook-wall.txt.gz ...")
+        urllib.request.urlretrieve("http://socialnetworks.mpi-sws.mpg.de/data/facebook-wall.txt.gz", file_path)
+        print("Download complete.")
 
     # receiver_id sender_id unix_timestamp
     data = np.loadtxt(file_path, np.float)
@@ -354,17 +373,20 @@ def load_facebook_wall(timestamp_max=1000, largest_connected_component_only=Fals
 
 # Various examples of loading datasets
 if __name__ == '__main__':
+    # fb_event_dict, fb_num_nodes, fb_duration = load_facebook_wall(largest_connected_component_only=True)
+    # print("Facebook wall-post - Num Nodes:", fb_num_nodes,
+    #       "Num Edges:", np.sum(utils.event_dict_to_aggregated_adjacency(fb_num_nodes, fb_event_dict)),
+    #       "duration:", fb_duration)
 
-    load_facebook_wall(largest_connected_component_only=True)
     # load_reality_mining_test_train()
     # plot_event_count_hist(reality_mining_event_dict, num_nodes, "Reality Mining's Core people")
 
     # load_reality_mining_test_train()
     # load_core_reality_mining()
-
-    # ((enron_train_event_dict, enron_train_n_nodes),
-    #  (enron_test_event_dict, enron_test_n_nodes),
-    #  (enron_combined_event_dict, enron_combined_n_nodes), nodes_not_in_train) = load_enron_train_test()
+    load_fb_train_test()
+    # ((enron_train_event_dict, enron_train_n_nodes, train_duration),
+    #  (enron_test_event_dict, enron_test_n_nodes, test_duration),
+    #  (enron_combined_event_dict, enron_combined_n_nodes, combined_duration), nodes_not_in_train) = load_enron_train_test()
     #
     # print(np.sum(utils.event_dict_to_aggregated_adjacency(enron_train_n_nodes, enron_train_event_dict)))
     # print(np.sum(utils.event_dict_to_aggregated_adjacency(enron_test_n_nodes, enron_test_event_dict)))

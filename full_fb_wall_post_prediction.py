@@ -20,7 +20,7 @@ import model_fitting_utils as fitting_utils
 import parameter_estimation as estimate_utils
 from spectral_clustering import spectral_cluster
 
-result_file_path = './storage/results/fb_chip_fit'
+result_file_path = f'{dataset_utils.get_script_path()}/storage/results/fb_chip_fit'
 
 use_agg_adj = True
 fit_chip = True

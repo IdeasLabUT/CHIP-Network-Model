@@ -20,7 +20,7 @@ import parameter_estimation as estimate_utils
 from spectral_clustering import spectral_cluster
 
 
-result_file_path = './storage/results/fb_chip_fit'
+result_file_path = f'{dataset_utils.get_script_path()}/storage/results/fb_chip_fit'
 
 fit_chip = False
 load_fb = True

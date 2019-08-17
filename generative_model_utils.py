@@ -8,6 +8,7 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 import chip_generative_model as chip
+from dataset_utils import get_script_path
 from tick.hawkes import SimuHawkesExpKernels
 
 
@@ -342,7 +343,7 @@ def simulate_community_hawkes(params=None, network_name=None, load_if_exists=Fal
 
     :return: event_dict, node_membership
     """
-    generated_network_path = './storage/results/generated_networks/'
+    generated_network_path = f'{get_script_path()}/storage/results/generated_networks/'
 
     default_params = {'seed': None,
                       'number_of_nodes': 128,

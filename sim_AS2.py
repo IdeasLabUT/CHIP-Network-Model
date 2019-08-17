@@ -18,11 +18,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import generative_model_utils as utils
+from dataset_utils import get_script_path
 from sklearn.metrics import adjusted_rand_score
 from spectral_clustering import spectral_cluster
 
 
-result_file_path = './storage/results/AS2'
+result_file_path = f'{get_script_path()}/storage/results/AS2'
 
 also_use_unweighted_adjacency = True
 

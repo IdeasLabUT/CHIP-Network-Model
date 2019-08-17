@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 from plotting_utils import heatmap
 from joblib import Parallel, delayed
 import generative_model_utils as utils
+from dataset_utils import get_script_path
 from sklearn.metrics import adjusted_rand_score
 from spectral_clustering import spectral_cluster
 
@@ -44,7 +45,7 @@ def test_spectral_clustering_on_generative_model(n, t, k):
     return agg_adj_sc_rand
 
 
-result_file_path = './storage/results/AS3'
+result_file_path = f'{get_script_path()}/storage/results/AS3'
 
 plot_only = True
 

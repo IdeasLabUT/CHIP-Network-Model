@@ -37,7 +37,6 @@ def spectral_cluster(adj, num_classes=2, n_kmeans_init=10, normalize_z=True, ver
         plt.tight_layout()
         plt.rc('xtick', labelsize=12)
         plt.rc('ytick', labelsize=12)
-        # plt.savefig('./storage/results/fb_chip_fit/singular_values.pdf')
         plt.show()
 
     # Sort in decreasing order of magnitude
