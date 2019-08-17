@@ -1,9 +1,15 @@
+# -*- coding: utf-8 -*-
+"""
+@author: Makan Arastuie
+"""
+
 import numpy as np
 import generative_model_utils as utils
 
 
 def block_generative_model(num_nodes, class_prob, bp_mu, bp_alpha, bp_beta, end_time, seed=None):
     """
+     Generates a network based on the Block Hawkes model.
 
     :param num_nodes: (int) Total number of nodes
     :param class_prob: (list) Probability of class memberships from class 0 to K - 1
@@ -65,6 +71,7 @@ def block_generative_model(num_nodes, class_prob, bp_mu, bp_alpha, bp_beta, end_
     return node_membership, event_dicts
 
 
+# Example of generating from the Block Hawkes model
 if __name__ == "__main__":
     seed = 1
     number_of_nodes = 8

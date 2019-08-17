@@ -1,11 +1,16 @@
+# -*- coding: utf-8 -*-
+"""
+@author: Makan Arastuie
+"""
+
 import time
 import numpy as np
 import multiprocessing
 from joblib import Parallel, delayed
 import generative_model_utils as utils
-import block_generative_model as block_model
+import bhm_generative_model as block_model
 from sklearn.metrics import adjusted_rand_score
-from spectral_clustering import spectral_cluster, regularized_spectral_cluster
+from spectral_clustering import regularized_spectral_cluster
 import block_parameter_estimation as block_estimate_utils
 
 
@@ -13,6 +18,13 @@ def calc_node_neigh_solutions(event_dict, n_classes, duration, node_membership, 
     """
     Calculates the log-likelihood of neighboring solutions of a batch of nodes by changing their membership. If a higher
     log-likelihood was achieved the best solution will be returned, else a tuple of three np.nan is returned.
+
+    :param event_dict: Edge dictionary of events between all node pair. Output of the generative models.
+    :param n_classes: (int) total number of classes
+    :param duration: (int) Duration of the network
+    :param node_membership: (list) membership of every node to one of K classes
+    :param log_lik_init: (float) base log-likelihood of the current solution
+    :param node_batch: (list) nodes in the current batch
     :return: (node index, best class index, log_likelihood)
     """
 
@@ -53,6 +65,21 @@ def calc_node_neigh_solutions(event_dict, n_classes, duration, node_membership, 
 
 def block_local_search(event_dict, n_classes, node_membership_init, duration, max_iter=100, n_cores=-1,
                        return_fitted_param=False, verbose=False):
+    """
+    Performs local search / hill climbing to increase log-likelihood of the model by switching the community of a single
+    node at a time.
+
+    :param event_dict: Edge dictionary of events between all node pair. Output of the generative models.
+    :param n_classes: (int) total number of classes
+    :param node_membership_init: (list) initial membership of every node to one of K classes.
+    :param duration: (int) Duration of the network.
+    :param max_iter: (int) maximum number of iterations to be performed by local search.
+    :param n_cores: (int) number of cores to be used to parallelize the search. If -1, use all available cores.
+    :param return_fitted_param: if True, return the Hawkes parameters for the model as well.
+    :param verbose: If True, prints more information on local search.
+
+    :return: local optimum node_membership if `return_fitted_param` is false.
+    """
     n_nodes = len(node_membership_init)
     nodes = np.arange(n_nodes)
     node_membership = node_membership_init
@@ -114,6 +141,7 @@ def block_local_search(event_dict, n_classes, node_membership_init, duration, ma
     return node_membership
 
 
+# Example of running local search on Block Hawkes model.
 if __name__ == '__main__':
     seed = None
     n_classes = 4
@@ -135,10 +163,6 @@ if __name__ == '__main__':
                                                                             bp_mu, bp_alpha, bp_beta,
                                                                             duration, seed=seed)
     true_class_assignments = utils.one_hot_to_class_assignment(true_class_assignments)
-
-    # TODO: should I still use aggregated adj with SC or binary adj with regularized SC?
-    # agg_adj = utils.event_dict_to_aggregated_adjacency(n_nodes, event_dict)
-    # spectral_node_membership = spectral_cluster(agg_adj, num_classes=n_classes)
 
     binary_adj = utils.event_dict_to_adjacency(n_nodes, event_dict)
     spectral_node_membership = regularized_spectral_cluster(binary_adj, num_classes=n_classes)

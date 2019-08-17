@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+@author: Makan Arastuie
+"""
+
 import time
 import numpy as np
 import dataset_utils
@@ -8,10 +13,9 @@ import model_fitting_utils as model_utils
 def fit_and_eval_community_hawkes(train_tuple, test_tuple, combined_tuple, nodes_not_in_train,
                                   k_values_to_test=(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
                                   local_search_max_iter=0, local_search_n_cores=-1,
-                                  fit_generated_model=False, plot_fitted_hist=False,
-                                  verbose=False):
+                                  plot_fitted_hist=False, verbose=False):
     """
-    Fits the community Hawkes model to train and evaluates the log-likelihood on the test, by evaluating the
+    Fits the CHIP model to train and evaluates the log-likelihood on the test, by evaluating the
     log-likelihood on the combined dataset and subtracting the likelihood of train, dividing by number of events in test
 
     :param train_tuple, test_tuple, combined_tuple: A tuple of (event dict, number of nodes, duration)
@@ -19,10 +23,8 @@ def fit_and_eval_community_hawkes(train_tuple, test_tuple, combined_tuple, nodes
     :param k_values_to_test: iterable obj of number of communities to fit
     :param local_search_max_iter: if >0, then the model is fitted using local search, else local search is not used.
     :param local_search_n_cores: Number of cores to be used for local search. Ignored if local_search_max_iter <= 0.
-    :param plot_fitted_hist: If True, plots a histogram of the event count of read vs. fitted model.
-    :param fit_generated_model: If True, generates a community hawkes from train fitted values,
-                                then fits and evaluates the generated model itself. Uses the same generated model as
-                                the plotted one, if `plot_fitted_hist` is True.
+    :param plot_fitted_hist: If True, generates a CHIP model network based on the fitted parameters and plots a
+                             histogram of the event count of real vs. fitted model.
     :param verbose: Prints details of the fit along the way.
 
     :return: (list) test log-likelihood per event for all `k_values_to_test`.
@@ -79,11 +81,11 @@ def fit_and_eval_community_hawkes(train_tuple, test_tuple, combined_tuple, nodes
         print(f"K: {num_classes} - Train ll: {train_log_likelihood / train_n_events:.4f}", end=' - ')
         print(f"Test ll: {ll_per_event:.3f} - Took: {toc - tic:.2f}s")
 
-        model_utils.generate_fit_community_hawkes(train_event_dict, train_node_membership,
-                                                  train_bp_mu, train_bp_alpha, train_bp_beta,
-                                                  train_duration,
-                                                  fit_generated_model, plot_fitted_hist, train_percentage=0.8,
-                                                  n_cores=26)
+        if plot_fitted_hist:
+            model_utils.generate_fit_community_hawkes(train_event_dict, train_node_membership,
+                                                      train_bp_mu, train_bp_alpha, train_bp_beta,
+                                                      train_duration,
+                                                      plot_fitted_hist, n_cores=26)
 
     total_toc = time.time()
 
@@ -92,6 +94,7 @@ def fit_and_eval_community_hawkes(train_tuple, test_tuple, combined_tuple, nodes
     return lls_per_event
 
 
+# Examples of fitting CHIP to Facebook, Enron, Reality Mining and simulated data.
 if __name__ == "__main__":
     pass
     # # Facebook Dataset

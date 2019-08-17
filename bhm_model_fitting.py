@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+@author: Makan Arastuie
+"""
+
 import time
 import pickle
 import numpy as np
@@ -5,7 +10,6 @@ import dataset_utils
 import generative_model_utils as utils
 import model_fitting_utils as model_utils
 import block_parameter_estimation as estimate_utils
-from block_generative_model import block_generative_model
 
 
 def fit_and_eval_block_hawkes(train_tuple, test_tuple, combined_tuple, nodes_not_in_train,
@@ -16,6 +20,7 @@ def fit_and_eval_block_hawkes(train_tuple, test_tuple, combined_tuple, nodes_not
     """
     Fits the block Hawkes model to train and evaluates the log-likelihood on the test, by evaluating the
     log-likelihood on the combined dataset and subtracting the likelihood of train, dividing by number of events in test
+
     :param train_tuple, test_tuple, combined_tuple: A tuple of (event dict, number of nodes, duration)
     :param nodes_not_in_train: Nodes that are in the test data, but not in the train
     :param k_values_to_test: iterable obj of number of communities to fit
@@ -87,9 +92,9 @@ def fit_and_eval_block_hawkes(train_tuple, test_tuple, combined_tuple, nodes_not
                         handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         if plot_fitted_hist:
-            model_utils.generate_fit_block_hawkes(train_event_dict, train_node_membership,
-                                                  train_bp_mu, train_bp_alpha, train_bp_beta,
-                                                  train_duration)
+            estimate_utils.generate_fit_block_hawkes(train_event_dict, train_node_membership,
+                                                     train_bp_mu, train_bp_alpha, train_bp_beta,
+                                                     train_duration)
 
     total_toc = time.time()
 
@@ -98,6 +103,7 @@ def fit_and_eval_block_hawkes(train_tuple, test_tuple, combined_tuple, nodes_not
     return lls_per_event
 
 
+# Running Block Hawkes model on Facebook, Enron, Reality Mining, and simulated data
 if __name__ == "__main__":
     # Facebook Dataset
     print("Facebook wall-post dataset")

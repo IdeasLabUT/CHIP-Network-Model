@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+@author: Makan Arastuie
+"""
+
 import time
 import numpy as np
 import multiprocessing
@@ -13,6 +18,17 @@ def calc_node_neigh_solutions(event_dict, n_classes, duration, node_membership, 
     """
     Calculates the log-likelihood of neighboring solutions of a batch of nodes by changing their membership. If a higher
     log-likelihood was achieved the best solution will be returned, else a tuple of three np.nan is returned.
+
+    :param event_dict: Edge dictionary of events between all node pair. Output of the generative models.
+    :param n_classes: (int) total number of classes/blocks
+    :param duration: (int) Duration of the network
+    :param node_membership: (list) membership of every node to one of K classes
+    :param agg_adj: aggregated/weighted adjacency of the network
+    :param beta: K x K np array of block pairs beta. This is fixed for every solution to lower time complexity. Only mu
+                 and m are estimated for each neighboring solution
+    :param log_lik_init: (float) base log-likelihood
+    :param node_batch: (list) nodes in the current batch
+
     :return: (node index, best class index, log_likelihood)
     """
 
@@ -57,12 +73,29 @@ def calc_node_neigh_solutions(event_dict, n_classes, duration, node_membership, 
 
 def chp_local_search(event_dict, n_classes, node_membership_init, duration, max_iter=100, n_cores=-1,
                      return_fitted_param=False, verbose=True):
+    """
+    Performs local search / hill climbing to increase log-likelihood of the model by switching the community of a single
+    node at a time. For every neighboring solution only mu and m are estimated, beta is fixed to the base solution to
+    lower time complexity.
+
+    :param event_dict: Edge dictionary of events between all node pair. Output of the generative models.
+    :param n_classes: (int) total number of classes/blocks
+    :param node_membership_init: (list) initial membership of every node to one of K classes. Usually output of the
+                                 spectral clustering
+    :param duration: (int) Duration of the network
+    :param max_iter: (int) maximum number of iterations to be performed by local search.
+    :param n_cores: (int) number of cores to be used to parallelize the search. If -1, use all available cores.
+    :param return_fitted_param: if True, return the Hawkes parameters for the model as well.
+    :param verbose: If True, prints more information on local search.
+
+    :return: local optimum node_membership if `return_fitted_param` is false.
+    """
     n_nodes = len(node_membership_init)
     nodes = np.arange(n_nodes)
     node_membership = node_membership_init
     agg_adj = utils.event_dict_to_aggregated_adjacency(n_nodes, event_dict, dtype=np.int)
 
-    # estimate initial params of CHP and its log-likelihood
+    # estimate initial params of CHIP and its log-likelihood
     (mu,
      alpha,
      beta,
@@ -76,7 +109,6 @@ def chp_local_search(event_dict, n_classes, node_membership_init, duration, max_
     n_cores = n_cores if n_cores > 0 else multiprocessing.cpu_count()
     batch_size = np.int(n_nodes / n_cores) + 1
 
-    # print(n_cores)
     for iter in range(max_iter):
         if verbose:
             print(f"Iteration {iter}...", end='\r')
@@ -97,7 +129,7 @@ def chp_local_search(event_dict, n_classes, node_membership_init, duration, max_
 
         max_ll_neigh_idx = np.nanargmax(possible_solutions[:, 2])
 
-        # if a good neighbor was found, update all CHP params, and go for the next iteration.
+        # if a good neighbor was found, update all CHIP params, and go for the next iteration.
         node_membership[int(possible_solutions[max_ll_neigh_idx, 0])] = int(possible_solutions[max_ll_neigh_idx, 1])
         (mu,
          alpha,
@@ -121,13 +153,16 @@ def chp_local_search(event_dict, n_classes, node_membership_init, duration, max_
     return node_membership
 
 
-# This function is only here for speed comparisons.
 def chp_local_search_single_core(event_dict, n_classes, node_membership_init, duration, max_iter=100, verbose=True):
+    """
+    This function is only here for speed comparisons against the multi-core version. All parameters are the same as
+    `chip_local_search`.
+    """
     n_nodes = len(node_membership_init)
     node_membership = node_membership_init
     agg_adj = utils.event_dict_to_aggregated_adjacency(n_nodes, event_dict, dtype=np.int)
 
-    # estimate initial params of CHP and its log-likelihood
+    # estimate initial params of CHIP and its log-likelihood
     (mu,
      alpha,
      beta,
@@ -180,7 +215,7 @@ def chp_local_search_single_core(event_dict, n_classes, node_membership_init, du
                 print(f"Local solution found with {iter} iterations.")
             break
 
-        # if a good neighbor was found, update all CHP params, and go for the next iteration.
+        # if a good neighbor was found, update all CHIP params, and go for the next iteration.
         node_membership[best_neigh[0]] = best_neigh[1]
         (mu,
          alpha,
@@ -198,60 +233,7 @@ def chp_local_search_single_core(event_dict, n_classes, node_membership_init, du
     return node_membership
 
 
-# The functions defined below are not being used.
-
-# This log-likelihood is optimized for the local search.
-def full_hawkes_log_likelihood(event_dict, event_adj, class_assignment, bp_size, bp_mu, bp_alpha, bp_beta, end_time):
-    ll_first_term_total = -1 * np.sum(bp_mu * bp_size) * end_time
-
-    ll = ll_first_term_total
-    tic = time.time()
-    non_zero_adj_idxs = np.where(event_adj != 0)
-    toc = time.time()
-    print(toc - tic)
-
-    tic = time.time()
-    for u, v in event_dict.keys():
-        mu = bp_mu[class_assignment[u], class_assignment[v]]
-        alpha = bp_alpha[class_assignment[u], class_assignment[v]]
-        beta = bp_beta[class_assignment[u], class_assignment[v]]
-
-        second_inner_sum = (alpha / beta) * np.sum(np.exp(-beta * (end_time - event_dict[(u, v)])) - 1)
-        third_inner_sum = np.sum(np.log(mu + alpha * estimate_utils.compute_wijs_recursive(event_dict[(u, v)], beta)))
-        ll += second_inner_sum + third_inner_sum
-    toc = time.time()
-
-    print(toc - tic)
-    return ll
-
-
-def calc_class_size(node_membership, n_classes):
-    classes, class_size = np.unique(node_membership, return_counts=True)
-    if len(classes) != n_classes:
-        exit("fix it")
-
-    return class_size
-
-
-def calc_bp_size(class_size, neigh_switch=None):
-    """
-    Calculates the block pair size based on a single membership change.
-    :param neigh_switch: tuple (old_block, new_block)
-    """
-
-    if neigh_switch is not None:
-        class_size[neigh_switch[0]] -= 1
-        class_size[neigh_switch[1]] += 1
-
-    bp_size = np.ones((n_classes, n_classes)) * class_size
-    # computing block size by |b_i| * |b_j|
-    bp_size = bp_size * bp_size.T
-    # Subtracting |b_i| from diagonals to get |b_i| * (|b_i| - 1) for diagonal block size
-    bp_size = bp_size - np.diag(bp_size)
-
-    return bp_size
-
-
+# Examples of running local search on CHIP model.
 if __name__ == '__main__':
     n_classes = 4
     n_nodes = 1024
