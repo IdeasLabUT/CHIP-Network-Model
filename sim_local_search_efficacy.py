@@ -17,6 +17,7 @@ from chip_local_search import chip_local_search
 
 
 result_file_path = '/shared/Results/CommunityHawkes/pickles/local_search_efficacy'
+
 pickle_file_name = 'ls_efficacy'
 plot_name = 'ls_efficacy'
 plot_only = True

@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import generative_model_utils as utils
 
-
 plot_path = '/shared/Results/CommunityHawkes/plots/'
 
 

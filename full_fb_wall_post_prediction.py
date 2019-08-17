@@ -20,7 +20,6 @@ import model_fitting_utils as fitting_utils
 import parameter_estimation as estimate_utils
 from spectral_clustering import spectral_cluster
 
-
 result_file_path = '/shared/Results/CommunityHawkes/pickles/fb_chip_fit'
 
 use_agg_adj = True
