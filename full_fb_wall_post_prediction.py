@@ -129,9 +129,6 @@ if fit_chip:
                      'beta': bp_beta,
                      'alpha_beta_ratio': bp_alpha_beta_ratio}
 
-
-
-
     # Save results
     with open(f'{result_file_path}/pred-all-model-params-k-{num_classes}-{file_names_append}.pckl', 'wb') as handle:
         pickle.dump([train_num_nodes, train_num_events, train_duration,
@@ -190,8 +187,6 @@ for i in range(num_classes):
         bp_size = counts[i] * counts[j] if i != j else counts[i] * (counts[i] - 1)
         test_mean_num_events_bp[i, j] = len(test_block_pair_events[i][j]) / bp_size
 
-# print(test_mean_num_events_bp)
-
 
 pred_mean_num_events_bp = (hawkes_params['mu'] * test_duration) / (1 - (hawkes_params['alpha'] / hawkes_params['beta']))
 
@@ -203,4 +198,4 @@ im, _ = heatmap(pred_se, labels, labels, ax=ax, cmap="Greys",
                 cbarlabel="Number of Events Per Node Pair")
 
 fig.tight_layout()
-# plt.show()
+plt.show()

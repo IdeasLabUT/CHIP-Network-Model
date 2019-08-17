@@ -96,14 +96,13 @@ def fit_and_eval_community_hawkes(train_tuple, test_tuple, combined_tuple, nodes
 
 # Examples of fitting CHIP to Facebook, Enron, Reality Mining and simulated data.
 if __name__ == "__main__":
-    pass
-    # # Facebook Dataset
-    # print("Facebook wall-post dataset")
-    # fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
-    #     dataset_utils.load_fb_train_test(remove_nodes_not_in_train=False)
-    # fit_and_eval_community_hawkes(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
-    #                               k_values_to_test=np.arange(1, 11),
-    #                               plot_fitted_hist=False, verbose=False)
+    # Facebook Dataset
+    print("Facebook wall-post dataset")
+    fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
+        dataset_utils.load_fb_train_test(remove_nodes_not_in_train=False)
+    fit_and_eval_community_hawkes(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
+                                  k_values_to_test=np.arange(1, 11),
+                                  plot_fitted_hist=False, verbose=False)
 
     # # Enron Dataset
     # print("Enron dataset")

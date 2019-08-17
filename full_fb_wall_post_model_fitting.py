@@ -15,7 +15,6 @@ import dataset_utils
 import matplotlib.pyplot as plt
 from plotting_utils import heatmap
 import generative_model_utils as utils
-import model_fitting_utils as fitting_utils
 import parameter_estimation as estimate_utils
 from spectral_clustering import spectral_cluster
 
@@ -27,12 +26,11 @@ load_fb = True
 plot_hawkes_params = True
 plot_node_membership = True
 plot_num_events = True
-simulate_chip = False
 verbose = False
 num_classes = 10
 
 # load Facebook Wall-posts
-if fit_chip or load_fb or simulate_chip:
+if fit_chip or load_fb:
     tic = time.time()
     fb_event_dict, fb_num_node, fb_duration = dataset_utils.load_facebook_wall(largest_connected_component_only=True)
     toc = time.time()
@@ -204,7 +202,6 @@ if plot_hawkes_params:
         labels = np.arange(1, num_classes + 1)
         im, _ = heatmap(hawkes_params[param], labels, labels, ax=ax, cmap="Greys", cbarlabel=cbar_label[param])
 
-        # ax.set_title(f"Full Facebook wall-posts {param.capitalize()}")
         fig.tight_layout()
         plt.savefig(f"{result_file_path}/plots/{param}-k-{num_classes}.pdf")
         # plt.show()
@@ -218,65 +215,3 @@ if plot_hawkes_params:
     fig.tight_layout()
     # plt.show()
     plt.savefig(f"{result_file_path}/plots/m-k-{num_classes}.pdf")
-
-
-if simulate_chip:
-    # # Generating a CHIP model with fitted parameters
-    # [generated_node_membership,
-    #  generated_event_dict] = fitting_utils.generate_fit_community_hawkes(fb_event_dict, node_membership,
-    #                                                                      hawkes_params['mu'], hawkes_params['alpha'],
-    #                                                                      hawkes_params['beta'], fb_duration,
-    #                                                                      plot_hist=False, n_cores=25)
-    #
-    # with open(f'{result_file_path}/generated_model.pckl', 'wb') as handle:
-    #     pickle.dump([generated_node_membership, generated_event_dict], handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-    # Loading a CHIP model with fitted parameters
-    with open(f'{result_file_path}/generated_model.pckl', 'rb') as handle:
-        generated_node_membership, generated_event_dict = pickle.load(handle)
-
-    # Generating a CHIP model with fitted parameters
-    generated_agg_adj = utils.event_dict_to_aggregated_adjacency(fb_num_node, generated_event_dict, dtype=np.int)
-    generated_deg_count_flattened = np.reshape(generated_agg_adj, (fb_num_node * fb_num_node))
-
-    fb_agg_adj = utils.event_dict_to_aggregated_adjacency(fb_num_node, fb_event_dict, dtype=np.int)
-    deg_count_flattened = np.reshape(fb_agg_adj, (fb_num_node * fb_num_node))
-
-    # plt.hist(deg_count_flattened, bins=50, alpha=0.5, label='Real Data', color='blue', density=True)
-    # plt.hist(generated_deg_count_flattened, bins=25, alpha=0.5, label='Generated Data', color='red', density=True)
-    #
-    # plt.legend(loc='upper right')
-    # plt.xlabel('Event Count')
-    # plt.ylabel('Density')
-    # plt.title(f'Histogram of the Count Matrix Real Vs. Generated CHIP Model Data - K: {num_classes}'
-    #           f'\n Mean Count -  Real: {np.mean(fb_agg_adj):.3f} - Generated: {np.mean(generated_agg_adj):.3f}')
-    # plt.yscale("log")
-    # plt.show()
-    #
-    # plt.clf()
-
-    # out degree -> axis=1, in degree -> axis=0
-    fb_degree = np.sum(fb_agg_adj, axis=1) + 1
-    fb_deg_count = np.unique(fb_degree, return_counts=True)
-    fb_deg_count = fitting_utils.log_binning(fb_deg_count, 75)
-
-    gen_degree = np.sum(generated_agg_adj, axis=1) + 1
-    gen_deg_count = np.unique(gen_degree, return_counts=True)
-    gen_deg_count = fitting_utils.log_binning(gen_deg_count, 75)
-
-    plt.xscale('log')
-    plt.yscale('log')
-
-    plt.scatter(fb_deg_count[0], fb_deg_count[1], c='b', marker='*', alpha=0.9, label="Real")
-    plt.scatter(gen_deg_count[0], gen_deg_count[1], c='r', marker='x', alpha=0.9, label="Generated")
-
-    plt.xticks(fontsize=20)
-    plt.yticks(fontsize=20)
-    plt.legend(loc="best", fontsize=20)
-    plt.ylabel('Frequency', fontsize=20)
-    plt.xlabel('Degree', fontsize=20)
-    plt.tight_layout()
-    plt.title(f'Out Degree Distribution on Log-Log Scale')
-    # plt.savefig('{}degree-dist-{}.pdf'.format(plot_save_path, pymk_directories[i]), format='pdf')
-    plt.show()
-    # plt.clf()

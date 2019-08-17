@@ -10,7 +10,7 @@ import numpy as np
 import networkx as nx
 from datetime import datetime
 import matplotlib.pyplot as plt
-# import generative_model_utils as utils
+import generative_model_utils as utils
 
 
 def get_script_path():
@@ -369,33 +369,3 @@ def load_facebook_wall(timestamp_max=1000, largest_connected_component_only=Fals
         event_dict[(sender_id, receiver_id)].append(data[i, 2])
 
     return event_dict, len(node_set), duration
-
-
-# Various examples of loading datasets
-if __name__ == '__main__':
-    # fb_event_dict, fb_num_nodes, fb_duration = load_facebook_wall(largest_connected_component_only=True)
-    # print("Facebook wall-post - Num Nodes:", fb_num_nodes,
-    #       "Num Edges:", np.sum(utils.event_dict_to_aggregated_adjacency(fb_num_nodes, fb_event_dict)),
-    #       "duration:", fb_duration)
-
-    # load_reality_mining_test_train()
-    # plot_event_count_hist(reality_mining_event_dict, num_nodes, "Reality Mining's Core people")
-
-    # load_reality_mining_test_train()
-    # load_core_reality_mining()
-    load_fb_train_test()
-    # ((enron_train_event_dict, enron_train_n_nodes, train_duration),
-    #  (enron_test_event_dict, enron_test_n_nodes, test_duration),
-    #  (enron_combined_event_dict, enron_combined_n_nodes, combined_duration), nodes_not_in_train) = load_enron_train_test()
-    #
-    # print(np.sum(utils.event_dict_to_aggregated_adjacency(enron_train_n_nodes, enron_train_event_dict)))
-    # print(np.sum(utils.event_dict_to_aggregated_adjacency(enron_test_n_nodes, enron_test_event_dict)))
-    # print(np.sum(utils.event_dict_to_aggregated_adjacency(enron_combined_n_nodes, enron_combined_event_dict)))
-
-    # print("Train -- Num Nodes:", enron_train_n_nodes,
-    #       "Num Edges:", np.sum(utils.event_dict_to_aggregated_adjacency(enron_train_n_nodes, enron_train_event_dict)))
-    # print("Test -- Num Nodes:", enron_test_n_nodes,
-    #       "Num Edges:", np.sum(utils.event_dict_to_aggregated_adjacency(enron_test_n_nodes, enron_test_event_dict)))
-    # print("Combined -- Num Nodes:", enron_combined_n_nodes,
-    #       "Num Edges:", np.sum(utils.event_dict_to_aggregated_adjacency(enron_combined_n_nodes, enron_combined_event_dict)))
-
