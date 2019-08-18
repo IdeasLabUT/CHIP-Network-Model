@@ -1,6 +1,6 @@
 BSD 3-Clause License
 
-Copyright (c) 2019, Makan Arastuie, Kevin S. Xu, and Subhadeep Paul
+Copyright (c) 2019, Makan Arastuie, Subhadeep Paul and Kevin S. Xu 
 
 All rights reserved.
 
