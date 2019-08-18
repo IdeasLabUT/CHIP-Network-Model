@@ -20,7 +20,7 @@ import parameter_estimation as estimate_utils
 from spectral_clustering import spectral_cluster
 
 
-result_file_path = '/shared/Results/CommunityHawkes/pickles/fb_chip_fit'
+result_file_path = '/shared/Results/CommunityHawkes/pickles/fb_chip_fit_2'
 
 fit_chip = False
 load_fb = True
@@ -57,7 +57,7 @@ if fit_chip:
     tic_tot = time.time()
     tic = time.time()
     # Running spectral clustering
-    node_membership = spectral_cluster(agg_adj, num_classes=10, verbose=False, plot_eigenvalues=True)
+    node_membership = spectral_cluster(agg_adj, num_classes=10, verbose=False, plot_eigenvalues=False)
 
     toc = time.time()
 
