@@ -23,10 +23,10 @@ from spectral_clustering import spectral_cluster
 result_file_path = '/shared/Results/CommunityHawkes/pickles/fb_chip_fit_2'
 
 fit_chip = False
-load_fb = True
+load_fb = False
 plot_hawkes_params = True
-plot_node_membership = True
-plot_num_events = True
+plot_node_membership = False
+plot_num_events = False
 simulate_chip = False
 verbose = False
 num_classes = 10
@@ -207,7 +207,7 @@ if plot_hawkes_params:
         # ax.set_title(f"Full Facebook wall-posts {param.capitalize()}")
         fig.tight_layout()
         plt.savefig(f"{result_file_path}/plots/{param}-k-{num_classes}.pdf")
-        # plt.show()
+        plt.show()
 
     # plot m
     fig, ax = plt.subplots()
@@ -216,9 +216,25 @@ if plot_hawkes_params:
                     cbarlabel=r"$m$")
 
     fig.tight_layout()
-    # plt.show()
+    plt.show()
     plt.savefig(f"{result_file_path}/plots/m-k-{num_classes}.pdf")
 
+    # plot mu / (1 - m)
+    fig, ax = plt.subplots()
+    labels = np.arange(1, num_classes + 1)
+    m = hawkes_params['alpha'] / hawkes_params['beta']
+    expected = hawkes_params['mu'] / (1 - m)
+    im, _ = heatmap(expected, labels, labels, ax=ax, cmap="Greys",
+                    cbarlabel=r"$\mu/(1-m)$")
+
+    fig.tight_layout()
+    plt.show()
+    plt.savefig(f"{result_file_path}/plots/mu-over-1-m-k-{num_classes}.pdf")
+
+    # print(f"Diag mean:  {np.mean(expected[np.eye(num_classes, dtype=bool)]):.3e}", end=', ')
+    # print(f"sd: {np.std(expected[np.eye(num_classes, dtype=bool)]):.3e}")
+    # print(f"off-diag mean: {np.mean(expected[~np.eye(num_classes, dtype=bool)]):.3e}", end=', ')
+    # print(f"sd: {np.std(expected[~np.eye(num_classes, dtype=bool)]):.3e}")
 
 if simulate_chip:
     # # Generating a CHIP model with fitted parameters
