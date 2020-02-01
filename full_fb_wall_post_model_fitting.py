@@ -24,15 +24,15 @@ result_file_path = '/shared/Results/CommunityHawkes/pickles/fb_chip_fit_2'
 
 fit_chip = False
 load_fb = False
-plot_hawkes_params = True
+plot_hawkes_params = False
 plot_node_membership = False
-plot_num_events = False
+plot_num_events = True
 simulate_chip = False
 verbose = False
 num_classes = 10
 
 # load Facebook Wall-posts
-if fit_chip or load_fb or simulate_chip:
+if fit_chip or load_fb or simulate_chip or plot_num_events:
     tic = time.time()
     fb_event_dict, fb_num_node, fb_duration = dataset_utils.load_facebook_wall(largest_connected_component_only=True)
     toc = time.time()
@@ -139,15 +139,15 @@ if plot_num_events:
     num_events_block_pair = np.zeros((num_classes, num_classes), dtype=np.int)
     for i in range(num_classes):
         for j in range(num_classes):
-            num_events_block_pair[i, j] = len(block_pair_events[i][j])
+            num_events_block_pair[i, j] = len(np.concatenate(block_pair_events[i][j]))
 
     fig, ax = plt.subplots()
     labels = np.arange(1, num_classes + 1)
     im, _ = heatmap(num_events_block_pair, labels, labels, ax=ax, cmap="Greys", cbarlabel=" ")
 
     fig.tight_layout()
-    # plt.show()
     plt.savefig(f"{result_file_path}/plots/num_block_pair_events.pdf")
+    # plt.show()
 
     # plot block pair average number of events per node pair
     blocks, counts = np.unique(node_membership, return_counts=True)
@@ -155,7 +155,7 @@ if plot_num_events:
     for i in range(num_classes):
         for j in range(num_classes):
             bp_size = counts[i] * counts[j] if i != j else counts[i] * (counts[i] - 1)
-            mean_num_events_block_pair[i, j] = len(block_pair_events[i][j]) / bp_size
+            mean_num_events_block_pair[i, j] = len(np.concatenate(block_pair_events[i][j])) / bp_size
 
     fig, ax = plt.subplots()
     labels = np.arange(1, num_classes + 1)
