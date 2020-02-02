@@ -25,9 +25,11 @@ fit_chip = False
 load_dataset = False
 plot_hawkes_params = False
 plot_node_membership = False
-plot_num_events = True
+plot_num_events = False
+analyze_position = True
 verbose = False
 num_classes = 2
+
 
 # Load combined Enron Dataset
 if fit_chip or load_dataset or plot_num_events:
@@ -235,10 +237,46 @@ if plot_hawkes_params:
     # print(f"off-diag mean: {np.mean(expected[~np.eye(num_classes, dtype=bool)]):.3e}", end=', ')
     # print(f"sd: {np.std(expected[~np.eye(num_classes, dtype=bool)]):.3e}")
 
+if analyze_position:
+    # load dict of node id to index map
+    dataset_path = '/shared/DataSets/EnronPriebe2009'
+    with open(f'{dataset_path}/node_id_to_position_dict_map.pckl', 'rb') as handle:
+        node_to_idx = pickle.load(handle)
 
+    # get the position of each node
+    idx_to_position = {}
+    with open(f'{dataset_path}/position.csv', 'r') as f:
+        for i, l in enumerate(f):
+            if i + 1 in node_to_idx:
+                idx_to_position[node_to_idx[i + 1]] = l.strip()
 
-# There are some interesting things going on based on the Hawkes params:
-# The number of events within communities are higher than the number of events between communities. This is expected based on spectral clustering.
-# However, this high number cannot be explained only by mu .  Since mu is very low for block pair 2-2.
-# Then you look at m and you see that the high number of events in block pair 2-2, is explained by the burstiness of the Hawkes process.
-# Then this is better captured by the expected average number of events mu / (1-m), which is almost the exact opposite of mu.
+    # Explore the memberships
+    for c_idx in range(num_classes):
+        print("Class: ", c_idx + 1)
+        print("Positions:")
+
+        na_cnt = 0
+        emp_cnt = 0
+        non_emp_cnt = 0
+        for i, c in enumerate(node_membership):
+            if c != c_idx:
+                continue
+
+            p = idx_to_position[i]
+            if p == 'NA':
+                na_cnt += 1
+            elif p == 'Employee':
+                emp_cnt += 1
+            else:
+                non_emp_cnt += 1
+
+            print(p, end=', ')
+
+        tot_nodes = np.sum(node_membership == c_idx)
+        print('\n')
+        print(f'Counts -> Employees: {emp_cnt} - Higher Ups: {non_emp_cnt} - NA\'s: {na_cnt}')
+        print(f'Percentage -> Employees: {100 * emp_cnt / tot_nodes:.1f}% - '
+              f'Higher Ups: {100 * non_emp_cnt / tot_nodes:.1f}% - NA\'s: {100 * na_cnt / tot_nodes:.1f}%')
+        print(f'Percentage excluding NA\'s -> Employees: {100 * emp_cnt / (tot_nodes - na_cnt):.1f}% - '
+              f'Higher Ups: {100 * non_emp_cnt / (tot_nodes - na_cnt):.1f}%')
+        print()
