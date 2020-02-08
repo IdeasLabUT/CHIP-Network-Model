@@ -4,7 +4,7 @@
 
 Here we fit CHIP to the Enron dataset and analyze various aspects of the fitted model.
 
-@author: Makan Arastuie
+@author: Anonymous
 """
 
 import time

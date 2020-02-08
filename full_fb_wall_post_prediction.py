@@ -6,7 +6,7 @@ the weighted vs. unweighted adjacency matrices.
 Here we fit CHIP to the largest connected component of the Facebook wall-post dataset in a train/test setting to
 evaluate the log-likelihood of the model on the test set.
 
-@author: Makan Arastuie
+@author: Anonymous
 """
 
 import time

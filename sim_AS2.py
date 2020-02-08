@@ -10,7 +10,7 @@
 Expectation: We should see accuracy increase in both these cases. When mu_diag/mu_off_diag ratio is low, the algorithms
 will do poorly, but as the ratio increases there is more signal and the algorithm will do well and go all the way to 1.
 
-@author: Makan Arastuie
+@author: Anonymous
 """
 
 import pickle

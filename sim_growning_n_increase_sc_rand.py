@@ -2,7 +2,7 @@
 """
 "Spectral Clustering on Weighted vs. Unweighted Adjacency Matrix"
 
-@author: Makan Arastuie
+@author: Anonymous
 """
 
 import pickle

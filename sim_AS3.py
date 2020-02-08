@@ -10,7 +10,7 @@ lower mis-clustering rate.
 (b) fix $T$, increasing $n$ and decreasing $k$.
 (c) fix $k$, increasing $n$ and increasing $T$.
 
-@author: Makan Arastuie
+@author: Anonymous
 """
 
 import pickle

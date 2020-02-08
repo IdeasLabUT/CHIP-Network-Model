@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@authors: kevin Xu and Makan Arastuie
+@author: Anonymous
 """
 
 import warnings

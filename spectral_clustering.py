@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@author: Kevin Xu and Makan Arastuie
+@author: Anonymous
 """
 
 import numpy as np

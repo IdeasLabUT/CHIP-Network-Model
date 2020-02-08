@@ -5,7 +5,7 @@
 Here we fit CHIP to the largest connected component of the Facebook wall-post dataset and analyze various aspects of
 the fitted model.
 
-@author: Makan Arastuie
+@author: Anonymous
 """
 
 import time

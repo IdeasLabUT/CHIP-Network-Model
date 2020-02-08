@@ -4,7 +4,7 @@
 
 Empirically analyzing the consistency of the CHIP parameter estimators.
 
-@author: Makan Arastuie
+@author: Anonymous
 """
 
 import pickle
