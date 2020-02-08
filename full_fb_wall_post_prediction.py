@@ -96,18 +96,15 @@ if fit_chip:
     tic = time.time()
     bp_beta = np.zeros((num_classes, num_classes), dtype=np.float)
     train_block_pair_events = utils.event_dict_to_block_pair_events(train_event_dict, train_node_membership, num_classes)
+    bp_size = utils.calc_block_pair_size(train_node_membership, num_classes)
 
     cnt = 0
     for b_i in range(num_classes):
         for b_j in range(num_classes):
-            bp_size = len(np.where(train_node_membership == b_i)[0]) * len(np.where(train_node_membership == b_j)[0])
-            if b_i == b_j:
-                bp_size -= len(np.where(train_node_membership == b_i)[0])
-
             bp_beta[b_i, b_j], _ = estimate_utils.estimate_beta_from_events(train_block_pair_events[b_i][b_j],
                                                                             bp_mu[b_i, b_j],
                                                                             bp_alpha_beta_ratio[b_i, b_j],
-                                                                            train_duration, bp_size)
+                                                                            train_duration, bp_size[b_i, b_j])
             cnt += 1
             print(f"{100 * cnt / num_classes ** 2:0.2f}% Done.", end='\r')
 
@@ -184,12 +181,11 @@ combined_node_membership = fitting_utils.assign_node_membership_for_missing_node
 # test_block_pair_events = utils.event_dict_to_block_pair_events(test_event_dict, combined_node_membership, num_classes)
 test_block_pair_events = utils.event_dict_to_block_pair_events(test_event_dict, combined_node_membership, num_classes)
 
-blocks, counts = np.unique(combined_node_membership, return_counts=True)
+bp_size = utils.calc_block_pair_size(combined_node_membership, num_classes)
 test_mean_num_events_bp = np.zeros((num_classes, num_classes))
 for i in range(num_classes):
     for j in range(num_classes):
-        bp_size = counts[i] * counts[j] if i != j else counts[i] * (counts[i] - 1)
-        test_mean_num_events_bp[i, j] = len(test_block_pair_events[i][j]) / bp_size
+        test_mean_num_events_bp[i, j] = len(test_block_pair_events[i][j]) / bp_size[i, j]
 
 # print(test_mean_num_events_bp)
 
