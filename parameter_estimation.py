@@ -12,20 +12,18 @@ from chip_generative_model import community_generative_model
 from scipy.optimize import minimize_scalar, minimize
 
 
-def estimate_hawkes_from_counts(agg_adj, class_vec, duration, default_mu=None):
+def compute_sample_mean_and_variance(agg_adj, class_vec):
     """
-    Estimates CHIP's mu and m.
+    Computes CHIP's sample mean (N) and variance (S^2)
 
     :param agg_adj: weighted adjacency of the network
     :param class_vec: (list) membership of every node to one of K classes.
-    :param duration: duration of the network
-    :param default_mu: default mu values for block pairs with sample variance of 0.
 
-    :return: mu, m
+    :return: N, S^2
     """
-    num_classes = class_vec.max()+1
-    sample_mean = np.zeros((num_classes,num_classes))
-    sample_var = np.zeros((num_classes,num_classes))
+    num_classes = class_vec.max() + 1
+    sample_mean = np.zeros((num_classes, num_classes))
+    sample_var = np.zeros((num_classes, num_classes))
 
     community_membership = utils.node_membership_to_community_membership(class_vec, num_classes)
 
@@ -48,18 +46,35 @@ def estimate_hawkes_from_counts(agg_adj, class_vec, duration, default_mu=None):
                 # triangular portions
 
                 num_nodes_in_a = nodes_in_a.size
-                lower_indices = np.tril_indices(num_nodes_in_a,-1)
-                upper_indices = np.triu_indices(num_nodes_in_a,1)
+                lower_indices = np.tril_indices(num_nodes_in_a, -1)
+                upper_indices = np.triu_indices(num_nodes_in_a, 1)
                 agg_adj_block_no_diag = np.r_[agg_adj_block[lower_indices],
                                               agg_adj_block[upper_indices]]
 
-                sample_mean[a,b] = np.mean(agg_adj_block_no_diag)
-                sample_var[a,b] = np.var(agg_adj_block_no_diag,ddof=1)
+                sample_mean[a, b] = np.mean(agg_adj_block_no_diag)
+                sample_var[a, b] = np.var(agg_adj_block_no_diag, ddof=1)
 
             else:
 
-                sample_mean[a,b] = np.mean(agg_adj_block)
-                sample_var[a,b] = np.var(agg_adj_block,ddof=1)
+                sample_mean[a, b] = np.mean(agg_adj_block)
+                sample_var[a, b] = np.var(agg_adj_block, ddof=1)
+
+    return sample_mean, sample_var
+
+
+def estimate_hawkes_from_counts(agg_adj, class_vec, duration, default_mu=None):
+    """
+    Estimates CHIP's mu and m.
+
+    :param agg_adj: weighted adjacency of the network
+    :param class_vec: (list) membership of every node to one of K classes.
+    :param duration: duration of the network
+    :param default_mu: default mu values for block pairs with sample variance of 0.
+
+    :return: mu, m
+    """
+
+    sample_mean, sample_var = compute_sample_mean_and_variance(agg_adj, class_vec)
 
     # Variance can be zero, resulting in division by zero warnings. Ignore and set a default mu.
     with warnings.catch_warnings():

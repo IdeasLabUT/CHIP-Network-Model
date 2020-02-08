@@ -15,9 +15,9 @@ import dataset_utils
 import matplotlib.pyplot as plt
 from plotting_utils import heatmap
 import generative_model_utils as utils
+import model_fitting_utils as fitting_utils
 import parameter_estimation as estimate_utils
 from spectral_clustering import spectral_cluster
-
 
 result_file_path = f'{dataset_utils.get_script_path()}/storage/results/fb_chip_fit'
 
@@ -26,11 +26,12 @@ load_fb = True
 plot_hawkes_params = True
 plot_node_membership = True
 plot_num_events = True
+get_confidence_intervals = True
 verbose = False
 num_classes = 10
 
 # load Facebook Wall-posts
-if fit_chip or load_fb:
+if fit_chip or load_fb or plot_num_events or get_confidence_intervals:
     tic = time.time()
     fb_event_dict, fb_num_node, fb_duration = dataset_utils.load_facebook_wall(largest_connected_component_only=True)
     toc = time.time()
@@ -55,7 +56,7 @@ if fit_chip:
     tic_tot = time.time()
     tic = time.time()
     # Running spectral clustering
-    node_membership = spectral_cluster(agg_adj, num_classes=10, verbose=False, plot_eigenvalues=True)
+    node_membership = spectral_cluster(agg_adj, num_classes=num_classes, verbose=False, plot_eigenvalues=False)
 
     toc = time.time()
 
@@ -83,18 +84,15 @@ if fit_chip:
     tic = time.time()
     bp_beta = np.zeros((num_classes, num_classes), dtype=np.float)
     block_pair_events = utils.event_dict_to_block_pair_events(fb_event_dict, node_membership, num_classes)
+    bp_size = utils.calc_block_pair_size(node_membership, num_classes)
 
     cnt = 0
     for b_i in range(num_classes):
         for b_j in range(num_classes):
-            bp_size = len(np.where(node_membership == b_i)[0]) * len(np.where(node_membership == b_j)[0])
-            if b_i == b_j:
-                bp_size -= len(np.where(node_membership == b_i)[0])
-
             bp_beta[b_i, b_j], _ = estimate_utils.estimate_beta_from_events(block_pair_events[b_i][b_j],
                                                                             bp_mu[b_i, b_j],
                                                                             bp_alpha_beta_ratio[b_i, b_j],
-                                                                            fb_duration, bp_size)
+                                                                            fb_duration, bp_size[b_i, b_j])
             cnt += 1
             print(f"{100 * cnt / num_classes ** 2:0.2f}% Done.", end='\r')
 
@@ -137,23 +135,21 @@ if plot_num_events:
     num_events_block_pair = np.zeros((num_classes, num_classes), dtype=np.int)
     for i in range(num_classes):
         for j in range(num_classes):
-            num_events_block_pair[i, j] = len(block_pair_events[i][j])
+            num_events_block_pair[i, j] = len(np.concatenate(block_pair_events[i][j]))
 
     fig, ax = plt.subplots()
     labels = np.arange(1, num_classes + 1)
     im, _ = heatmap(num_events_block_pair, labels, labels, ax=ax, cmap="Greys", cbarlabel=" ")
 
     fig.tight_layout()
-    # plt.show()
     plt.savefig(f"{result_file_path}/plots/num_block_pair_events.pdf")
+    # plt.show()
 
-    # plot block pair average number of events per node pair
-    blocks, counts = np.unique(node_membership, return_counts=True)
+    bp_size = utils.calc_block_pair_size(node_membership, num_classes)
     mean_num_events_block_pair = np.zeros((num_classes, num_classes))
     for i in range(num_classes):
         for j in range(num_classes):
-            bp_size = counts[i] * counts[j] if i != j else counts[i] * (counts[i] - 1)
-            mean_num_events_block_pair[i, j] = len(block_pair_events[i][j]) / bp_size
+            mean_num_events_block_pair[i, j] = len(np.concatenate(block_pair_events[i][j])) / bp_size[i, j]
 
     fig, ax = plt.subplots()
     labels = np.arange(1, num_classes + 1)
@@ -204,7 +200,7 @@ if plot_hawkes_params:
 
         fig.tight_layout()
         plt.savefig(f"{result_file_path}/plots/{param}-k-{num_classes}.pdf")
-        # plt.show()
+        plt.show()
 
     # plot m
     fig, ax = plt.subplots()
@@ -213,5 +209,39 @@ if plot_hawkes_params:
                     cbarlabel=r"$m$")
 
     fig.tight_layout()
-    # plt.show()
+    plt.show()
     plt.savefig(f"{result_file_path}/plots/m-k-{num_classes}.pdf")
+
+    # plot mu / (1 - m)
+    fig, ax = plt.subplots()
+    labels = np.arange(1, num_classes + 1)
+    m = hawkes_params['alpha'] / hawkes_params['beta']
+    expected = hawkes_params['mu'] / (1 - m)
+    im, _ = heatmap(expected, labels, labels, ax=ax, cmap="Greys",
+                    cbarlabel=r"$\mu/(1-m)$")
+
+    fig.tight_layout()
+    plt.show()
+    plt.savefig(f"{result_file_path}/plots/mu-over-1-m-k-{num_classes}.pdf")
+
+
+if get_confidence_intervals:
+    mu_ci, m_ci = fitting_utils.compute_mu_and_m_confidence_interval(fb_event_dict, node_membership, num_classes,
+                                                                     z_alpha=0.05, duration=fb_duration)
+    print("m CI:")
+    print('[', end='')
+    for i in range(num_classes):
+        print('[', end='')
+        for j in range(num_classes):
+            print(f"{hawkes_params['alpha_beta_ratio'][i, j]:.3f} +/- {m_ci[i, j]:.3f}", end=', ')
+        print(']')
+    print(']')
+
+    print("mu CI:")
+    print('[', end='')
+    for i in range(num_classes):
+        print('[', end='')
+        for j in range(num_classes):
+            print(f"{hawkes_params['mu'][i, j]:.2e} +/- {mu_ci[i, j]:.2e}", end=', ')
+        print(']')
+    print(']')

@@ -17,8 +17,8 @@ from spectral_clustering import spectral_cluster
 
 result_file_path = f'{get_script_path()}/storage/results/growing_n_increase_sc_rand'
 
-agg_adj_should_fail = True
-plot_only = False
+agg_adj_should_fail = False
+plot_only = True
 
 number_of_nodes_list = [8, 16, 32, 64, 128, 256, 512]
 # number_of_nodes_list = [10000]
@@ -119,6 +119,12 @@ with open(f'{result_file_path}/{file_name}', 'rb') as handle:
      mean_agg_adj_sc_rand_scores,
      mean_agg_adj_sc_rand_scores_err] = pickle.load(handle)
 
+# Remove entries for 8 and 16
+number_of_nodes_list = number_of_nodes_list[2:]
+mean_adj_sc_rand_scores = mean_adj_sc_rand_scores[2:]
+mean_adj_sc_rand_scores_err = mean_adj_sc_rand_scores_err[2:]
+mean_agg_adj_sc_rand_scores = mean_agg_adj_sc_rand_scores[2:]
+mean_agg_adj_sc_rand_scores_err = mean_agg_adj_sc_rand_scores_err[2:]
 
 print(f"community model:")
 print("Number of nodes:", number_of_nodes_list)
@@ -139,13 +145,14 @@ ax.set_xticklabels(number_of_nodes_list, fontsize=12)
 ax.set_ylim(0, 1)
 ax.tick_params(labelsize=12)
 
-ax.legend((p1[0], p2[0]), (f"Unweighted Adjacency", f"Weighted Adjacency"), fontsize=14)
+ax.legend((p1[0], p2[0]), (f"Unweighted", f"Weighted"), fontsize=14)
 plt.ylabel("Mean Adjusted Rand Score", fontsize=16)
 plt.xlabel("Number of Nodes", fontsize=16)
+plt.tight_layout()
 
 ax.autoscale_view()
 
 plot_name = "agg_adj_fail_100_sim" if agg_adj_should_fail else "adj_fail_100_sim"
 # plot_name = "very-large-n"
-plt.savefig(f"{result_file_path}/plots/{plot_name}.pdf")
+plt.savefig(f"{result_file_path}/plots/{plot_name}.pdf", bbox_inches='tight')
 plt.show()

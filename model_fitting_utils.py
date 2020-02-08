@@ -4,6 +4,7 @@
 """
 
 import numpy as np
+from scipy.stats import norm
 import chip_local_search as cls
 import matplotlib.pyplot as plt
 from scipy.stats import multinomial
@@ -46,25 +47,12 @@ def fit_community_model(event_dict, num_nodes, duration, num_classes, local_sear
         block_pair_events = utils.event_dict_to_block_pair_events(event_dict, node_membership, num_classes)
 
     else:
-        bp_mu, bp_alpha_beta_ratio = estimate_utils.estimate_hawkes_from_counts(agg_adj, node_membership,
-                                                                                duration,
-                                                                                1e-10 / duration)
-        bp_beta = np.zeros((num_classes, num_classes), dtype=np.float)
-
-        block_pair_events = utils.event_dict_to_block_pair_events(event_dict, node_membership, num_classes)
-
-        for b_i in range(num_classes):
-            for b_j in range(num_classes):
-                bp_size = len(np.where(node_membership == b_i)[0]) * len(np.where(node_membership == b_j)[0])
-                if b_i == b_j:
-                    bp_size -= len(np.where(node_membership == b_i)[0])
-
-                bp_beta[b_i, b_j], _ = estimate_utils.estimate_beta_from_events(block_pair_events[b_i][b_j],
-                                                                                bp_mu[b_i, b_j],
-                                                                                bp_alpha_beta_ratio[b_i, b_j],
-                                                                                duration, bp_size)
-
-        bp_alpha = bp_alpha_beta_ratio * bp_beta
+        (bp_mu,
+         bp_alpha,
+         bp_beta,
+         bp_alpha_beta_ratio,
+         block_pair_events) = estimate_bp_hawkes_params(event_dict, node_membership, duration, num_classes,
+                                                        agg_adj=agg_adj, return_block_pair_events=True)
 
     # Printing information about the fit
     if verbose:
@@ -85,7 +73,8 @@ def fit_community_model(event_dict, num_nodes, duration, num_classes, local_sear
     return node_membership, bp_mu, bp_alpha, bp_beta, block_pair_events
 
 
-def estimate_bp_hawkes_params(event_dict, node_membership, duration, num_classes):
+def estimate_bp_hawkes_params(event_dict, node_membership, duration, num_classes,
+                              agg_adj=None, return_block_pair_events=False):
     """
     Estimate CHIP Hawkes parameters.
 
@@ -93,32 +82,36 @@ def estimate_bp_hawkes_params(event_dict, node_membership, duration, num_classes
     :param node_membership: (list) membership of every node to one of K classes.
     :param duration: (int) duration of the network
     :param num_classes: (int) number of blocks / classes
+    :param agg_adj: (optional) np array (num_nodes x num_nodes) Adjacency matrix where element ij denotes the
+                    number of events between nodes i an j. If None, this will be calculated.
+    :param return_block_pair_events: (bool) If True, returns the return_block_pair_events
 
     :return: parameters of the CHIP model -> mu, alpha, beta, m
     """
 
-    num_nodes = len(node_membership)
+    if agg_adj is None:
+        num_nodes = len(node_membership)
+        agg_adj = utils.event_dict_to_aggregated_adjacency(num_nodes, event_dict)
 
-    agg_adj = utils.event_dict_to_aggregated_adjacency(num_nodes, event_dict)
     bp_mu, bp_alpha_beta_ratio = estimate_utils.estimate_hawkes_from_counts(agg_adj, node_membership,
                                                                             duration,
                                                                             1e-10 / duration)
 
     bp_beta = np.zeros((num_classes, num_classes), dtype=np.float)
     block_pair_events = utils.event_dict_to_block_pair_events(event_dict, node_membership, num_classes)
+    bp_size = utils.calc_block_pair_size(node_membership, num_classes)
 
     for b_i in range(num_classes):
         for b_j in range(num_classes):
-            bp_size = len(np.where(node_membership == b_i)[0]) * len(np.where(node_membership == b_j)[0])
-            if b_i == b_j:
-                bp_size -= len(np.where(node_membership == b_i)[0])
-
             bp_beta[b_i, b_j], _ = estimate_utils.estimate_beta_from_events(block_pair_events[b_i][b_j],
                                                                             bp_mu[b_i, b_j],
                                                                             bp_alpha_beta_ratio[b_i, b_j],
-                                                                            duration, bp_size)
+                                                                            duration, bp_size[b_i, b_j])
 
     bp_alpha = bp_alpha_beta_ratio * bp_beta
+
+    if return_block_pair_events:
+        return bp_mu, bp_alpha, bp_beta, bp_alpha_beta_ratio, block_pair_events
 
     return bp_mu, bp_alpha, bp_beta, bp_alpha_beta_ratio
 
@@ -144,16 +137,13 @@ def calc_full_log_likelihood(block_pair_events, node_membership,
     """
 
     log_likelihood = 0
+    bp_size = utils.calc_block_pair_size(node_membership, num_classes)
     for b_i in range(num_classes):
         for b_j in range(num_classes):
-            bp_size = len(np.where(node_membership == b_i)[0]) * len(np.where(node_membership == b_j)[0])
-            if b_i == b_j:
-                bp_size -= len(np.where(node_membership == b_i)[0])
-
             log_likelihood += estimate_utils.block_pair_full_hawkes_log_likelihood(block_pair_events[b_i][b_j],
                                                                                    bp_mu[b_i, b_j], bp_alpha[b_i, b_j],
                                                                                    bp_beta[b_i, b_j], duration,
-                                                                                   block_pair_size=bp_size)
+                                                                                   block_pair_size=bp_size[b_i, b_j])
 
     if add_com_assig_log_prob:
         # Adding the log probability of the community assignments to the full log likelihood
@@ -273,3 +263,66 @@ def log_binning(counter, bin_count=35):
     bin_means_x = np.histogram(keys, bins, weights=keys)[0] / np.histogram(keys, bins)[0]
 
     return bin_means_x, bin_means_y
+
+
+def compute_mu_and_m_confidence_interval(event_dict, node_membership, num_classes, z_alpha, duration):
+    """
+    Computes the confidence interval for mu and m (alpha to beta ratio)
+
+    :param event_dict: Edge dictionary of events between all node pair.
+    :param node_membership: (list) membership of every node to one of K classes.
+    :param num_classes: (int) number of blocks / classes
+    :param z_alpha: significance level (resulting in (1 - z_alpha) * 100 % CI)
+    :param duration: the duration of the network
+
+    :return: matrix of KxK confidence interval for mu and m
+    """
+    num_nodes = len(node_membership)
+    agg_adj = utils.event_dict_to_aggregated_adjacency(num_nodes, event_dict)
+
+    sample_mean, sample_var = estimate_utils.compute_sample_mean_and_variance(agg_adj, node_membership)
+    bp_size = utils.calc_block_pair_size(node_membership, num_classes)
+
+    z = 1 - (z_alpha / (2 * (num_classes ** 2)))
+    ci_percentile = norm.ppf(1 - ((1 - z) / 2))
+
+    mu_ci = ci_percentile * np.sqrt((9 * sample_mean) / (4 * bp_size))
+    mu_ci /= duration
+
+    m_ci = ci_percentile * np.sqrt(1 / (4 * bp_size * sample_mean))
+
+    return mu_ci, m_ci
+
+
+def compute_mu_pairwise_difference_confidence_interval(event_dict, node_membership, num_classes, mu, duration,
+                                                       block_pair_tuple_list, z_alpha):
+    """
+    Computes the pairwise difference if mu along with its confidence interval
+
+    :param event_dict: Edge dictionary of events between all node pair.
+    :param node_membership: (list) membership of every node to one of K classes.
+    :param num_classes: (int) number of blocks / classes
+    :param mu: KxK matrix of mu values for each block pair
+    :param duration: the duration of the network
+    :param block_pair_tuple_list: (list) of tuples for pairwise difference [(1, 1, 1, 2), (1, 1, 2, 1)]
+    :param z_alpha: significance level (resulting in (1 - z_alpha) * 100 % CI)
+
+    :return: dict with passed tuples as keys and a tuple of (difference, CI) as value
+    """
+    num_nodes = len(node_membership)
+    agg_adj = utils.event_dict_to_aggregated_adjacency(num_nodes, event_dict)
+
+    sample_mean, sample_var = estimate_utils.compute_sample_mean_and_variance(agg_adj, node_membership)
+    bp_size = utils.calc_block_pair_size(node_membership, num_classes)
+
+    z = 1 - (z_alpha / (4 * (num_classes - 1) * num_classes))
+    ci_percentile = norm.ppf(1 - ((1 - z) / 2))
+
+    pairwise_res_dict = {}
+    for a, b, x, y in block_pair_tuple_list:
+        diff = mu[a, b] - mu[x, y]
+        sqroot = np.sqrt((9 / 4) * ((sample_mean[a, b] / bp_size[a, b]) + (sample_mean[x, y] / bp_size[x, y])))
+        ci = ci_percentile * (1 / duration) * sqroot
+        pairwise_res_dict[(a, b, x, y)] = (diff, ci)
+
+    return pairwise_res_dict

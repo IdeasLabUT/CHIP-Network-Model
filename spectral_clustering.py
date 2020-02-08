@@ -10,9 +10,11 @@ from sklearn.preprocessing import normalize
 import matplotlib.pyplot as plt
 
 
-def spectral_cluster(adj, num_classes=2, n_kmeans_init=10, normalize_z=True, verbose=False, plot_eigenvalues=False):
+def spectral_cluster(adj, num_classes=2, n_kmeans_init=10, normalize_z=True, verbose=False, plot_eigenvalues=False,
+                     plot_save_path=''):
     """
     Runs spectral clustering on weighted or unweighted adjacency matrix
+
 
     :param adj: weighted, unweighted or regularized adjacency matrix
     :param num_classes: number of classes for spectral clustering
@@ -20,6 +22,7 @@ def spectral_cluster(adj, num_classes=2, n_kmeans_init=10, normalize_z=True, ver
     :param normalize_z: If True, vector z is normalized to sum to 1
     :param verbose: if True, prints the eigenvalues
     :param plot_eigenvalues: if True, plots the first `num_classes` singular values
+    :param plot_save_path: directory to save the plot
 
     :return: predicted clustering membership
     """
@@ -31,12 +34,14 @@ def spectral_cluster(adj, num_classes=2, n_kmeans_init=10, normalize_z=True, ver
         print("Eigenvalues: \n", s)
 
     if plot_eigenvalues:
-        plt.scatter(np.arange(num_classes, 0, -1), s, marker='*', color='blue')
-        plt.xlabel('Rank', fontsize=16)
-        plt.ylabel('Singular Values', fontsize=16)
+        fig, ax = plt.subplots()
+        plt.scatter(np.arange(num_classes, 0, -1), s, s=80, marker='*', color='blue')
+        plt.xlabel('Rank', fontsize=24)
+        plt.ylabel('Singular Values', fontsize=24)
+        plt.grid(True)
+        ax.tick_params(labelsize=20)
         plt.tight_layout()
-        plt.rc('xtick', labelsize=12)
-        plt.rc('ytick', labelsize=12)
+        plt.savefig(f'{plot_save_path}/singular_values.pdf')
         plt.show()
 
     # Sort in decreasing order of magnitude

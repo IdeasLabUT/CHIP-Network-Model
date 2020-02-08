@@ -75,18 +75,18 @@ for fixed_var in ['n', 't', 'k']:
 
         fixed_value = fixed_n
         ylables = t_range
-        xlables = k_range
-        xlab = "K"
-        ylab = "T"
+        xlables = k_range[::-1]
+        xlab = "Number of blocks k"
+        ylab = "Time duration T"
 
     elif fixed_var == 't':
         t_range_to_test = [fixed_t]
 
         fixed_value = fixed_t
         ylables = n_range
-        xlables = k_range
-        xlab = "K"
-        ylab = "N"
+        xlables = k_range[::-1]
+        xlab = "Number of blocks k"
+        ylab = "Number of nodes n"
 
     else:
         k_range_to_test = [fixed_k]
@@ -95,8 +95,8 @@ for fixed_var in ['n', 't', 'k']:
         fixed_value = fixed_k
         ylables = n_range
         xlables = t_range[::-1]
-        xlab = "T"
-        ylab = "N"
+        xlab = "Time duration T"
+        ylab = "Number of nodes n"
 
     if not plot_only:
         mean_sc_rand_scores = []
@@ -127,15 +127,21 @@ for fixed_var in ['n', 't', 'k']:
     with open(f'{result_file_path}/all_sims-fixed-{fixed_var}.pckl', 'rb') as handle:
         [mean_sc_rand_scores, mean_sc_rand_scores_err] = pickle.load(handle)
 
+    # Reverse results in order of k for fixed n and T
+    if fixed_var == 'n' or fixed_var == 't':
+        mean_sc_rand_scores = mean_sc_rand_scores[:,::-1]
+    
+    np.set_printoptions(suppress=True)
     print(f"community model fixed {fixed_var}: {fixed_value}")
     print(f"rand:", mean_sc_rand_scores)
     print(f"rand error:", mean_sc_rand_scores_err)
 
     # Plot Results
+    plt.ion()
     fig, ax = plt.subplots()
-
+    
     im, _ = heatmap(mean_sc_rand_scores, ylables, xlables, ax=ax, cmap="coolwarm",
-                    cbarlabel=f"Adjusted Rand Score")
+                    cbarlabel=f"Adjusted Rand Score", vmin=0, vmax=1)
 
     # # Loop over data dimensions and create text annotations.
     # for i in range(len(n_range)):
@@ -147,6 +153,6 @@ for fixed_var in ['n', 't', 'k']:
     plt.xlabel(xlab, fontsize=16)
     # ax.set_title(f"CHIP SC AS3 Fixed {fixed_var.upper()}: {fixed_value}")
     fig.tight_layout()
-    plt.savefig(f"{result_file_path}/plots/as3-fixed-{fixed_var}.pdf")
-    # plt.show()
+    plt.savefig(f"{result_file_path}/plots/as3-fixed-{fixed_var}.pdf", bbox_inches='tight')
+#    plt.show()
 
