@@ -263,11 +263,14 @@ def calc_block_pair_size(class_assignment, n_classes):
     if len(classes) != n_classes:
         exit("Fix calc_block_pair_size")
 
+    # Sort classes sizes based on block index 0 to n_classes -1
+    class_size = class_size[np.argsort(classes)]
+
     bp_size = np.ones((n_classes, n_classes)) * class_size
     # computing block size by |b_i| * |b_j|
     bp_size = bp_size * bp_size.T
     # Subtracting |b_i| from diagonals to get |b_i| * (|b_i| - 1) for diagonal block size
-    bp_size = bp_size - np.diag(bp_size)
+    bp_size = bp_size - np.diag(class_size)
 
     return bp_size
 
