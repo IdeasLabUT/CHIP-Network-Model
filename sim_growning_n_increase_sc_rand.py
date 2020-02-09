@@ -18,7 +18,7 @@ from spectral_clustering import spectral_cluster
 result_file_path = f'{get_script_path()}/storage/results/growing_n_increase_sc_rand'
 
 agg_adj_should_fail = False
-plot_only = True
+plot_only = False
 
 number_of_nodes_list = [8, 16, 32, 64, 128, 256, 512]
 # number_of_nodes_list = [10000]

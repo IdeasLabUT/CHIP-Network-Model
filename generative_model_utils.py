@@ -6,9 +6,9 @@
 import os
 import pickle
 import numpy as np
+import dataset_utils
 import matplotlib.pyplot as plt
 import chip_generative_model as chip
-from dataset_utils import get_script_path
 from tick.hawkes import SimuHawkesExpKernels
 
 
@@ -264,11 +264,14 @@ def calc_block_pair_size(class_assignment, n_classes):
     if len(classes) != n_classes:
         exit("Fix calc_block_pair_size")
 
+    # Sort classes sizes based on block index 0 to n_classes -1
+    class_size = class_size[np.argsort(classes)]
+
     bp_size = np.ones((n_classes, n_classes)) * class_size
     # computing block size by |b_i| * |b_j|
     bp_size = bp_size * bp_size.T
     # Subtracting |b_i| from diagonals to get |b_i| * (|b_i| - 1) for diagonal block size
-    bp_size = bp_size - np.diag(bp_size)
+    bp_size = bp_size - np.diag(class_size)
 
     return bp_size
 
@@ -343,7 +346,7 @@ def simulate_community_hawkes(params=None, network_name=None, load_if_exists=Fal
 
     :return: event_dict, node_membership
     """
-    generated_network_path = f'{get_script_path()}/storage/results/generated_networks/'
+    generated_network_path = f'{dataset_utils.get_script_path()}/storage/results/generated_networks/'
 
     default_params = {'seed': None,
                       'number_of_nodes': 128,

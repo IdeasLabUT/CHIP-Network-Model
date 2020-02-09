@@ -20,7 +20,7 @@ from parameter_estimation import estimate_hawkes_from_counts
 result_file_path = f'{get_script_path()}/storage/results/count_based_estimate'
 
 estimate_alpha_beta = True
-plot_only = True
+plot_only = False
 
 no_alpha_name = "_no_alpha" if not estimate_alpha_beta else ""
 

@@ -30,7 +30,7 @@ also_use_unweighted_adjacency = True
 sim_type = 'a'
 # sim_type = 'b'
 
-plot_only = True
+plot_only = False
 
 plot_name = "fixed_ratio" if sim_type == 'a' else "increase_mu_diag"
 

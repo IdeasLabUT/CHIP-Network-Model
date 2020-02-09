@@ -19,14 +19,13 @@ import parameter_estimation as estimate_utils
 from spectral_clustering import spectral_cluster
 
 
-result_file_path = '/shared/Results/CommunityHawkes/pickles/enron_chip_fit'
+result_file_path = f'{dataset_utils.get_script_path()}/storage/results/enron_chip_fit'
 
-fit_chip = False
+fit_chip = True
 plot_hawkes_params = True
-plot_node_membership = False
-plot_num_events = False
-analyze_position = False
-get_confidence_intervals = False
+plot_node_membership = True
+plot_num_events = True
+get_confidence_intervals = True
 verbose = True
 num_classes = 2
 
@@ -222,51 +221,6 @@ if plot_hawkes_params:
     fig.tight_layout()
     # plt.show()
     plt.savefig(f"{result_file_path}/plots/mu-over-1-m-k-{num_classes}.pdf")
-
-
-if analyze_position:
-    # load dict of node id to index map
-    dataset_path = '/shared/DataSets/EnronPriebe2009'
-    with open(f'{dataset_path}/node_id_to_position_dict_map.pckl', 'rb') as handle:
-        node_to_idx = pickle.load(handle)
-
-    # get the position of each node
-    idx_to_position = {}
-    with open(f'{dataset_path}/position.csv', 'r') as f:
-        for i, l in enumerate(f):
-            if i + 1 in node_to_idx:
-                idx_to_position[node_to_idx[i + 1]] = l.strip()
-
-    # Explore the memberships
-    for c_idx in range(num_classes):
-        print("Class: ", c_idx + 1)
-        print("Positions:")
-
-        na_cnt = 0
-        emp_cnt = 0
-        non_emp_cnt = 0
-        for i, c in enumerate(node_membership):
-            if c != c_idx:
-                continue
-
-            p = idx_to_position[i]
-            if p == 'NA':
-                na_cnt += 1
-            elif p == 'Employee':
-                emp_cnt += 1
-            else:
-                non_emp_cnt += 1
-
-            print(p, end=', ')
-
-        tot_nodes = np.sum(node_membership == c_idx)
-        print('\n')
-        print(f'Counts -> Employees: {emp_cnt} - Higher Ups: {non_emp_cnt} - NA\'s: {na_cnt}')
-        print(f'Percentage -> Employees: {100 * emp_cnt / tot_nodes:.1f}% - '
-              f'Higher Ups: {100 * non_emp_cnt / tot_nodes:.1f}% - NA\'s: {100 * na_cnt / tot_nodes:.1f}%')
-        print(f'Percentage excluding NA\'s -> Employees: {100 * emp_cnt / (tot_nodes - na_cnt):.1f}% - '
-              f'Higher Ups: {100 * non_emp_cnt / (tot_nodes - na_cnt):.1f}%')
-        print()
 
 if get_confidence_intervals:
     mu_ci, m_ci = fitting_utils.compute_mu_and_m_confidence_interval(data_event_dict, node_membership, num_classes,

@@ -47,7 +47,7 @@ def test_spectral_clustering_on_generative_model(n, t, k):
 
 result_file_path = f'{get_script_path()}/storage/results/AS3'
 
-plot_only = True
+plot_only = False
 
 # Number of test values for all variable must be the same
 n_range = [2048, 1024, 512, 256, 128, 64]
