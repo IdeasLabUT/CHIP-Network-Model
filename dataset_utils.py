@@ -307,7 +307,8 @@ def plot_event_count_hist(event_dict, num_nodes, dset_title_name):
     plt.show()
 
 
-def load_facebook_wall(timestamp_max=1000, largest_connected_component_only=False, train_percentage=None):
+def load_facebook_wall(timestamp_max=1000, largest_connected_component_only=False, train_percentage=None,
+                       download_file_path=None):
     """
     First downloads the dataset if it is not in the "storage/datasets/facebook-wallposts" directory, then loads the
     dataset.
@@ -316,8 +317,11 @@ def load_facebook_wall(timestamp_max=1000, largest_connected_component_only=Fals
     :param largest_connected_component_only: if True, only the largest connected component will be loaded.
     :param train_percentage: If None, returns the entire dataset as a single dataset, else returns a train/test/combined
                              dataset based on the train_percentage.
+    :param download_file_path: (optional) manually set the path to the data
     """
-    file_path = f"{get_script_path()}/storage/datasets/facebook-wallposts/facebook-wallpost.txt.gz"
+    file_path = download_file_path
+    if download_file_path is None:
+        file_path = f"{get_script_path()}/storage/datasets/facebook-wallposts/facebook-wallpost.txt.gz"
 
     # Downloading the dataset it is not in the storage directory
     if not os.path.exists(file_path):
