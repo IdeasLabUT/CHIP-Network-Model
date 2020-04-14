@@ -31,10 +31,14 @@ def fit_block_model(event_dict, num_nodes, duration, num_classes, local_search_m
     """
     adj = utils.event_dict_to_adjacency(num_nodes, event_dict)
 
-    # Running spectral clustering
-    node_membership = regularized_spectral_cluster(adj, num_classes=num_classes)
+    # if number of there are as many classes as nodes, assign each node to its own class
+    if num_classes == num_nodes:
+        node_membership = list(range(num_nodes))
+    else:
+        # Running spectral clustering
+        node_membership = regularized_spectral_cluster(adj, num_classes=num_classes)
 
-    if local_search_max_iter > 0 and num_classes > 1:
+    if local_search_max_iter > 0 and num_nodes > num_classes > 1:
         node_membership, bp_mu, bp_alpha, bp_beta = bls.block_local_search(event_dict, num_classes, node_membership,
                                                                            duration,
                                                                            local_search_max_iter, local_search_n_cores,

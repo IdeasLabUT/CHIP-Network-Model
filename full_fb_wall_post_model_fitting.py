@@ -320,3 +320,17 @@ if simulate_chip:
     # plt.savefig('{}degree-dist-{}.pdf'.format(plot_save_path, pymk_directories[i]), format='pdf')
     plt.show()
     # plt.clf()
+
+
+# Loaded the dataset in 6.8s
+# (43953, 43953) 100
+# Spectral clustering done in 68.0s
+# Mu and m estimated in 12.5s
+#
+# Start Beta estimation:
+# Beta estimated in 88.2s
+# Total computation time: 168.6s
+
+
+
+

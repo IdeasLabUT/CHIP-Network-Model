@@ -96,28 +96,29 @@ def fit_and_eval_community_hawkes(train_tuple, test_tuple, combined_tuple, nodes
 
 # Examples of fitting CHIP to Facebook, Enron, Reality Mining and simulated data.
 if __name__ == "__main__":
-    pass
-    # # Facebook Dataset
-    # print("Facebook wall-post dataset")
-    # fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
-    #     dataset_utils.load_fb_train_test(remove_nodes_not_in_train=False)
-    # fit_and_eval_community_hawkes(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
-    #                               k_values_to_test=np.arange(1, 11),
-    #                               plot_fitted_hist=False, verbose=False)
+    
+    # Facebook Dataset
+    print("Facebook wall-post dataset")
+    fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
+        dataset_utils.load_fb_train_test(remove_nodes_not_in_train=False)
+    fit_and_eval_community_hawkes(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
+                                  k_values_to_test=np.arange(1, 11),
+                                  plot_fitted_hist=False, verbose=False)
 
     # # Enron Dataset
     # print("Enron dataset")
     # enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train = \
     #     dataset_utils.load_enron_train_test(remove_nodes_not_in_train=False)
     # fit_and_eval_community_hawkes(enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train,
-    #                               k_values_to_test=list(range(1, 11)), plot_fitted_hist=False, verbose=False)
+    #                               k_values_to_test=np.arange(1, enron_train_tuple[1]),
+    #                               plot_fitted_hist=False, verbose=False)
 
-    # # Reality Mining
+    # Reality Mining
     # print("Reality Mining")
     # rm_train_tuple, rm_test_tuple, rm_combined_tuple, rm_nodes_not_in_train = \
     #     dataset_utils.load_reality_mining_test_train(remove_nodes_not_in_train=False)
     # fit_and_eval_community_hawkes(rm_train_tuple, rm_test_tuple, rm_combined_tuple, rm_nodes_not_in_train,
-    #                               k_values_to_test=list(range(1, 11)),
+    #                               k_values_to_test=np.arange(1, rm_train_tuple[1]),
     #                               local_search_max_iter=0, local_search_n_cores=34,
     #                               plot_fitted_hist=False, verbose=False)
 
@@ -133,3 +134,4 @@ if __name__ == "__main__":
     # print(sim_test_tuple[-1])
     # print(sim_combined_tuple[-1])
     # fit_and_eval_community_hawkes(sim_train_tuple, sim_test_tuple, sim_combined_tuple, sim_nodes_not_in_train)
+

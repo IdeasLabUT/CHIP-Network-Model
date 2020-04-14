@@ -105,30 +105,33 @@ def fit_and_eval_block_hawkes(train_tuple, test_tuple, combined_tuple, nodes_not
 
 # Running Block Hawkes model on Facebook, Enron, Reality Mining, and simulated data
 if __name__ == "__main__":
+    pass
     # Facebook Dataset
-    print("Facebook wall-post dataset")
-    fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
-        dataset_utils.load_fb_train_test(remove_nodes_not_in_train=False)
-    fit_and_eval_block_hawkes(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
-                              local_search_max_iter=500, local_search_n_cores=25,
-                              k_values_to_test=[3],
-                              plot_fitted_hist=False, verbose=False)
+    # print("Facebook wall-post dataset")
+    # fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
+    #     dataset_utils.load_fb_train_test(remove_nodes_not_in_train=False)
+    # fit_and_eval_block_hawkes(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
+    #                           local_search_max_iter=500, local_search_n_cores=25,
+    #                           k_values_to_test=[3],
+    #                           plot_fitted_hist=False, verbose=False)
 
     # # Enron Dataset
     # print("Enron dataset")
+    # k_range = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85,
+    #            90, 95, 100]
     # enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train = \
     #     dataset_utils.load_enron_train_test(remove_nodes_not_in_train=False)
     # fit_and_eval_block_hawkes(enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train,
-    #                           local_search_max_iter=100000, local_search_n_cores=35,
-    #                           k_values_to_test=list(range(1, 11)), plot_fitted_hist=False, verbose=False)
+    #                           local_search_max_iter=100000, local_search_n_cores=6,
+    #                           k_values_to_test=[enron_train_tuple[1]], plot_fitted_hist=False, verbose=False)
 
-    # # Reality Mining
-    # print("Reality Mining")
+    # # # Reality Mining
+    # # print("Reality Mining")
     # rm_train_tuple, rm_test_tuple, rm_combined_tuple, rm_nodes_not_in_train = \
-    #     dataset_utils.load_reality_mining_test_train(remove_nodes_not_in_train=False)
+    #     dataset_utils.load_reality_mining_test_train(remove_nodes_not_in_train=True)
     # fit_and_eval_block_hawkes(rm_train_tuple, rm_test_tuple, rm_combined_tuple, rm_nodes_not_in_train,
-    #                           local_search_max_iter=100000, local_search_n_cores=34,
-    #                           k_values_to_test=list(range(1, 11)), plot_fitted_hist=False, verbose=False)
+    #                           local_search_max_iter=100000, local_search_n_cores=26,
+    #                           k_values_to_test=[rm_train_tuple[1]], plot_fitted_hist=False, verbose=False)
 
     # # Simulated Data
     # print("Simulated Data:")
