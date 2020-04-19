@@ -150,6 +150,9 @@ def estimate_poisson_lambda(count_matrix, node_membership, duration, num_classes
     :return: n_classes x n_classes where entry ij is the lambda of the block pair ij
     """
     bp_size = utils.calc_block_pair_size(node_membership, num_classes)
+    # if a block only has 1 node in it, its own bp_size will be 0.
+    # But since count_matrix will be zero setting to 1 won't change the outcome.
+    bp_size[bp_size == 0] = 1
     bp_lambda = count_matrix / (duration * bp_size)
     bp_lambda[bp_lambda == 0] = default_lambda
 
@@ -198,16 +201,14 @@ if __name__ == "__main__":
     fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
         dataset_utils.load_fb_train_test(remove_nodes_not_in_train=False)
     fit_and_eval_poisson_baseline(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
-                                  k_values_to_test=np.arange(1, 11), verbose=False)
+                                  k_values_to_test=np.arange(1, 150), verbose=False)
 
     # Enron Dataset
     print("Enron dataset")
-    # k_range = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85,
-    #            90, 95, 100]
     enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train = \
         dataset_utils.load_enron_train_test(remove_nodes_not_in_train=False)
     fit_and_eval_poisson_baseline(enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train,
-                                  k_values_to_test=np.arange(1, 11),
+                                  k_values_to_test=np.arange(1, enron_train_tuple[1] + 1),
                                   verbose=False)
 
     # Reality Mining
@@ -215,4 +216,4 @@ if __name__ == "__main__":
     rm_train_tuple, rm_test_tuple, rm_combined_tuple, rm_nodes_not_in_train = \
         dataset_utils.load_reality_mining_test_train(remove_nodes_not_in_train=False)
     fit_and_eval_poisson_baseline(rm_train_tuple, rm_test_tuple, rm_combined_tuple, rm_nodes_not_in_train,
-                                  k_values_to_test=np.arange(1, 11), verbose=False)
+                                  k_values_to_test=np.arange(1, rm_train_tuple[1] + 1), verbose=False)
