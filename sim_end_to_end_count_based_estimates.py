@@ -32,9 +32,9 @@ beta = 0.8
 mu_diag = 1.85
 mu_off_diag = 1.65
 class_probs = [0.25, 0.25, 0.25, 0.25]
-num_nodes_to_test = [16, 32, 64, 128, 256]
-num_simulations = 10
-n_cores = 10
+num_nodes_to_test = [16, 32, 64, 128, 256, 512]
+num_simulations = 100
+n_cores = 6
 n_classes = len(class_probs)
 
 
