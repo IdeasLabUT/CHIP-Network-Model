@@ -18,7 +18,7 @@ from spectral_clustering import spectral_cluster
 from parameter_estimation import estimate_hawkes_from_counts
 
 
-result_file_path = '/shared/Results/CommunityHawkes/pickles/end_to_end_count_based_estimate'
+result_file_path = '/shared/Results/CommunityHawkes/pickles/end_to_end_count_based_estimate/vary_m'
 
 estimate_alpha_beta = True
 plot_only = False
@@ -27,10 +27,15 @@ no_alpha_name = "_no_alpha" if not estimate_alpha_beta else ""
 
 # sim params
 end_time = 100
-alpha = 0.6
-beta = 0.8
 mu_diag = 1.85
 mu_off_diag = 1.65
+
+alpha_diag = 0.75
+alpha_off_diag = 0.65
+
+beta_diag = 0.85
+beta_off_diag = 0.95
+
 class_probs = [0.25, 0.25, 0.25, 0.25]
 num_nodes_to_test = [16, 32, 64, 128, 256, 512]
 num_simulations = 100
@@ -42,10 +47,12 @@ def calc_mean_and_error_of_count_estiamte(n_nodes):
     params = {'number_of_nodes': n_nodes,
               'class_probabilities': class_probs,
               'end_time': end_time,
-              'alpha': alpha,
-              'beta': beta,
               'mu_diag': mu_diag,
               'mu_off_diag': mu_off_diag,
+              'alpha': alpha_off_diag,
+              'alpha_diag': alpha_diag,
+              'beta': beta_off_diag,
+              'beta_diag': beta_diag,
               'scale': False}
 
     event_dict, true_node_membership = utils.simulate_community_hawkes(params)
@@ -71,9 +78,16 @@ def calc_mean_and_error_of_count_estiamte(n_nodes):
 
 no_alpha_name = "_no_alpha" if not estimate_alpha_beta else ""
 
-true_ratio = alpha/beta
 true_mu = np.zeros((n_classes, n_classes)) + mu_off_diag
 np.fill_diagonal(true_mu, mu_diag)
+
+true_alpha = np.zeros((n_classes, n_classes)) + alpha_off_diag
+np.fill_diagonal(true_alpha, alpha_diag)
+
+true_beta = np.zeros((n_classes, n_classes)) + beta_off_diag
+np.fill_diagonal(true_beta, beta_diag)
+
+true_ratio = true_alpha / true_beta
 
 # if estimate_alpha_beta:
 #     all_estimates = np.zeros((len(num_nodes_to_test), num_simulations, 5, n_classes, n_classes))
@@ -120,11 +134,11 @@ if not plot_only:
         rand_mean_err.append(2 * np.std(results[:, 4, 0, 0]) / np.sqrt(results[:, 4, 0, 0].size))
 
         if estimate_alpha_beta:
-            alpha_mse_temp = np.power(results[:, 2, :, :] - alpha, 2)
+            alpha_mse_temp = np.power(results[:, 2, :, :] - true_alpha, 2)
             alpha_mse.append(np.mean(alpha_mse_temp))
             alpha_mse_err.append(2 * np.std(alpha_mse_temp) / np.sqrt(alpha_mse_temp.size))
 
-            beta_mse_temp = np.power(results[:, 3, :, :] - beta, 2)
+            beta_mse_temp = np.power(results[:, 3, :, :] - true_beta, 2)
             beta_mse.append(np.mean(beta_mse_temp))
             beta_mse_err.append(2 * np.std(beta_mse_temp) / np.sqrt(beta_mse_temp.size))
 

@@ -357,6 +357,7 @@ def simulate_community_hawkes(params=None, network_name=None, load_if_exists=Fal
                       'mu_diag': 1.8,
                       'num_nodes_to_scale': 128,
                       'alpha_diag': None,
+                      'beta_diag': None,
                       'scale': True,
                       'n_cores': 1}
 
@@ -388,6 +389,9 @@ def simulate_community_hawkes(params=None, network_name=None, load_if_exists=Fal
     if default_params['alpha_diag'] is not None:
         np.fill_diagonal(bp_alpha, default_params['alpha_diag'])
 
+    if default_params['beta_diag'] is not None:
+        np.fill_diagonal(bp_alpha, default_params['beta_diag'])
+
     if default_params['scale']:
         n_scale = default_params['num_nodes_to_scale']
         bp_mu = scale_parameteres_by_block_pair_size(bp_mu, n_scale, class_probabilities)
@@ -395,10 +399,10 @@ def simulate_community_hawkes(params=None, network_name=None, load_if_exists=Fal
         bp_beta = scale_parameteres_by_block_pair_size(bp_beta, n_scale, class_probabilities)
 
     node_membership, event_dict = chip.community_generative_model(number_of_nodes,
-                                                                 class_probabilities,
-                                                                 bp_mu, bp_alpha, bp_beta,
-                                                                 burnin, end_time,
-                                                                 n_cores=default_params['n_cores'], seed=seed)
+                                                                  class_probabilities,
+                                                                  bp_mu, bp_alpha, bp_beta,
+                                                                  burnin, end_time,
+                                                                  n_cores=default_params['n_cores'], seed=seed)
 
     node_membership = one_hot_to_class_assignment(node_membership)
 
