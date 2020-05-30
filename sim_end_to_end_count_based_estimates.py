@@ -18,7 +18,7 @@ from spectral_clustering import spectral_cluster
 from parameter_estimation import estimate_hawkes_from_counts
 
 
-result_file_path = '/shared/Results/CommunityHawkes/pickles/end_to_end_count_based_estimate/vary_m'
+result_file_path = '/shared/Results/CommunityHawkes/pickles/end_to_end_count_based_estimate'
 
 estimate_alpha_beta = True
 plot_only = False
@@ -37,7 +37,8 @@ beta_diag = 0.85
 beta_off_diag = 0.95
 
 class_probs = [0.25, 0.25, 0.25, 0.25]
-num_nodes_to_test = [16, 32, 64, 128, 256, 512]
+num_nodes_to_test = [8, 16, 32, 64, 128, 256]
+# num_nodes_to_test = [16, 32, 64, 128, 256, 512]
 num_simulations = 100
 n_cores = 6
 n_classes = len(class_probs)
@@ -89,11 +90,6 @@ np.fill_diagonal(true_beta, beta_diag)
 
 true_ratio = true_alpha / true_beta
 
-# if estimate_alpha_beta:
-#     all_estimates = np.zeros((len(num_nodes_to_test), num_simulations, 5, n_classes, n_classes))
-# else:
-#     all_estimates = np.zeros((len(num_nodes_to_test), num_simulations, 3, n_classes, n_classes))
-
 rand_mean = []
 rand_mean_err = []
 mu_mse = []
@@ -119,8 +115,6 @@ if not plot_only:
         else:
             results = np.reshape(results, (num_simulations, 3, n_classes, n_classes))
 
-        # all_estimates[j, :, :, :, :] = results
-
         mu_mse_temp = np.power(results[:, 0, :, :] - true_mu, 2)
         mu_mse.append(np.mean(mu_mse_temp))
         mu_mse_err.append(2 * np.std(mu_mse_temp) / np.sqrt(len(mu_mse_temp)))
@@ -144,22 +138,24 @@ if not plot_only:
 
     if estimate_alpha_beta:
         with open(f'{result_file_path}/mses.pckl', 'wb') as handle:
-            pickle.dump([mu_mse, mu_mse_err, ratio_mse, ratio_mse_err,
+            pickle.dump([rand_mean, rand_mean_err, mu_mse, mu_mse_err, ratio_mse, ratio_mse_err,
                          alpha_mse, alpha_mse_err, beta_mse, beta_mse_err], handle, protocol=pickle.HIGHEST_PROTOCOL)
     else:
         with open(f'{result_file_path}/mses_no_alpha.pckl', 'wb') as handle:
-            pickle.dump([mu_mse, mu_mse_err, ratio_mse, ratio_mse_err], handle, protocol=pickle.HIGHEST_PROTOCOL)
+            pickle.dump([rand_mean, rand_mean_err, mu_mse, mu_mse_err,
+                         ratio_mse, ratio_mse_err], handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 if estimate_alpha_beta:
     with open(f'{result_file_path}/mses.pckl', 'rb') as handle:
-        [mu_mse, mu_mse_err, ratio_mse, ratio_mse_err,
+        [rand_mean, rand_mean_err, mu_mse, mu_mse_err, ratio_mse, ratio_mse_err,
          alpha_mse, alpha_mse_err, beta_mse, beta_mse_err] = pickle.load(handle)
 else:
     with open(f'{result_file_path}/mses_no_alpha.pckl', 'rb') as handle:
-        mu_mse, mu_mse_err, ratio_mse, ratio_mse_err = pickle.load(handle)
+        rand_mean, rand_mean_err, mu_mse, mu_mse_err, ratio_mse, ratio_mse_err = pickle.load(handle)
 
-print("Mu MSE:")
+
+print("Rand Mean:")
 print(rand_mean)
 
 print("Mu MSE:")
@@ -253,3 +249,7 @@ if estimate_alpha_beta:
 
     plt.savefig(f"{result_file_path}/plots/consistent_beta_mse.pdf")
     #plt.show()
+
+
+
+# [0.6320759231955095, 0.9677787392115078, 1.0, 1.0, 1.0, 1.0]
