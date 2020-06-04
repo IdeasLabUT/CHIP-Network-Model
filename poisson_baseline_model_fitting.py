@@ -194,26 +194,31 @@ def calc_full_log_likelihood(count_matrix, node_membership, duration, bp_lambda,
 
 # Running Poisson baseline model on Facebook, Enron, Reality Mining
 if __name__ == "__main__":
-    pass
-    
-    # Facebook Dataset
+    # Entire Facebook Dataset
     print("Facebook wall-post dataset")
     fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
-        dataset_utils.load_fb_train_test(remove_nodes_not_in_train=False)
+        dataset_utils.load_facebook_wall(timestamp_max=1000, largest_connected_component_only=True, train_percentage=0.8)
     fit_and_eval_poisson_baseline(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
-                                  k_values_to_test=np.arange(1, 150), verbose=False)
+                                  k_values_to_test=np.arange(11, 43), verbose=False)
 
-    # Enron Dataset
-    print("Enron dataset")
-    enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train = \
-        dataset_utils.load_enron_train_test(remove_nodes_not_in_train=False)
-    fit_and_eval_poisson_baseline(enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train,
-                                  k_values_to_test=np.arange(1, enron_train_tuple[1] + 1),
-                                  verbose=False)
-
-    # Reality Mining
-    print("Reality Mining")
-    rm_train_tuple, rm_test_tuple, rm_combined_tuple, rm_nodes_not_in_train = \
-        dataset_utils.load_reality_mining_test_train(remove_nodes_not_in_train=False)
-    fit_and_eval_poisson_baseline(rm_train_tuple, rm_test_tuple, rm_combined_tuple, rm_nodes_not_in_train,
-                                  k_values_to_test=np.arange(1, rm_train_tuple[1] + 1), verbose=False)
+    # # Facebook Dataset
+    # print("Facebook wall-post dataset")
+    # fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
+    #     dataset_utils.load_fb_train_test(remove_nodes_not_in_train=False)
+    # fit_and_eval_poisson_baseline(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
+    #                               k_values_to_test=np.arange(1, 150), verbose=False)
+    #
+    # # Enron Dataset
+    # print("Enron dataset")
+    # enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train = \
+    #     dataset_utils.load_enron_train_test(remove_nodes_not_in_train=False)
+    # fit_and_eval_poisson_baseline(enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train,
+    #                               k_values_to_test=np.arange(1, enron_train_tuple[1] + 1),
+    #                               verbose=False)
+    #
+    # # Reality Mining
+    # print("Reality Mining")
+    # rm_train_tuple, rm_test_tuple, rm_combined_tuple, rm_nodes_not_in_train = \
+    #     dataset_utils.load_reality_mining_test_train(remove_nodes_not_in_train=False)
+    # fit_and_eval_poisson_baseline(rm_train_tuple, rm_test_tuple, rm_combined_tuple, rm_nodes_not_in_train,
+    #                               k_values_to_test=np.arange(1, rm_train_tuple[1] + 1), verbose=False)

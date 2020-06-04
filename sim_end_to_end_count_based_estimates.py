@@ -23,30 +23,92 @@ from parameter_estimation import estimate_hawkes_from_counts
 from sklearn.linear_model import LinearRegression
 
 result_file_path = join(os.sep, '/shared', 'Results', 'CommunityHawkes', 'pickles',
-                        'end_to_end_count_based_estimate_2', '7_values')
-Path(join(result_file_path, 'plots')).mkdir(mode=0o777, parents=True, exist_ok=True)
+                        'end_to_end_count_based_estimate', 'up_to_256_scaled')
+Path(join(result_file_path, 'plots')).mkdir(parents=True, exist_ok=True)
 
-run_analysis = True
+run_analysis = False
 run_plotting = True
 run_regression = True
 
-# sim params
-end_time = 100
-mu_diag = 1.85
-mu_off_diag = 1.65
+# # sim params
+# end_time = 100
+# mu_diag = 1.85
+# mu_off_diag = 1.65
+#
+# alpha_diag = 0.75
+# alpha_off_diag = 0.65
+#
+# beta_diag = 0.85
+# beta_off_diag = 0.95
 
-alpha_diag = 0.75
-alpha_off_diag = 0.65
 
-beta_diag = 0.85
-beta_off_diag = 0.95
+# # sim params
+# end_time = 100
+# mu_diag = 0.07
+# mu_off_diag = 0.06
+#
+# alpha_diag = 0.06
+# alpha_off_diag = 0.05
+#
+# beta_diag = 0.07
+# beta_off_diag = 0.08
+
+
+# # # sim params
+# end_time = 100
+# mu_diag = 0.85
+# mu_off_diag = 0.83
+#
+# alpha_diag = 0.75
+# alpha_off_diag = 0.73
+#
+# beta_diag = 0.85
+# beta_off_diag = 0.87
+
+# # # sim params
+# end_time = 100
+# mu_diag = 0.85
+# mu_off_diag = 0.83
+#
+# alpha_diag = 0.74
+# alpha_off_diag = 0.73
+#
+# beta_diag = 0.86
+# beta_off_diag = 0.87
+
+# # # sim params
+# end_time = 100
+# mu_diag = 0.085
+# mu_off_diag = 0.075
+#
+# alpha_diag = 0.075
+# alpha_off_diag = 0.065
+#
+# beta_diag = 0.085
+# beta_off_diag = 0.095
+
+asy_scalar = 100
+
+# # sim params
+end_time = 100 * asy_scalar
+mu_diag = 0.11 / asy_scalar
+mu_off_diag = 0.1 / asy_scalar
+
+alpha_diag = 0.11
+alpha_off_diag = 0.09
+
+beta_diag = 0.14
+beta_off_diag = 0.16
+
 
 class_probs = [0.25, 0.25, 0.25, 0.25]
 # num_nodes_to_test = [8, 16, 32, 64, 128, 256]
 # num_nodes_to_test = [16, 32, 64, 128, 256, 512]
-num_nodes_to_test = np.logspace(4, 7, num=7, dtype=np.int32, base=2)
-# num_nodes_to_test = np.logspace(4, 5, num=4, dtype=np.int32, base=2)
-num_simulations = 6
+# num_nodes_to_test = np.logspace(4, 7, num=7, dtype=np.int32, base=2)  # 128 - 7
+# num_nodes_to_test = np.logspace(5, 7, num=11, dtype=np.int32, base=2)  # 128 - 11
+num_nodes_to_test = np.logspace(5, 8, num=7, dtype=np.int32, base=2)  # 256
+# num_nodes_to_test = np.logspace(4, 6, num=5, dtype=np.int32, base=2)  # test
+num_simulations = 100
 n_cores = 6
 n_classes = len(class_probs)
 
@@ -65,9 +127,18 @@ def calc_mean_and_error_of_count_estiamte(n_nodes):
 
     event_dict, true_node_membership = utils.simulate_community_hawkes(params)
 
-    # Spectral clustering on aggregated adjacency matrix
-    agg_adj = utils.event_dict_to_aggregated_adjacency(n_nodes, event_dict)
-    node_membership = spectral_cluster(agg_adj, num_classes=n_classes, verbose=False)
+    invalid_cluster = True
+
+    while invalid_cluster:
+        # Spectral clustering on aggregated adjacency matrix
+        agg_adj = utils.event_dict_to_aggregated_adjacency(n_nodes, event_dict)
+        node_membership = spectral_cluster(agg_adj, num_classes=n_classes, verbose=False)
+        unique_vals, cnts = np.unique(node_membership, return_counts=True)
+        invalid_cluster = len(unique_vals) != n_classes
+        if len(unique_vals) != n_classes:
+            print("a;ldskfjasdlf")
+            print(unique_vals, cnts)
+
     sc_rand = adjusted_rand_score(true_node_membership, node_membership)
     sc_rand = np.zeros((n_classes, n_classes)) + sc_rand  # match the shape of other params to retrieve easily
 
@@ -95,6 +166,10 @@ np.fill_diagonal(true_beta, beta_diag)
 
 true_ratio = true_alpha / true_beta
 
+# expected_num_events = (true_mu * end_time) / (1 - true_alpha / true_beta)
+# print(expected_num_events)
+# exit()
+
 params = {
     'mu': ['mu_mse', 'mu_mse_err'],
     'm': ['ratio_mse', 'ratio_mse_err'],
@@ -118,11 +193,10 @@ if run_analysis:
         results = Parallel(n_jobs=n_cores)(delayed(calc_mean_and_error_of_count_estiamte)
                                            (n_nodes) for i in range(num_simulations))
 
-        print(f"Done simulations with {n_nodes} nodes.")
-
         results = np.asarray(results, dtype=np.float)
-
         results = np.reshape(results, (num_simulations, 9, n_classes, n_classes))
+
+        print(f"Done simulations with {n_nodes} nodes. ARI: {np.mean(results[:, 4, 0, 0])}")
 
         # estimated communities
         mu_mse_temp = np.power(results[:, 0, :, :] - true_mu, 2)
@@ -187,13 +261,13 @@ if run_plotting:
     # rand index for estimated communities
     plt.ion()
     plt.subplots(figsize=(3.8, 3))
-    plt.bar(range(len(num_nodes_to_test)), ece['rand_mean'], yerr=ece['rand_mean_err'], log=True)
+    plt.bar(range(len(num_nodes_to_test)), ece['rand_mean'], yerr=ece['rand_mean_err'])
     plt.xlabel("Number of Nodes", fontsize=16)
     plt.ylabel("Mean-squared Error", fontsize=16)
     plt.xticks(range(len(num_nodes_to_test)), num_nodes_to_test)
     plt.tick_params(labelsize=12)
     plt.tight_layout()
-    plt.savefig(f"{result_file_path}/plots/known_consistent_rand_mean.pdf")
+    plt.savefig(f"{result_file_path}/plots/estimated_consistent_rand_mean.pdf")
 
     for param, err in params.items():
         # estimated communities

@@ -390,7 +390,7 @@ def simulate_community_hawkes(params=None, network_name=None, load_if_exists=Fal
         np.fill_diagonal(bp_alpha, default_params['alpha_diag'])
 
     if default_params['beta_diag'] is not None:
-        np.fill_diagonal(bp_alpha, default_params['beta_diag'])
+        np.fill_diagonal(bp_beta, default_params['beta_diag'])
 
     if default_params['scale']:
         n_scale = default_params['num_nodes_to_scale']
