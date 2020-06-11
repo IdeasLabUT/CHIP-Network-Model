@@ -96,14 +96,15 @@ def fit_poisson_baseline_model(event_dict, num_nodes, duration, num_classes, ver
 
     :return: node_membership, lambda, block_pair_events
     """
-    adj = utils.event_dict_to_adjacency(num_nodes, event_dict)
+    # adj = utils.event_dict_to_adjacency(num_nodes, event_dict)
+    agg_adj = utils.event_dict_to_aggregated_adjacency(num_nodes, event_dict)
 
     # if number of there are as many classes as nodes, assign each node to its own class
     if num_classes == num_nodes:
         node_membership = list(range(num_nodes))
     else:
         # Running spectral clustering
-        node_membership = spectral_cluster(adj, num_classes=num_classes)
+        node_membership = spectral_cluster(agg_adj, num_classes=num_classes)
 
     count_matrix = event_dict_to_block_pair_event_counts(event_dict, node_membership, num_classes)
 
@@ -194,12 +195,21 @@ def calc_full_log_likelihood(count_matrix, node_membership, duration, bp_lambda,
 
 # Running Poisson baseline model on Facebook, Enron, Reality Mining
 if __name__ == "__main__":
+    # # # Entire Facebook Dataset
+    # print("Entire Facebook wall-post dataset 2")
+    # fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
+    #     dataset_utils.load_facebook_wall_2(timestamp_max=1000, largest_connected_component_only=True,
+    #                                        train_percentage=0.8, remove_nodes_not_in_train=True)
+    # fit_and_eval_poisson_baseline(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
+    #                               k_values_to_test=np.arange(101, 201), verbose=False)
+
     # Entire Facebook Dataset
     print("Facebook wall-post dataset")
     fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
-        dataset_utils.load_facebook_wall(timestamp_max=1000, largest_connected_component_only=True, train_percentage=0.8)
+        dataset_utils.load_facebook_wall(timestamp_max=1000, largest_connected_component_only=True,
+                                         train_percentage=0.8)
     fit_and_eval_poisson_baseline(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
-                                  k_values_to_test=np.arange(11, 43), verbose=False)
+                                  k_values_to_test=np.arange(1, 11), verbose=False)
 
     # # Facebook Dataset
     # print("Facebook wall-post dataset")
@@ -207,7 +217,8 @@ if __name__ == "__main__":
     #     dataset_utils.load_fb_train_test(remove_nodes_not_in_train=False)
     # fit_and_eval_poisson_baseline(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
     #                               k_values_to_test=np.arange(1, 150), verbose=False)
-    #
+
+
     # # Enron Dataset
     # print("Enron dataset")
     # enron_train_tuple, enron_test_tuple, enron_combined_tuple, enron_nodes_not_in_train = \

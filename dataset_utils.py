@@ -420,10 +420,85 @@ def load_facebook_wall(timestamp_max=1000, largest_connected_component_only=Fals
         # Scale timestamps to 0 to timestamp_max
         data[:, 2] = (data[:, 2] - min(data[:, 2])) / (max(data[:, 2]) - min(data[:, 2])) * timestamp_max
 
+
     if train_percentage is not None:
         return split_event_list_to_train_test(data, train_percentage=train_percentage)
-    
+
     duration = data[-1, 2]
+
+    node_set = set(data[:, 0].astype(np.int)).union(data[:, 1].astype(np.int))
+    node_id_map = get_node_map(node_set)
+
+    event_dict = {}
+    for i in range(data.shape[0]):
+        receiver_id = node_id_map[np.int(data[i, 0])]
+        sender_id = node_id_map[np.int(data[i, 1])]
+
+        if (sender_id, receiver_id) not in event_dict:
+            event_dict[(sender_id, receiver_id)] = []
+
+        event_dict[(sender_id, receiver_id)].append(data[i, 2])
+
+    return event_dict, len(node_set), duration
+
+
+def load_facebook_wall_2(timestamp_max=1000, largest_connected_component_only=False, train_percentage=None,
+                         plot_growth=False, remove_nodes_not_in_train=False):
+    """
+    :param timestamp_max: The time unit of the last timestamp. Used to scale all other timestamps.
+    :param largest_connected_component_only: if True, only the largest connected component will be loaded.
+    :param train_percentage: If None, returns the entire dataset as a single dataset, else returns a train/test/combined
+                             dataset based on the train_percentage.
+    """
+
+    file_path = '/shared/DataSets/FacebookViswanath2009/raw/facebook-wall.txt'
+
+    # receiver_id sender_id unix_timestamp
+    data = np.loadtxt(file_path, np.float)
+
+    # remove data during the first half
+    data = data[data[:, 2].argsort()]
+    data[:, 2] = data[:, 2] - data[0, 2]
+    data[:, 2] = (data[:, 2] - min(data[:, 2])) / (max(data[:, 2]) - min(data[:, 2])) * timestamp_max
+
+    data = data[np.where(data[:, 2] >= 500)[0], :]
+    data = data[np.where(data[:, 2] <= 900)[0], :]
+
+    # remove self-edges
+    data = data[np.where(data[:, 0] != data[:, 1])[0], :]
+
+    if largest_connected_component_only:
+        # finding the nodes in the largest connected component
+        fb_net = nx.Graph()
+        for i in range(data.shape[0]):
+            fb_net.add_edge(data[i, 1], data[i, 0])
+
+        largest_cc = max(nx.connected_components(fb_net), key=len)
+        edge_idx_in_largest_cc = np.array([node_id in largest_cc for node_id in data[:, 0]])
+        data = data[edge_idx_in_largest_cc, :]
+
+    # Sorting by unix_timestamp and adjusting first timestamp to start from 0
+    data = data[data[:, 2].argsort()]
+    data[:, 2] = data[:, 2] - data[0, 2]
+
+    if timestamp_max is not None:
+        # Scale timestamps to 0 to timestamp_max
+        data[:, 2] = (data[:, 2] - min(data[:, 2])) / (max(data[:, 2]) - min(data[:, 2])) * timestamp_max
+
+    duration = data[-1, 2]
+
+    if plot_growth:
+        cum_event_count = [np.sum(data[:, 2] < t) for t in range(int(duration) + 1)]
+        plt.plot(np.arange(int(duration) + 1), cum_event_count)
+        plt.ylabel('Cumulative Event Count')
+        plt.xlabel('Duration')
+        # plt.savefig(f"/shared/Results/CommunityHawkes/pickles/full_fb_fit/plots/fb_growth.pdf")
+        plt.show()
+
+    if train_percentage is not None:
+        return split_event_list_to_train_test(data, train_percentage=train_percentage,
+                                              remove_nodes_not_in_train=remove_nodes_not_in_train)
+
 
     node_set = set(data[:, 0].astype(np.int)).union(data[:, 1].astype(np.int))
     node_id_map = get_node_map(node_set)

@@ -27,7 +27,7 @@ result_file_path = join(os.sep, '/shared', 'Results', 'CommunityHawkes', 'pickle
 Path(join(result_file_path, 'plots')).mkdir(parents=True, exist_ok=True)
 
 run_analysis = False
-run_plotting = True
+run_plotting = False
 run_regression = True
 
 # # sim params
@@ -297,10 +297,14 @@ if run_plotting:
 if run_regression:
     print("\nRegression: \n")
     print("Estimated Communities:\n")
+
+    start_idx = 0
+    end_idx = 3
+    num_nodes = num_nodes_to_test[start_idx:end_idx]
     for param, err in params.items():
         print(param, '(estimated communities)')
-        x = np.log(num_nodes_to_test).reshape(len(num_nodes_to_test), 1)
-        y = np.log(ece[err[0]]).reshape(len(ece[err[0]]), 1)
+        x = np.log(num_nodes).reshape(len(num_nodes), 1)
+        y = np.log(ece[err[0]][start_idx:end_idx]).reshape(len(ece[err[0]][start_idx:end_idx]), 1)
 
         reg = LinearRegression().fit(x, y)
 
@@ -310,8 +314,8 @@ if run_regression:
         print()
 
         print(param, '(known communities)')
-        x = np.log(num_nodes_to_test).reshape(len(num_nodes_to_test), 1)
-        y = np.log(kce[err[0]]).reshape(len(kce[err[0]]), 1)
+        x = np.log(num_nodes).reshape(len(num_nodes), 1)
+        y = np.log(kce[err[0]][start_idx:end_idx]).reshape(len(kce[err[0]][start_idx:end_idx]), 1)
 
         reg = LinearRegression().fit(x, y)
 

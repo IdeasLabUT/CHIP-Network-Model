@@ -35,7 +35,7 @@ def fit_community_model(event_dict, num_nodes, duration, num_classes, local_sear
     # adj = utils.event_dict_to_adjacency(num_nodes, event_dict)
 
     # Running spectral clustering
-    node_membership = spectral_cluster(agg_adj, num_classes, verbose=False)
+    node_membership = spectral_cluster(agg_adj, num_classes, verbose=False, plot_eigenvalues=False)
 
     if local_search_max_iter > 0 and num_classes > 1:
         node_membership, bp_mu, bp_alpha, bp_beta = cls.chip_local_search(event_dict, num_classes, node_membership,
@@ -326,3 +326,79 @@ def compute_mu_pairwise_difference_confidence_interval(event_dict, node_membersh
         pairwise_res_dict[(a, b, x, y)] = (diff, ci)
 
     return pairwise_res_dict
+
+
+def compute_block_pair_event_count_empirical_mean_and_variance(block_pair_events, node_membership, n_classes):
+    """
+    Computes the mean and variance of block pair event counts
+
+    :param block_pair_events: (list) n_classes x n_classes where entry ij is a list of event lists between nodes in
+                              block i to nodes in block j.
+    :param node_membership: (list) membership of every node to one of K classes.
+    :param n_classes: (int) number of blocks / classes
+
+    :return: a tuple of two matrices of KxK for mean and variance of block pair event counts
+    """
+
+    bp_size = utils.calc_block_pair_size(node_membership, n_classes).astype(int)
+
+    block_pair_events_counts_mean = np.zeros((n_classes, n_classes))
+    block_pair_events_counts_variance = np.zeros((n_classes, n_classes))
+    for i in range(n_classes):
+        for j in range(n_classes):
+            temp_counts = [len(event_list) for event_list in block_pair_events[i][j]]  # actual counts
+            temp_counts.extend([0] * (bp_size[i, j] - len(temp_counts)))  # add 0's for node-pairs with no events
+
+            block_pair_events_counts_mean[i, j] = np.mean(temp_counts)
+            block_pair_events_counts_variance[i, j] = np.std(temp_counts) ** 2
+
+    return block_pair_events_counts_mean, block_pair_events_counts_variance
+
+
+def compute_block_pair_total_event_count(block_pair_events, n_classes):
+    """
+    Computes the total number of events in each block pair.
+
+    :param block_pair_events: (list) n_classes x n_classes where entry ij is a list of event lists between nodes in
+                              block i to nodes in block j.
+    :param n_classes: (int) number of blocks / classes
+
+    :return: n_classes x n_classes matrix where entry ij is the number of events in block pair ij
+    """
+
+    block_pair_event_count = np.zeros((n_classes, n_classes))
+
+    for i in range(n_classes):
+        for j in range(n_classes):
+            block_pair_event_count[i, j] = np.sum([len(event_list) for event_list in block_pair_events[i][j]])
+
+    return block_pair_event_count
+
+
+def compute_prediction_mean_and_variance_for_block_pair_event_count(train_bp_mu, train_bp_alpha_beta_ratio,
+                                                                    test_block_pair_events,
+                                                                    train_node_membership, n_classes,
+                                                                    train_duration, test_duration):
+    """
+    Computes sample mean and variance of block pair event counts
+
+    :param test_block_pair_events: (list) n_classes x n_classes where entry ij is a list of event lists between nodes in
+                                    block i to nodes in block j of the test dataset.
+    :param train_node_membership: (list) membership of every node to one of K classes in the train dataset.
+    :param n_classes: (int) number of blocks / classes
+    :param train_duration: duration of the train dataset
+    :param test_duration: duration of the test dataset
+
+    :return:
+    """
+    train_bp_size = utils.calc_block_pair_size(train_node_membership, n_classes)
+
+    sample_mean = (train_bp_mu * train_duration) / (1 - train_bp_alpha_beta_ratio)
+    sample_mean = (sample_mean / train_duration) * test_duration * train_bp_size
+
+    sample_var = (train_bp_mu * train_duration) / ((1 - train_bp_alpha_beta_ratio) ** 3)
+    sample_var = (sample_var / train_duration) * test_duration * train_bp_size
+
+    test_block_pair_event_count = compute_block_pair_total_event_count(test_block_pair_events, n_classes)
+
+    return sample_mean, sample_var, test_block_pair_event_count

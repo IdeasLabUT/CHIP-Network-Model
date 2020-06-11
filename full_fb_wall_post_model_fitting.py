@@ -26,6 +26,7 @@ load_fb = True
 plot_hawkes_params = False
 plot_node_membership = False
 plot_num_events = False
+plot_community_structure = True
 simulate_chip = False
 get_confidence_intervals = False
 verbose = False
@@ -199,9 +200,9 @@ if plot_hawkes_params:
         labels = np.arange(1, num_classes + 1)
         im, _ = heatmap(hawkes_params[param], labels, labels, ax=ax, cmap="Greys", cbarlabel=cbar_label[param])
 
-        # ax.set_title(f"Full Facebook wall-posts {param.capitalize()}")
+        ax.set_title(f"Full Facebook wall-posts {param.capitalize()}")
         fig.tight_layout()
-        plt.savefig(f"{result_file_path}/plots/{param}-k-{num_classes}.pdf")
+        # plt.savefig(f"{result_file_path}/plots/{param}-k-{num_classes}.pdf")
         plt.show()
 
     # plot m
@@ -332,5 +333,35 @@ if simulate_chip:
 # Total computation time: 168.6s
 
 
+if plot_community_structure:
+    # adj = utils.event_dict_to_adjacency(fb_num_node, fb_event_dict, dtype=np.int)
+    num_nodes = len(node_membership)
+    community_membership = utils.node_membership_to_community_membership(node_membership, num_classes)
+    community_size = [len(community) for community in community_membership]
+    node_ids = np.concatenate(community_membership)
+    sorting_map = {}
+    for i in range(node_ids.shape[0]):
+        sorting_map[node_ids[i]] = i
 
+    sorted_adj = np.zeros((num_nodes, num_nodes), dtype=np.int)
 
+    for (u, v), event_times in fb_event_dict.items():
+        if len(event_times) != 0:
+            sorted_adj[sorting_map[u], sorting_map[v]] = 1
+
+    #Plot adjacency matrix in toned-down black and white
+    plt.spy(sorted_adj, marker='.', markersize=0.1, precision=0)
+    cumulative_community_size = 0
+    for com_size in community_size:
+        cumulative_community_size += com_size
+        plt.axhline(cumulative_community_size, color='black', linewidth=1)
+        plt.axvline(cumulative_community_size, color='black', linewidth=1)
+
+    # plt.xticks(rotation=45)
+    ticks = np.arange(0, num_nodes, 5000)
+    plt.yticks(ticks, [f'{int(t / 1000)}{"K" if t >= 1000 else ""}' for t in ticks], fontsize=13)
+    plt.xticks(ticks, [f'{int(t / 1000)}{"K" if t >= 1000 else ""}' for t in ticks], fontsize=13)
+    plt.tight_layout()
+    # plt.show()
+    plt.savefig(f"{result_file_path}/plots/community-structure-k-{num_classes}.png", format='png', dpi=200)
+    # plt.savefig(f"{result_file_path}/plots/community-structure-k-{num_classes}.pdf", format='pdf')

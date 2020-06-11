@@ -105,22 +105,33 @@ def fit_and_eval_block_hawkes(train_tuple, test_tuple, combined_tuple, nodes_not
 
 # Running Block Hawkes model on Facebook, Enron, Reality Mining, and simulated data
 if __name__ == "__main__":
-    # Entire Facebook Dataset
-    print("Entire Facebook wall-post dataset")
-    fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
-        dataset_utils.load_facebook_wall(timestamp_max=1000, largest_connected_component_only=True, train_percentage=0.8)
-    fit_and_eval_block_hawkes(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
-                              local_search_max_iter=500, local_search_n_cores=25,
-                              k_values_to_test=[1],
-                              plot_fitted_hist=False, verbose=False)
+    pass
+    # # Entire Facebook Dataset
+    # print("Entire Facebook wall-post dataset 2")
+    # fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
+    #     dataset_utils.load_facebook_wall_2(timestamp_max=1000, largest_connected_component_only=True,
+    #                                        train_percentage=0.8, remove_nodes_not_in_train=True)
+    # fit_and_eval_block_hawkes(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
+    #                           local_search_max_iter=500, local_search_n_cores=25,
+    #                           k_values_to_test=[1],
+    #                           plot_fitted_hist=False, verbose=False)
+
+    # # Entire Facebook Dataset
+    # print("Facebook wall-post dataset")
+    # fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
+    #     dataset_utils.load_facebook_wall(timestamp_max=1000, largest_connected_component_only=True, train_percentage=0.8)
+    # fit_and_eval_block_hawkes(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
+    #                           local_search_max_iter=500, local_search_n_cores=25,
+    #                           k_values_to_test=[1],
+    #                           plot_fitted_hist=False, verbose=False)
 
     # # Facebook Dataset
     # print("Facebook wall-post dataset")
     # fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
-    #     dataset_utils.load_fb_train_test(remove_nodes_not_in_train=False)
+    #     dataset_utils.load_fb_train_test(remove_nodes_not_in_train=True)
     # fit_and_eval_block_hawkes(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
     #                           local_search_max_iter=500, local_search_n_cores=25,
-    #                           k_values_to_test=[3],
+    #                           k_values_to_test=[1, 2, 3],
     #                           plot_fitted_hist=False, verbose=False)
 
     # # Enron Dataset

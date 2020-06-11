@@ -412,3 +412,6 @@ def simulate_community_hawkes(params=None, network_name=None, load_if_exists=Fal
 
     return event_dict, node_membership
 
+
+def compute_hawkes_conditional_intensity():
+    pass

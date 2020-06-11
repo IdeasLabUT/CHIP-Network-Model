@@ -48,7 +48,6 @@ test_num_events = utils.num_events_in_event_dict(test_event_dict)
 print("Train: ", "Num Nodes:", train_num_nodes, "Duration:", train_duration, "Num Edges:", train_num_events)
 print("Test: ", "Num Nodes:", test_num_nodes, "Duration:", test_duration, "Num Edges:", test_num_events)
 
-
 # fit Facebook Wall-posts
 if fit_chip:
     tic = time.time()
