@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-@author: Makan Arastuie
+@author: Anonymous
 """
 
+import os
+import sys
+import urllib
 import numpy as np
 import networkx as nx
 from datetime import datetime
@@ -10,70 +13,14 @@ import matplotlib.pyplot as plt
 import generative_model_utils as utils
 
 
-def load_core_reality_mining_based_on_dubois(remove_nodes_not_in_train=False):
+def get_script_path():
     """
-    Due to inconsistencies of the DoBios' REM paper, this method's network doesn't match the papers. DO NOT USE.
-
-    Loads only the interaction of the core people of the reality mining dataset.
-
-    Loads 2000 phone calls among the 89 recipients between October 2004 and February 2005 (Mtest = 1000).
-    The time stamp found to correspond to this description is start from 1098561155 to the end of the entire dataset.
-
-    Of the entire dataset:
-    first time stamp: 2004-09-24 00:00:59
-    last time stamp: 2005-01-07 23:56:18
-
-    :param remove_nodes_not_in_train: if True, removes the nodes that do not appear in the training set.
-
-    :return: Three tuples one for each train, test and combined datasets. Each Tuple contains:
-         ((dict) with (caller_id, receiver_id): [unix_timestamps] (event dict structure),
-         (int) number of nodes,
-         (float) duration)
-         (list) nodes_not_in_train
+    :return: the path of the current script
     """
-    attributes_file_path = '/shared/DataSets/RealityMining/Dubois2013/all.attributes.txt'
-    edges_file_path = '/shared/DataSets/RealityMining/Dubois2013/voice-all.edges'
-
-    # get the id of core nodes from all.attribute. Each line is 'node_id';'1' or '0' if it is in core or not
-    core_nodes_id = set()
-    with open(attributes_file_path, 'r') as f:
-        for l in f:
-            node_id, is_core = l.split(';')
-
-            if int(is_core):
-                core_nodes_id.add(int(node_id))
-
-    # load the core dataset. unix_timestamp;caller_id;receiver_id;duration_in_second;communication_type
-    rm_data = np.loadtxt(edges_file_path, np.int, delimiter=';', usecols=(0, 1, 2))
-    # Sorting by unix_timestamp
-    rm_data = rm_data[rm_data[:, 0].argsort()]
-
-    # t_from = datetime(2004, 11, 23, 15, 52, 34).timestamp()
-    t_from = 1098561155
-
-    recipients_node_id = set()
-
-    # Finding the 89 core recipients
-    for i in range(rm_data.shape[0]):
-        if rm_data[i, 2] in core_nodes_id:
-            recipients_node_id.add(int(rm_data[i, 2]))
-
-    event_list = np.zeros((2000, 3), dtype=np.int)
-    core_rec_dict = set()
-    cnt = 0
-    for i in range(rm_data.shape[0]):
-        if t_from <= rm_data[i, 0] and rm_data[i, 1] in recipients_node_id and rm_data[i, 2] in recipients_node_id:
-            event_list[cnt] = [rm_data[i, 1], rm_data[i, 2], rm_data[i, 0]]
-            cnt += 1
-
-            core_rec_dict.add(int(rm_data[i, 1]))
-            core_rec_dict.add(int(rm_data[i, 2]))
-
-    return split_event_list_to_train_test(event_list, train_percentage=0.5,
-                                          remove_nodes_not_in_train=remove_nodes_not_in_train)
+    return os.path.dirname(os.path.realpath(sys.argv[0]))
 
 
-def load_reality_mining_test_train(remove_nodes_not_in_train):
+def load_reality_mining_test_train(remove_nodes_not_in_train=False):
     """
         Loads Reality Mining dataset.
 
@@ -85,39 +32,13 @@ def load_reality_mining_test_train(remove_nodes_not_in_train):
                  (float) duration)
                  (list) nodes_not_in_train
         """
-    train_file_path = '/shared/DataSets/RealityMining/Dubois2013/train_reality.csv'
-    test_file_path = '/shared/DataSets/RealityMining/Dubois2013/test_reality.csv'
+    train_file_path = f'{get_script_path()}/storage/datasets/reality-mining/train_reality.csv'
+    test_file_path = f'{get_script_path()}/storage/datasets/reality-mining/test_reality.csv'
 
     # Timestamps are adjusted to start from 0 and go up to 1000.
     combined_duration = 1000.0
 
     return load_train_test(train_file_path, test_file_path, combined_duration, remove_nodes_not_in_train)
-
-
-def load_enron():
-    """
-    Loads Enron dataset.
-    :return: (dict) with (caller_id, receiver_id): [unix_timestamps] (event dict structure)
-             (int) number of nodes
-    """
-    edges_file_path = '/shared/DataSets/EnronPriebe2009/raw/execs.email.lines2.txt'
-
-    # load the core dataset.  time, from, receiver, tag
-    enron_data = np.loadtxt(edges_file_path, np.int, delimiter=' ', usecols=(0, 1, 2))
-    # Sorting by unix_timestamp
-    enron_data = enron_data[enron_data[:, 0].argsort()]
-
-    people = set(enron_data[:, 1])
-    people = people.union(enron_data[:, 2])
-
-    event_dict = {}
-    for i in range(enron_data.shape[0]):
-        if (enron_data[i, 1], enron_data[i, 2]) not in event_dict:
-            event_dict[(enron_data[i, 1], enron_data[i, 2])] = []
-
-        event_dict[(enron_data[i, 1], enron_data[i, 2])].append(enron_data[i, 0])
-
-    return event_dict, len(people)
 
 
 def load_enron_train_test(remove_nodes_not_in_train=False):
@@ -132,8 +53,8 @@ def load_enron_train_test(remove_nodes_not_in_train=False):
              (float) duration)
              (list) nodes_not_in_train
     """
-    train_file_path = '/shared/DataSets/EnronPriebe2009/train_enron.csv'
-    test_file_path = '/shared/DataSets/EnronPriebe2009/test_enron.csv'
+    train_file_path = f'{get_script_path()}/storage/datasets/enron/train_enron.csv'
+    test_file_path = f'{get_script_path()}/storage/datasets/enron/test_enron.csv'
 
     # Timestamps are adjusted to start from 0 and go up to 1000.
     combined_duration = 1000.0
@@ -153,8 +74,8 @@ def load_fb_train_test(remove_nodes_not_in_train=False):
              (float) duration)
              (list) nodes_not_in_train
     """
-    train_file_path = '/shared/DataSets/FacebookViswanath2009/train_FB_event_mat.csv'
-    test_file_path = '/shared/DataSets/FacebookViswanath2009/test_FB_event_mat.csv'
+    train_file_path = f'{get_script_path()}/storage/datasets/facebook-wallposts/train_FB_event_mat.csv'
+    test_file_path = f'{get_script_path()}/storage/datasets/facebook-wallposts/test_FB_event_mat.csv'
 
     # Timestamps are adjusted to start from 0 and go up to 8759.9.
     combined_duration = 8759.9
@@ -386,15 +307,28 @@ def plot_event_count_hist(event_dict, num_nodes, dset_title_name):
     plt.show()
 
 
-def load_facebook_wall(timestamp_max=1000, largest_connected_component_only=False, train_percentage=None):
+def load_facebook_wall(timestamp_max=1000, largest_connected_component_only=False, train_percentage=None,
+                       download_file_path=None):
     """
+    First downloads the dataset if it is not in the "storage/datasets/facebook-wallposts" directory, then loads the
+    dataset.
+
     :param timestamp_max: The time unit of the last timestamp. Used to scale all other timestamps.
     :param largest_connected_component_only: if True, only the largest connected component will be loaded.
     :param train_percentage: If None, returns the entire dataset as a single dataset, else returns a train/test/combined
                              dataset based on the train_percentage.
+    :param download_file_path: (optional) manually set the path to the data
     """
+    file_path = download_file_path
+    if download_file_path is None:
+        file_path = f"{get_script_path()}/storage/datasets/facebook-wallposts/facebook-wallpost.txt.gz"
 
-    file_path = '/shared/DataSets/FacebookViswanath2009/raw/facebook-wall.txt'
+    # Downloading the dataset it is not in the storage directory
+    if not os.path.exists(file_path):
+        print("Downloading Facebook wall-posts dataset from "
+              "http://socialnetworks.mpi-sws.mpg.de/data/facebook-wall.txt.gz ...")
+        urllib.request.urlretrieve("http://socialnetworks.mpi-sws.mpg.de/data/facebook-wall.txt.gz", file_path)
+        print("Download complete.")
 
     # receiver_id sender_id unix_timestamp
     data = np.loadtxt(file_path, np.float)
@@ -440,39 +374,3 @@ def load_facebook_wall(timestamp_max=1000, largest_connected_component_only=Fals
         event_dict[(sender_id, receiver_id)].append(data[i, 2])
 
     return event_dict, len(node_set), duration
-
-
-# Various examples of loading datasets
-if __name__ == '__main__':
-
-    load_facebook_wall(largest_connected_component_only=True)
-    # load_core_reality_mining_based_on_dubois()
-    # load_reality_mining_test_train()
-    # plot_event_count_hist(reality_mining_event_dict, num_nodes, "Reality Mining's Core people")
-
-    # enron_event_dict, num_nodes = load_enron()
-    # plot_event_count_hist(enron_event_dict, num_nodes, "Enron")
-    # print(load_enron())
-
-    # load_reality_mining_test_train()
-    # load_core_reality_mining()
-
-    # ((enron_train_event_dict, enron_train_n_nodes),
-    #  (enron_test_event_dict, enron_test_n_nodes),
-    #  (enron_combined_event_dict, enron_combined_n_nodes), nodes_not_in_train) = load_enron_train_test()
-    #
-    # print(np.sum(utils.event_dict_to_aggregated_adjacency(enron_train_n_nodes, enron_train_event_dict)))
-    # print(np.sum(utils.event_dict_to_aggregated_adjacency(enron_test_n_nodes, enron_test_event_dict)))
-    # print(np.sum(utils.event_dict_to_aggregated_adjacency(enron_combined_n_nodes, enron_combined_event_dict)))
-
-    # ((enron_train_event_dict, enron_train_n_nodes, train_duration),
-    #  (enron_test_event_dict, enron_test_n_nodes, test_duration),
-    #  (enron_combined_event_dict, enron_combined_n_nodes, combined_duration), nodes_not_in_train) = load_core_reality_mining_based_on_dubois()
-    # 
-    # print("Train -- Num Nodes:", enron_train_n_nodes,
-    #       "Num Edges:", np.sum(utils.event_dict_to_aggregated_adjacency(enron_train_n_nodes, enron_train_event_dict)))
-    # print("Test -- Num Nodes:", enron_test_n_nodes,
-    #       "Num Edges:", np.sum(utils.event_dict_to_aggregated_adjacency(enron_test_n_nodes, enron_test_event_dict)))
-    # print("Combined -- Num Nodes:", enron_combined_n_nodes,
-    #       "Num Edges:", np.sum(utils.event_dict_to_aggregated_adjacency(enron_combined_n_nodes, enron_combined_event_dict)))
-

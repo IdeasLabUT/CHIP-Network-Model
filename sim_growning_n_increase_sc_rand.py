@@ -2,7 +2,7 @@
 """
 "Spectral Clustering on Weighted vs. Unweighted Adjacency Matrix"
 
-@author: Makan Arastuie
+@author: Anonymous
 """
 
 import pickle
@@ -10,18 +10,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import generative_model_utils as utils
+from dataset_utils import get_script_path
 from sklearn.metrics import adjusted_rand_score
 from spectral_clustering import spectral_cluster
 
 
-result_file_path = '/shared/Results/CommunityHawkes/pickles/growing_n_increase_sc_rand'
+result_file_path = f'{get_script_path()}/storage/results/growing_n_increase_sc_rand'
 
 agg_adj_should_fail = False
-plot_only = True
+plot_only = False
 
 number_of_nodes_list = [8, 16, 32, 64, 128, 256, 512]
-# number_of_nodes_list = [10000]
-# number_of_nodes_list = 2 ** np.arange(9, 14)
 n_classes = 4
 class_prob = np.ones(n_classes) / n_classes
 
@@ -47,7 +46,6 @@ def test_spectral_clustering_on_generative_model(n_nodes):
                   'beta': 0.008,
                   'mu_off_diag': 0.001,
                   'mu_diag': 0.001,
-                  # 'mu_diag': 0.002,
                   'alpha_diag': 0.006,
                   'scale': False,
                   'end_time': 400,
@@ -74,7 +72,6 @@ def test_spectral_clustering_on_generative_model(n_nodes):
 
 # Save results
 file_name = "all_sims_agg_adj_fail_100_sim.pckl" if agg_adj_should_fail else "all_sims_adj_fail_100_sim.pckl"
-# file_name = "very-large-n.pckl"
 
 if not plot_only:
     mean_adj_sc_rand_scores = []
@@ -132,7 +129,7 @@ print(f"SC on Aggregated Adjacency:", mean_agg_adj_sc_rand_scores)
 
 
 # Plot Results
-fig, ax = plt.subplots(figsize=(4.2, 4))
+fig, ax = plt.subplots()
 ind = np.arange(len(number_of_nodes_list))    # the x locations for the groups
 width = 0.35         # the width of the bars
 p1 = ax.bar(ind, mean_adj_sc_rand_scores, width, color='r', yerr=mean_adj_sc_rand_scores_err)
@@ -152,6 +149,5 @@ plt.tight_layout()
 ax.autoscale_view()
 
 plot_name = "agg_adj_fail_100_sim" if agg_adj_should_fail else "adj_fail_100_sim"
-# plot_name = "very-large-n"
-plt.savefig(f"{result_file_path}/plots/2020-02-03/{plot_name}.pdf", bbox_inches='tight')
+plt.savefig(f"{result_file_path}/plots/{plot_name}.pdf", bbox_inches='tight')
 plt.show()

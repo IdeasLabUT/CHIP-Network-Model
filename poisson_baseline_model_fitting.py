@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@author: Makan Arastuie
+@author: Anonymous
 """
 
 import time
@@ -96,7 +96,6 @@ def fit_poisson_baseline_model(event_dict, num_nodes, duration, num_classes, ver
 
     :return: node_membership, lambda, block_pair_events
     """
-    # adj = utils.event_dict_to_adjacency(num_nodes, event_dict)
     agg_adj = utils.event_dict_to_aggregated_adjacency(num_nodes, event_dict)
 
     # if number of there are as many classes as nodes, assign each node to its own class
@@ -201,15 +200,7 @@ if __name__ == "__main__":
         dataset_utils.load_facebook_wall(timestamp_max=1000, largest_connected_component_only=True,
                                          train_percentage=0.8)
     fit_and_eval_poisson_baseline(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
-                                  k_values_to_test=np.arange(1, 11), verbose=False)
-
-    # # Facebook Dataset
-    # print("Facebook wall-post dataset")
-    # fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
-    #     dataset_utils.load_fb_train_test(remove_nodes_not_in_train=False)
-    # fit_and_eval_poisson_baseline(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
-    #                               k_values_to_test=np.arange(1, 150), verbose=False)
-
+                                  k_values_to_test=np.arange(1, 201), verbose=False)
 
     # # Enron Dataset
     # print("Enron dataset")

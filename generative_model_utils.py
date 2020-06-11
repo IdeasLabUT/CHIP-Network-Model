@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-@author: Makan Arastuie
+@author: Anonymous
 """
 
 import os
 import pickle
 import numpy as np
+import dataset_utils
 import matplotlib.pyplot as plt
 import chip_generative_model as chip
 from tick.hawkes import SimuHawkesExpKernels
@@ -345,7 +346,7 @@ def simulate_community_hawkes(params=None, network_name=None, load_if_exists=Fal
 
     :return: event_dict, node_membership
     """
-    generated_network_path = '/shared/Results/CommunityHawkes/generated_networks/'
+    generated_network_path = f'{dataset_utils.get_script_path()}/storage/results/generated_networks/'
 
     default_params = {'seed': None,
                       'number_of_nodes': 128,
@@ -411,7 +412,3 @@ def simulate_community_hawkes(params=None, network_name=None, load_if_exists=Fal
             pickle.dump([event_dict, node_membership, default_params], handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     return event_dict, node_membership
-
-
-def compute_hawkes_conditional_intensity():
-    pass

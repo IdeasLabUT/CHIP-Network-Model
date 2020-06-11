@@ -10,7 +10,7 @@ lower mis-clustering rate.
 (b) fix $T$, increasing $n$ and decreasing $k$.
 (c) fix $k$, increasing $n$ and increasing $T$.
 
-@author: Makan Arastuie
+@author: Anonymous
 """
 
 import pickle
@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 from plotting_utils import heatmap
 from joblib import Parallel, delayed
 import generative_model_utils as utils
+from dataset_utils import get_script_path
 from sklearn.metrics import adjusted_rand_score
 from spectral_clustering import spectral_cluster
 
@@ -44,9 +45,9 @@ def test_spectral_clustering_on_generative_model(n, t, k):
     return agg_adj_sc_rand
 
 
-result_file_path = '/shared/Results/CommunityHawkes/pickles/AS3'
+result_file_path = f'{get_script_path()}/storage/results/AS3'
 
-plot_only = True
+plot_only = False
 
 # Number of test values for all variable must be the same
 n_range = [2048, 1024, 512, 256, 128, 64]
@@ -137,7 +138,7 @@ for fixed_var in ['n', 't', 'k']:
 
     # Plot Results
     plt.ion()
-    fig, ax = plt.subplots(figsize=(4.5, 3.4))
+    fig, ax = plt.subplots()
     
     im, _ = heatmap(mean_sc_rand_scores, ylables, xlables, ax=ax, cmap="coolwarm",
                     cbarlabel=f"Adjusted Rand Score", vmin=0, vmax=1)
@@ -152,6 +153,6 @@ for fixed_var in ['n', 't', 'k']:
     plt.xlabel(xlab, fontsize=16)
     # ax.set_title(f"CHIP SC AS3 Fixed {fixed_var.upper()}: {fixed_value}")
     fig.tight_layout()
-    plt.savefig(f"{result_file_path}/plots/2020-02-05/as3-fixed-{fixed_var}.pdf", bbox_inches='tight')
+    plt.savefig(f"{result_file_path}/plots/as3-fixed-{fixed_var}.pdf", bbox_inches='tight')
 #    plt.show()
 

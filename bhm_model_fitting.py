@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@author: Makan Arastuie
+@author: Anonymous
 """
 
 import time
@@ -86,7 +86,7 @@ def fit_and_eval_block_hawkes(train_tuple, test_tuple, combined_tuple, nodes_not
         print(f"Test ll: {ll_per_event:.3f} - Took: {toc - tic:.2f}s")
 
         # Save results
-        result_file_path = '/shared/Results/CommunityHawkes/fb'
+        result_file_path = f'{dataset_utils.get_script_path()}/storage/results/fb_bhm_fit'
         with open(f'{result_file_path}/k{num_classes}-model-params.pckl', 'wb') as handle:
             pickle.dump([train_node_membership, train_bp_mu, train_bp_alpha, train_bp_beta, train_block_pair_events],
                         handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -111,17 +111,7 @@ if __name__ == "__main__":
         dataset_utils.load_facebook_wall(timestamp_max=1000, largest_connected_component_only=True, train_percentage=0.8)
     fit_and_eval_block_hawkes(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
                               local_search_max_iter=500, local_search_n_cores=25,
-                              k_values_to_test=[1],
-                              plot_fitted_hist=False, verbose=False)
-
-    # # Facebook Dataset
-    # print("Facebook wall-post dataset")
-    # fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
-    #     dataset_utils.load_fb_train_test(remove_nodes_not_in_train=True)
-    # fit_and_eval_block_hawkes(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
-    #                           local_search_max_iter=500, local_search_n_cores=25,
-    #                           k_values_to_test=[1, 2, 3],
-    #                           plot_fitted_hist=False, verbose=False)
+                              k_values_to_test=[1], plot_fitted_hist=False, verbose=False)
 
     # # Enron Dataset
     # print("Enron dataset")

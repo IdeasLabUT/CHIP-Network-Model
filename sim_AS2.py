@@ -10,7 +10,7 @@
 Expectation: We should see accuracy increase in both these cases. When mu_diag/mu_off_diag ratio is low, the algorithms
 will do poorly, but as the ratio increases there is more signal and the algorithm will do well and go all the way to 1.
 
-@author: Makan Arastuie
+@author: Anonymous
 """
 
 import pickle
@@ -18,18 +18,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import generative_model_utils as utils
+from dataset_utils import get_script_path
 from sklearn.metrics import adjusted_rand_score
 from spectral_clustering import spectral_cluster
 
 
-result_file_path = '/shared/Results/CommunityHawkes/pickles/AS2'
+result_file_path = f'{get_script_path()}/storage/results/AS2'
 
 also_use_unweighted_adjacency = True
 
 sim_type = 'a'
 # sim_type = 'b'
 
-plot_only = True
+plot_only = False
 
 plot_name = "fixed_ratio" if sim_type == 'a' else "increase_mu_diag"
 

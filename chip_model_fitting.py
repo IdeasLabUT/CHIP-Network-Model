@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@author: Makan Arastuie
+@author: Anonymous
 """
 
 import time
@@ -81,7 +81,6 @@ def fit_and_eval_community_hawkes(train_tuple, test_tuple, combined_tuple, nodes
         print(f"K: {num_classes} - Train ll: {train_log_likelihood / train_n_events:.4f}", end=' - ')
         print(f"Test ll: {ll_per_event:.3f} - Took: {toc - tic:.2f}s")
 
-
         if plot_fitted_hist:
             model_utils.generate_fit_community_hawkes(train_event_dict, train_node_membership,
                                                       train_bp_mu, train_bp_alpha, train_bp_beta,
@@ -98,20 +97,13 @@ def fit_and_eval_community_hawkes(train_tuple, test_tuple, combined_tuple, nodes
 # Examples of fitting CHIP to Facebook, Enron, Reality Mining and simulated data.
 if __name__ == "__main__":
     # Entire Facebook Dataset
-    print("Entire Facebook wall-post dataset")
+    print("Facebook wall-post dataset")
     fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
-        dataset_utils.load_facebook_wall(timestamp_max=1000, largest_connected_component_only=True, train_percentage=0.8)
+        dataset_utils.load_facebook_wall(timestamp_max=1000, largest_connected_component_only=True,
+                                         train_percentage=0.8)
     fit_and_eval_community_hawkes(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
-                                  k_values_to_test=[9],
+                                  k_values_to_test=np.arange(1, 201),
                                   plot_fitted_hist=False, verbose=False)
-
-    # # Facebook Dataset
-    # print("Facebook wall-post dataset")
-    # fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
-    #     dataset_utils.load_fb_train_test(remove_nodes_not_in_train=False)
-    # fit_and_eval_community_hawkes(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
-    #                               k_values_to_test=[6],
-    #                               plot_fitted_hist=False, verbose=False)
 
     # # Enron Dataset
     # print("Enron dataset")

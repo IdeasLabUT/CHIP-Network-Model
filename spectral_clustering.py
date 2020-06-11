@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-@author: Kevin Xu and Makan Arastuie
+@author: Anonymous
 """
 
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from scipy.sparse.linalg import svds
 from sklearn.preprocessing import normalize
-import matplotlib.pyplot as plt
 
 
 def spectral_cluster(adj, num_classes=2, n_kmeans_init=10, normalize_z=True, verbose=False, plot_eigenvalues=False,
@@ -41,7 +41,6 @@ def spectral_cluster(adj, num_classes=2, n_kmeans_init=10, normalize_z=True, ver
         plt.grid(True)
         ax.tick_params(labelsize=20)
         plt.tight_layout()
-
         plt.savefig(f'{plot_save_path}/singular_values.pdf')
         plt.show()
 

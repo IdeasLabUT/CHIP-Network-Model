@@ -4,30 +4,27 @@
 
 Empirically analyzing the end-to-end consistency of the CHIP parameter estimators.
 
-@author: Makan Arastuie
+@author: Anonymous
 """
 
 import os
 import copy
 import pickle
 import numpy as np
-from os.path import join
-from pathlib import Path
 import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import generative_model_utils as utils
+from dataset_utils import get_script_path
 import model_fitting_utils as model_utils
 from sklearn.metrics import adjusted_rand_score
 from spectral_clustering import spectral_cluster
-from parameter_estimation import estimate_hawkes_from_counts
 from sklearn.linear_model import LinearRegression
+from parameter_estimation import estimate_hawkes_from_counts
 
-result_file_path = join(os.sep, '/shared', 'Results', 'CommunityHawkes', 'pickles',
-                        'end_to_end_count_based_estimate', 'up_to_256_scaled')
-Path(join(result_file_path, 'plots')).mkdir(parents=True, exist_ok=True)
+result_file_path = f'{get_script_path()}/storage/results/end_to_end_count_based_estimate'
 
-run_analysis = False
-run_plotting = False
+run_analysis = True
+run_plotting = True
 run_regression = True
 
 asy_scalar = 100
@@ -74,7 +71,6 @@ def calc_mean_and_error_of_count_estiamte(n_nodes):
         unique_vals, cnts = np.unique(node_membership, return_counts=True)
         invalid_cluster = len(unique_vals) != n_classes
         if len(unique_vals) != n_classes:
-            print("a;ldskfjasdlf")
             print(unique_vals, cnts)
 
     sc_rand = adjusted_rand_score(true_node_membership, node_membership)
