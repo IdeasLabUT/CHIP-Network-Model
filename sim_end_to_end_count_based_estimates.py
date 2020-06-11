@@ -2,7 +2,7 @@
 """
 "CHIP end-to-end parameter Estimation"
 
-Empirically analyzing the consistency of the CHIP parameter estimators.
+Empirically analyzing the end-to-end consistency of the CHIP parameter estimators.
 
 @author: Makan Arastuie
 """
@@ -30,63 +30,6 @@ run_analysis = False
 run_plotting = False
 run_regression = True
 
-# # sim params
-# end_time = 100
-# mu_diag = 1.85
-# mu_off_diag = 1.65
-#
-# alpha_diag = 0.75
-# alpha_off_diag = 0.65
-#
-# beta_diag = 0.85
-# beta_off_diag = 0.95
-
-
-# # sim params
-# end_time = 100
-# mu_diag = 0.07
-# mu_off_diag = 0.06
-#
-# alpha_diag = 0.06
-# alpha_off_diag = 0.05
-#
-# beta_diag = 0.07
-# beta_off_diag = 0.08
-
-
-# # # sim params
-# end_time = 100
-# mu_diag = 0.85
-# mu_off_diag = 0.83
-#
-# alpha_diag = 0.75
-# alpha_off_diag = 0.73
-#
-# beta_diag = 0.85
-# beta_off_diag = 0.87
-
-# # # sim params
-# end_time = 100
-# mu_diag = 0.85
-# mu_off_diag = 0.83
-#
-# alpha_diag = 0.74
-# alpha_off_diag = 0.73
-#
-# beta_diag = 0.86
-# beta_off_diag = 0.87
-
-# # # sim params
-# end_time = 100
-# mu_diag = 0.085
-# mu_off_diag = 0.075
-#
-# alpha_diag = 0.075
-# alpha_off_diag = 0.065
-#
-# beta_diag = 0.085
-# beta_off_diag = 0.095
-
 asy_scalar = 100
 
 # # sim params
@@ -102,12 +45,7 @@ beta_off_diag = 0.16
 
 
 class_probs = [0.25, 0.25, 0.25, 0.25]
-# num_nodes_to_test = [8, 16, 32, 64, 128, 256]
-# num_nodes_to_test = [16, 32, 64, 128, 256, 512]
-# num_nodes_to_test = np.logspace(4, 7, num=7, dtype=np.int32, base=2)  # 128 - 7
-# num_nodes_to_test = np.logspace(5, 7, num=11, dtype=np.int32, base=2)  # 128 - 11
 num_nodes_to_test = np.logspace(5, 8, num=7, dtype=np.int32, base=2)  # 256
-# num_nodes_to_test = np.logspace(4, 6, num=5, dtype=np.int32, base=2)  # test
 num_simulations = 100
 n_cores = 6
 n_classes = len(class_probs)
@@ -166,9 +104,6 @@ np.fill_diagonal(true_beta, beta_diag)
 
 true_ratio = true_alpha / true_beta
 
-# expected_num_events = (true_mu * end_time) / (1 - true_alpha / true_beta)
-# print(expected_num_events)
-# exit()
 
 params = {
     'mu': ['mu_mse', 'mu_mse_err'],

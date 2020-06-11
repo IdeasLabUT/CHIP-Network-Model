@@ -5,6 +5,8 @@
 Here we fit CHIP to the largest connected component of the Facebook wall-post dataset in a train/test setting to
 evaluate the log-likelihood of the model on the test set.
 
+Evaluating the prediction interval on the number of events within block-pairs.
+
 @author: Makan Arastuie
 """
 
@@ -29,18 +31,11 @@ get_predictions = True
 num_classes = 9
 
 tic = time.time()
+
 ((train_event_dict, train_num_nodes, train_duration),
  (test_event_dict, test_num_nodes, test_duration),
  (combined_event_dict, combined_num_events, combined_duration),
- nodes_not_in_train) = dataset_utils.load_facebook_wall_2(largest_connected_component_only=True, train_percentage=0.8,
-                                                          plot_growth=False, remove_nodes_not_in_train=True)
-
-# ((train_event_dict, train_num_nodes, train_duration),
-#  (test_event_dict, test_num_nodes, test_duration),
-#  (combined_event_dict, combined_num_events, combined_duration),
-#  nodes_not_in_train) = dataset_utils.load_facebook_wall(largest_connected_component_only=True, train_percentage=0.8)
-
-print(train_num_nodes + len(nodes_not_in_train))
+ nodes_not_in_train) = dataset_utils.load_facebook_wall(largest_connected_component_only=True, train_percentage=0.8)
 
 toc = time.time()
 print(f"Loaded the dataset in {toc - tic:.1f}s")

@@ -195,14 +195,6 @@ def calc_full_log_likelihood(count_matrix, node_membership, duration, bp_lambda,
 
 # Running Poisson baseline model on Facebook, Enron, Reality Mining
 if __name__ == "__main__":
-    # # # Entire Facebook Dataset
-    # print("Entire Facebook wall-post dataset 2")
-    # fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \
-    #     dataset_utils.load_facebook_wall_2(timestamp_max=1000, largest_connected_component_only=True,
-    #                                        train_percentage=0.8, remove_nodes_not_in_train=True)
-    # fit_and_eval_poisson_baseline(fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train,
-    #                               k_values_to_test=np.arange(101, 201), verbose=False)
-
     # Entire Facebook Dataset
     print("Facebook wall-post dataset")
     fb_train_tuple, fb_test_tuple, fb_combined_tuple, fb_nodes_not_in_train = \

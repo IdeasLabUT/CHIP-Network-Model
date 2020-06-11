@@ -33,8 +33,7 @@ tic = time.time()
 ((train_event_dict, train_num_nodes, train_duration),
  (test_event_dict, test_num_nodes, test_duration),
  (combined_event_dict, combined_num_events, combined_duration),
- nodes_not_in_train) = dataset_utils.load_facebook_wall_2(largest_connected_component_only=True, train_percentage=0.8,
-                                                          plot_growth=False, remove_nodes_not_in_train=True)
+ nodes_not_in_train) = dataset_utils.load_facebook_wall(largest_connected_component_only=True, train_percentage=0.8)
 
 print(train_num_nodes + len(nodes_not_in_train))
 
