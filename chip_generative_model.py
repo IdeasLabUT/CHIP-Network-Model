@@ -185,7 +185,8 @@ def generate_hawkes_for_single_node_block_pair(bp_mu, bp_alpha, bp_beta,
     return bp_event_dict
 
 
-def community_generative_model(num_nodes, class_prob, bp_mu, bp_alpha, bp_beta, burnin, end_time, n_cores=1, seed=None):
+def community_generative_model(num_nodes, class_prob, bp_mu, bp_alpha, bp_beta, end_time, burnin=None, n_cores=1,
+                               seed=None):
     """
     Community Hawkes Independent Pairs (CHIP) generative model
     as described in the paper titled "Consistent Community Detection in Continuous-Time Networks of Relational Events".
@@ -241,7 +242,7 @@ if __name__ == "__main__":
     node_membership, event_dicts = community_generative_model(number_of_nodes,
                                                               class_probabilities,
                                                               bp_mu, bp_alpha, bp_beta,
-                                                              burnin, end_time, seed=seed)
+                                                              end_time, burnin=burnin, seed=seed)
     toc = time.time()
 
     print(toc - tic)
@@ -250,7 +251,7 @@ if __name__ == "__main__":
     node_memberships, event_dictss = community_generative_model(number_of_nodes,
                                                                 class_probabilities,
                                                                 bp_mu, bp_alpha, bp_beta,
-                                                                burnin, end_time, n_cores=-1, seed=seed)
+                                                                end_time, burnin=burnin, n_cores=-1, seed=seed)
     toc = time.time()
     print(toc - tic)
 

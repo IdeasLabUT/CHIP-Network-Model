@@ -402,7 +402,7 @@ def simulate_community_hawkes(params=None, network_name=None, load_if_exists=Fal
     node_membership, event_dict = chip.community_generative_model(number_of_nodes,
                                                                   class_probabilities,
                                                                   bp_mu, bp_alpha, bp_beta,
-                                                                  burnin, end_time,
+                                                                  end_time, burnin=burnin,
                                                                   n_cores=default_params['n_cores'], seed=seed)
 
     node_membership = one_hot_to_class_assignment(node_membership)

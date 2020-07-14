@@ -8,7 +8,6 @@ import numpy as np
 import tick.hawkes as tick
 import matplotlib.pyplot as plt
 import generative_model_utils as utils
-from chip_generative_model import community_generative_model
 from scipy.optimize import minimize_scalar, minimize
 
 

@@ -220,7 +220,7 @@ def generate_fit_community_hawkes(event_dict, node_membership,
 
     generated_node_membership, generated_event_dict = community_generative_model(n_nodes, class_prob,
                                                                                  bp_mu, bp_alpha, bp_beta,
-                                                                                 burnin=None, end_time=duration,
+                                                                                 end_time=duration, burnin=None,
                                                                                  n_cores=n_cores, seed=seed)
 
     if plot_hist:
