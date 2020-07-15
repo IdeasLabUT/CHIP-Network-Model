@@ -222,7 +222,8 @@ def event_dict_to_event_list(event_dict):
 
     :param event_dict: Edge dictionary of events between all node pair. Output of the generative models.
 
-    :return: np.array num_events x 3 float
+    :return: np.array (num_events x 3) float.
+             A list of all events sorted by event times -> [[node from, node to, timestamp]]
     """
     num_events = num_events_in_event_dict(event_dict)
     event_list = np.zeros((num_events, 3), np.float)

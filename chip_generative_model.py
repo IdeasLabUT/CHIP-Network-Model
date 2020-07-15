@@ -234,7 +234,7 @@ if __name__ == "__main__":
     bp_mu = np.ones((num_of_classes, num_of_classes), dtype=np.float) * 0.6
     np.fill_diagonal(bp_mu, 1.8)
 
-    bp_mu = utils.scale_parameteres_by_block_pair_size(bp_mu, 128, class_probabilities)
+    bp_mu = utils.scale_parameteres_by_block_pair_size(bp_mu, 128, class_probabilities) 
     bp_alpha = utils.scale_parameteres_by_block_pair_size(bp_alpha, 128, class_probabilities)
     bp_beta = utils.scale_parameteres_by_block_pair_size(bp_beta, 128, class_probabilities)
 
