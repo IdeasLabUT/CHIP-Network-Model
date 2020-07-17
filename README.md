@@ -10,10 +10,10 @@ CHIP is a generative model for continuous-time networks of *timestamped relation
 event is a triplet (i, j, t) denoting events from node i (sender) to node j (receiver) at timestamp t.
 
 Main contributions:
-1. We demonstrate that spectral clustering provides consistent community detection in CHIP for a growing number of nodes.
-2. We propose consistent and computationally efficient estimators for the model parameters for a growing number of nodes 
+1. We demonstrate that spectral clustering provides **consistent community detection** in CHIP for a growing number of nodes.
+2. We propose **consistent and computationally efficient estimators** for the model parameters for a growing number of nodes 
 and time duration.
-3. We show that CHIP provides better fits to several real datasets and scales to much larger networks than 
+3. We show that CHIP provides better fits to several real datasets and **scales to much larger networks** than 
 existing models, including a Facebook network with over 40,000 nodes and over 800,000 events.
 
 
