@@ -1,11 +1,43 @@
 # Community Hawkes Independent Pairs (CHIP) Network Model
 
 
+This repo includes the Python implementation of the CHIP network model 
+introduced in the paper [Scalable and Consistent Estimation in Continuous-time Networks of Relational Events](https://arxiv.org/abs/1908.06940),
+as well as the code to replicate all experiments in the aforementioned paper.
 
-This repo is the Python implementation of the CHIP network model as part of the supplementary material for the paper 
-submitted to NeurIPS2020, titled "Scalable and Consistent Estimation in Continuous-time Networks of Relational Events".
+## Introduction
+CHIP is a generative model for continuous-time networks of *timestamped relational events*, where each 
+event is a triplet (i, j, t) denoting events from node i (sender) to node j (receiver) at timestamp t.
 
-All datasets used in this repo are either available in the `storage/datasets` directory or 
-will be automatically downloaded by the preprocessing script.
+Main contributions:
+1. We demonstrate that spectral clustering provides consistent community detection in CHIP for a growing number of nodes.
+2. We propose consistent and computationally efficient estimators for the model parameters for a growing number of nodes 
+and time duration.
+3. We show that CHIP provides better fits to several real datasets and scales to much larger networks than 
+existing models, including a Facebook network with over 40,000 nodes and over 800,000 events.
 
-The code was run by Python 3.6.8.
+
+## Setup
+We recommend Python 3.6 or higher. The code **does not** work with Python 2.7.
+
+To run experiments, either clone or fork this repository and refer to [requirements.txt](https://arxiv.org/abs/1908.06940) 
+for the required packages.
+
+## Datasets
+All datasets used in this repo are either available in the [storage/datasets](https://arxiv.org/abs/1908.06940)
+directory or will be automatically downloaded by the preprocessing script.
+
+
+## Examples
+There are 3 Jupyter notebook examples of the CHIP model in the [examples](https://arxiv.org/abs/1908.06940) directory:
+
+- [generating_chip_networks.ipynb](https://arxiv.org/abs/1908.06940): how to generate and fit networks using CHIP
+- [facebook_wallposts_exploratory_analysis.ipynb](https://arxiv.org/abs/1908.06940): fit CHIP to the largest connected component of the Facebook Wall Post dataset
+- [enron_exploratory_analysis.ipynb](https://arxiv.org/abs/1908.06940): fit CHIP to the Enron dataset
+
+
+## Contact
+Please contact us if you have any questions or to report an issue. You can find the contact information of all three 
+authors in the [paper](https://arxiv.org/abs/1908.06940).
+
+> This repository has been published for the sole purpose of providing more information on the aforementioned publication.
