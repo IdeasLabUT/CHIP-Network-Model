@@ -4,13 +4,14 @@
 
 Empirically analyzing the end-to-end consistency of the CHIP parameter estimators.
 
-@author: Anonymous
+@author: Makan Arastuie
 """
 
 import os
 import copy
 import pickle
 import numpy as np
+from os.path import join
 import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import generative_model_utils as utils
@@ -21,7 +22,7 @@ from spectral_clustering import spectral_cluster
 from sklearn.linear_model import LinearRegression
 from parameter_estimation import estimate_hawkes_from_counts
 
-result_file_path = f'{get_script_path()}/storage/results/end_to_end_count_based_estimate'
+result_file_path = join(get_script_path(), 'storage', 'results', 'end_to_end_count_based_estimate')
 
 run_analysis = True
 run_plotting = True
@@ -167,11 +168,11 @@ if run_analysis:
         kce['beta_mse'].append(np.mean(beta_mse_temp))
         kce['beta_mse_err'].append(2 * np.std(beta_mse_temp) / np.sqrt(beta_mse_temp.size))
 
-    with open(f'{result_file_path}/mses.pckl', 'wb') as handle:
+    with open(join(result_file_path, 'mses.pckl'), 'wb') as handle:
         pickle.dump([ece, kce], handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-with open(f'{result_file_path}/mses.pckl', 'rb') as handle:
+with open(join(result_file_path, 'mses.pckl'), 'rb') as handle:
     ece, kce = pickle.load(handle)
 
 
@@ -198,7 +199,7 @@ if run_plotting:
     plt.xticks(range(len(num_nodes_to_test)), num_nodes_to_test)
     plt.tick_params(labelsize=12)
     plt.tight_layout()
-    plt.savefig(f"{result_file_path}/plots/estimated_consistent_rand_mean.pdf")
+    plt.savefig(join(result_file_path, 'plots', 'estimated_consistent_rand_mean.pdf'))
 
     for param, err in params.items():
         # estimated communities
@@ -211,7 +212,7 @@ if run_plotting:
         plt.xticks(range(len(num_nodes_to_test)), num_nodes_to_test)
         plt.tick_params(labelsize=12)
         plt.tight_layout()
-        plt.savefig(f"{result_file_path}/plots/estimated_consistent_{param}_mse.pdf")
+        plt.savefig(join(result_file_path, 'plots', f'estimated_consistent_{param}_mse.pdf'))
 
         # known communities
         plt.ion()
@@ -222,8 +223,7 @@ if run_plotting:
         plt.xticks(range(len(num_nodes_to_test)), num_nodes_to_test)
         plt.tick_params(labelsize=12)
         plt.tight_layout()
-        plt.savefig(f"{result_file_path}/plots/known_consistent_{param}_mse.pdf")
-
+        plt.savefig(join(result_file_path, 'plots', f'known_consistent_{param}_mse.pdf'))
 
 if run_regression:
     print("\nRegression: \n")

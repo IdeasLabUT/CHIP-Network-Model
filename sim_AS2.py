@@ -10,11 +10,12 @@
 Expectation: We should see accuracy increase in both these cases. When mu_diag/mu_off_diag ratio is low, the algorithms
 will do poorly, but as the ratio increases there is more signal and the algorithm will do well and go all the way to 1.
 
-@author: Anonymous
+@author: Makan Arastuie
 """
 
 import pickle
 import numpy as np
+from os.path import join
 import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import generative_model_utils as utils
@@ -23,7 +24,7 @@ from sklearn.metrics import adjusted_rand_score
 from spectral_clustering import spectral_cluster
 
 
-result_file_path = f'{get_script_path()}/storage/results/AS2'
+result_file_path = join(get_script_path(), 'storage', 'results', 'AS2')
 
 also_use_unweighted_adjacency = True
 
@@ -101,7 +102,7 @@ if not plot_only:
             mean_proportion_ones_in_adj_err.append(2 * np.std(results[:, 2]) / np.sqrt(len(results[:, 2])))
 
             # Save results
-            with open(f'{result_file_path}/all_sims-{sim_type}-w-adj.pckl', 'wb') as handle:
+            with open(join(result_file_path, f'all_sims-{sim_type}-w-adj.pckl'), 'wb') as handle:
                 pickle.dump([agg_adj_mean_sc_rand_scores, agg_adj_mean_sc_rand_scores_err,
                              adj_mean_sc_rand_scores, adj_mean_sc_rand_scores_err,
                              mean_proportion_ones_in_adj,
@@ -111,18 +112,18 @@ if not plot_only:
             agg_adj_mean_sc_rand_scores_err.append(2 * np.std(results) / np.sqrt(len(results)))
 
             # Save results
-            with open(f'{result_file_path}/all_sims-{sim_type}.pckl', 'wb') as handle:
+            with open(join(result_file_path, f'all_sims-{sim_type}.pckl'), 'wb') as handle:
                 pickle.dump([agg_adj_mean_sc_rand_scores,
                              agg_adj_mean_sc_rand_scores_err], handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 if also_use_unweighted_adjacency:
-    with open(f'{result_file_path}/all_sims-{sim_type}-w-adj.pckl', 'rb') as handle:
+    with open(join(result_file_path, f'all_sims-{sim_type}-w-adj.pckl'), 'rb') as handle:
         [agg_adj_mean_sc_rand_scores, agg_adj_mean_sc_rand_scores_err,
          adj_mean_sc_rand_scores, adj_mean_sc_rand_scores_err,
          mean_proportion_ones_in_adj, mean_proportion_ones_in_adj_err] = pickle.load(handle)
 else:
-    with open(f'{result_file_path}/all_sims-{sim_type}.pckl', 'rb') as handle:
+    with open(join(result_file_path, f'all_sims-{sim_type}.pckl'), 'rb') as handle:
         [agg_adj_mean_sc_rand_scores, agg_adj_mean_sc_rand_scores_err] = pickle.load(handle)
 
 
@@ -157,7 +158,7 @@ if not also_use_unweighted_adjacency:
 
     ax.autoscale_view()
 
-    plt.savefig(result_file_path + "/plots/" + plot_name + ".pdf")
+    plt.savefig(join(result_file_path, 'plots', f'{plot_name}.pdf'))
     plt.show()
 else:
     w, h = plt.figaspect(.3)
@@ -190,5 +191,5 @@ else:
 
     ax.autoscale_view()
 
-    plt.savefig(f"{result_file_path}/plots/agg-vs-adj-density.pdf")
+    plt.savefig(join(result_file_path, 'plots', 'agg-vs-adj-density.pdf'))
     plt.show()

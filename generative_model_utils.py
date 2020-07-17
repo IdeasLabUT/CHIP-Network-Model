@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-@author: Anonymous
+@author: Makan Arastuie
 """
 
 import os
 import pickle
 import numpy as np
 import dataset_utils
+from os.path import join
 import matplotlib.pyplot as plt
 import chip_generative_model as chip
 from tick.hawkes import SimuHawkesExpKernels
@@ -347,7 +348,7 @@ def simulate_community_hawkes(params=None, network_name=None, load_if_exists=Fal
 
     :return: event_dict, node_membership
     """
-    generated_network_path = f'{dataset_utils.get_script_path()}/storage/results/generated_networks/'
+    generated_network_path = join(dataset_utils.get_script_path(), 'storage', 'results', 'generated_networks')
 
     default_params = {'seed': None,
                       'number_of_nodes': 128,
@@ -365,8 +366,8 @@ def simulate_community_hawkes(params=None, network_name=None, load_if_exists=Fal
 
     # Load the network if existed
     if load_if_exists and network_name is not None:
-        if os.path.isfile(generated_network_path + network_name + ".pckl"):
-            with open(generated_network_path + network_name + ".pckl", 'rb') as handle:
+        if os.path.isfile(join(generated_network_path, f'{network_name}.pckl')):
+            with open(join(generated_network_path, f'{network_name}.pckl'), 'rb') as handle:
                 [event_dict, node_membership, params] = pickle.load(handle)
 
                 if verbose:
@@ -409,7 +410,7 @@ def simulate_community_hawkes(params=None, network_name=None, load_if_exists=Fal
     node_membership = one_hot_to_class_assignment(node_membership)
 
     if network_name is not None:
-        with open(generated_network_path + network_name + ".pckl", 'wb') as handle:
+        with open(join(generated_network_path, f'{network_name}.pckl'), 'wb') as handle:
             pickle.dump([event_dict, node_membership, default_params], handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     return event_dict, node_membership

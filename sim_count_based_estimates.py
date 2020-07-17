@@ -4,11 +4,12 @@
 
 Empirically analyzing the consistency of the CHIP parameter estimators.
 
-@author: Anonymous
+@author: Makan Arastuie
 """
 
 import pickle
 import numpy as np
+from os.path import join
 import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import generative_model_utils as utils
@@ -17,7 +18,7 @@ from dataset_utils import get_script_path
 from parameter_estimation import estimate_hawkes_from_counts
 
 
-result_file_path = f'{get_script_path()}/storage/results/count_based_estimate'
+result_file_path = join(get_script_path(), 'storage', 'results', 'count_based_estimate')
 
 estimate_alpha_beta = True
 plot_only = False
@@ -113,19 +114,19 @@ if not plot_only:
             beta_mse_err.append(2 * np.std(beta_mse_temp) / np.sqrt(len(beta_mse_temp)))
 
     if estimate_alpha_beta:
-        with open(f'{result_file_path}/mses.pckl', 'wb') as handle:
+        with open(join(result_file_path, 'mses.pckl'), 'wb') as handle:
             pickle.dump([mu_mse, mu_mse_err, ratio_mse, ratio_mse_err,
                          alpha_mse, alpha_mse_err, beta_mse, beta_mse_err], handle, protocol=pickle.HIGHEST_PROTOCOL)
     else:
-        with open(f'{result_file_path}/mses_no_alpha.pckl', 'wb') as handle:
+        with open(join(result_file_path, 'mses_no_alpha.pckl'), 'wb') as handle:
             pickle.dump([mu_mse, mu_mse_err, ratio_mse, ratio_mse_err], handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 if estimate_alpha_beta:
-    with open(f'{result_file_path}/mses.pckl', 'rb') as handle:
+    with open(join(result_file_path, 'mses.pckl'), 'rb') as handle:
         [mu_mse, mu_mse_err, ratio_mse, ratio_mse_err,
          alpha_mse, alpha_mse_err, beta_mse, beta_mse_err] = pickle.load(handle)
 else:
-    with open(f'{result_file_path}/mses_no_alpha.pckl', 'rb') as handle:
+    with open(join(result_file_path, 'mses_no_alpha.pckl'), 'rb') as handle:
         mu_mse, mu_mse_err, ratio_mse, ratio_mse_err = pickle.load(handle)
 
 
@@ -154,7 +155,7 @@ plt.tick_params(labelsize=12)
 plt.tight_layout()
 #plt.ticklabel_format(axis='y', style='sci', scilimits=(0, 0), fontsize=16)
 plt.autoscale()
-plt.savefig(f"{result_file_path}/plots/consistent_mu_mse.pdf")
+plt.savefig(join(result_file_path, 'plots', 'consistent_mu_mse.pdf'))
 plt.show()
 
 plt.clf()
@@ -169,7 +170,7 @@ plt.tick_params(labelsize=12)
 plt.tight_layout()
 #plt.ticklabel_format(axis='y', style='sci', scilimits=(0, 0), fontsize=16)
 plt.autoscale()
-plt.savefig(f"{result_file_path}/plots/consistent_m_mse.pdf")
+plt.savefig(join(result_file_path, 'plots', 'consistent_m_mse.pdf'))
 plt.show()
 
 plt.clf()
@@ -186,7 +187,7 @@ if estimate_alpha_beta:
     plt.tight_layout()
     #plt.ticklabel_format(axis='y', style='sci', scilimits=(0, 0), fontsize=16)
 
-    plt.savefig(f"{result_file_path}/plots/consistent_alpha_mse.pdf")
+    plt.savefig(join(result_file_path, 'plots', 'consistent_alpha_mse.pdf'))
     plt.show()
 
     plt.clf()
@@ -202,5 +203,5 @@ if estimate_alpha_beta:
     plt.tight_layout()
     #plt.ticklabel_format(axis='y', style='sci', scilimits=(0, 0), fontsize=16)
 
-    plt.savefig(f"{result_file_path}/plots/consistent_beta_mse.pdf")
+    plt.savefig(join(result_file_path, 'plots', 'consistent_beta_mse.pdf'))
     plt.show()

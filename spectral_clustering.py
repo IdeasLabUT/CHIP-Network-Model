@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-@author: Anonymous
+@author: Makan Arastuie
 """
 
 import numpy as np
+from os.path import join
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from scipy.sparse.linalg import svds
@@ -41,7 +42,7 @@ def spectral_cluster(adj, num_classes=2, n_kmeans_init=10, normalize_z=True, ver
         plt.grid(True)
         ax.tick_params(labelsize=20)
         plt.tight_layout()
-        plt.savefig(f'{plot_save_path}/singular_values.pdf')
+        plt.savefig(join(plot_save_path, 'singular_values.pdf'))
         plt.show()
 
     # Sort in decreasing order of magnitude

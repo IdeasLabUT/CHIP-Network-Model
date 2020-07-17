@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@author: Anonymous
+@author: Makan Arastuie
 """
 
 import os
@@ -8,6 +8,7 @@ import sys
 import urllib
 import numpy as np
 import networkx as nx
+from os.path import join
 from datetime import datetime
 import matplotlib.pyplot as plt
 import generative_model_utils as utils
@@ -22,18 +23,18 @@ def get_script_path():
 
 def load_reality_mining_test_train(remove_nodes_not_in_train=False):
     """
-        Loads Reality Mining dataset.
+    Loads Reality Mining dataset.
 
-        :param remove_nodes_not_in_train: if True, removes the nodes that do not appear in the training set.
+    :param remove_nodes_not_in_train: if True, removes the nodes that do not appear in the training set.
 
-        :return: Three tuples one for each train, test and combined datasets. Each Tuple contains:
-                 ((dict) with (caller_id, receiver_id): [unix_timestamps] (event dict structure),
-                 (int) number of nodes,
-                 (float) duration)
-                 (list) nodes_not_in_train
-        """
-    train_file_path = f'{get_script_path()}/storage/datasets/reality-mining/train_reality.csv'
-    test_file_path = f'{get_script_path()}/storage/datasets/reality-mining/test_reality.csv'
+    :return: Three tuples one for each train, test and combined datasets. Each Tuple contains:
+             ((dict) with (caller_id, receiver_id): [unix_timestamps] (event dict structure),
+             (int) number of nodes,
+             (float) duration)
+             (list) nodes_not_in_train
+    """
+    train_file_path = join(get_script_path(), 'storage', 'datasets', 'reality-mining', 'train_reality.csv')
+    test_file_path = join(get_script_path(), 'storage', 'datasets', 'reality-mining', 'test_reality.csv')
 
     # Timestamps are adjusted to start from 0 and go up to 1000.
     combined_duration = 1000.0
@@ -53,8 +54,8 @@ def load_enron_train_test(remove_nodes_not_in_train=False):
              (float) duration)
              (list) nodes_not_in_train
     """
-    train_file_path = f'{get_script_path()}/storage/datasets/enron/train_enron.csv'
-    test_file_path = f'{get_script_path()}/storage/datasets/enron/test_enron.csv'
+    train_file_path = join(get_script_path(), 'storage', 'datasets', 'enron', 'train_enron.csv')
+    test_file_path = join(get_script_path(), 'storage', 'datasets', 'enron', 'test_enron.csv')
 
     # Timestamps are adjusted to start from 0 and go up to 1000.
     combined_duration = 1000.0
@@ -74,8 +75,8 @@ def load_fb_train_test(remove_nodes_not_in_train=False):
              (float) duration)
              (list) nodes_not_in_train
     """
-    train_file_path = f'{get_script_path()}/storage/datasets/facebook-wallposts/train_FB_event_mat.csv'
-    test_file_path = f'{get_script_path()}/storage/datasets/facebook-wallposts/test_FB_event_mat.csv'
+    train_file_path = join(get_script_path(), 'storage', 'datasets', 'facebook-wallposts', 'train_FB_event_mat.csv')
+    test_file_path = join(get_script_path(), 'storage', 'datasets', 'facebook-wallposts', 'test_FB_event_mat.csv')
 
     # Timestamps are adjusted to start from 0 and go up to 8759.9.
     combined_duration = 8759.9
@@ -321,7 +322,7 @@ def load_facebook_wall(timestamp_max=1000, largest_connected_component_only=Fals
     """
     file_path = download_file_path
     if download_file_path is None:
-        file_path = f"{get_script_path()}/storage/datasets/facebook-wallposts/facebook-wallpost.txt.gz"
+        file_path = join(get_script_path(), 'storage', 'datasets', 'facebook-wallposts', 'facebook-wallpost.txt.gz')
 
     # Downloading the dataset it is not in the storage directory
     if not os.path.exists(file_path):

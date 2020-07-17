@@ -2,11 +2,12 @@
 """
 "Spectral Clustering on Weighted vs. Unweighted Adjacency Matrix"
 
-@author: Anonymous
+@author: Makan Arastuie
 """
 
 import pickle
 import numpy as np
+from os.path import join
 import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import generative_model_utils as utils
@@ -15,7 +16,7 @@ from sklearn.metrics import adjusted_rand_score
 from spectral_clustering import spectral_cluster
 
 
-result_file_path = f'{get_script_path()}/storage/results/growing_n_increase_sc_rand'
+result_file_path = join(get_script_path(), 'storage', 'results', 'growing_n_increase_sc_rand')
 
 agg_adj_should_fail = False
 plot_only = False
@@ -103,13 +104,13 @@ if not plot_only:
         mean_agg_adj_sc_rand_scores.append(np.mean(results[:, 1]))
         mean_agg_adj_sc_rand_scores_err.append(2 * np.std(results[:, 1]) / np.sqrt(len(results[:, 1])))
 
-    with open(f'{result_file_path}/{file_name}', 'wb') as handle:
+    with open(join(result_file_path, file_name), 'wb') as handle:
         pickle.dump([mean_adj_sc_rand_scores,
                      mean_adj_sc_rand_scores_err,
                      mean_agg_adj_sc_rand_scores,
                      mean_agg_adj_sc_rand_scores_err], handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-with open(f'{result_file_path}/{file_name}', 'rb') as handle:
+with open(join(result_file_path, file_name), 'rb') as handle:
     [mean_adj_sc_rand_scores,
      mean_adj_sc_rand_scores_err,
      mean_agg_adj_sc_rand_scores,
@@ -149,5 +150,5 @@ plt.tight_layout()
 ax.autoscale_view()
 
 plot_name = "agg_adj_fail_100_sim" if agg_adj_should_fail else "adj_fail_100_sim"
-plt.savefig(f"{result_file_path}/plots/{plot_name}.pdf", bbox_inches='tight')
+plt.savefig(join(result_file_path, 'plots', f'{plot_name}.pdf'), bbox_inches='tight')
 plt.show()

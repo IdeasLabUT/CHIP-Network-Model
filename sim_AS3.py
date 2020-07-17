@@ -10,11 +10,12 @@ lower mis-clustering rate.
 (b) fix $T$, increasing $n$ and decreasing $k$.
 (c) fix $k$, increasing $n$ and increasing $T$.
 
-@author: Anonymous
+@author: Makan Arastuie
 """
 
 import pickle
 import numpy as np
+from os.path import join
 import matplotlib.pyplot as plt
 from plotting_utils import heatmap
 from joblib import Parallel, delayed
@@ -45,7 +46,7 @@ def test_spectral_clustering_on_generative_model(n, t, k):
     return agg_adj_sc_rand
 
 
-result_file_path = f'{get_script_path()}/storage/results/AS3'
+result_file_path = join(get_script_path(), 'storage', 'results', 'AS3')
 
 plot_only = False
 
@@ -121,10 +122,10 @@ for fixed_var in ['n', 't', 'k']:
         mean_sc_rand_scores_err = np.reshape(mean_sc_rand_scores_err, (num_test_values, num_test_values))
 
         # Save results
-        with open(f'{result_file_path}/all_sims-fixed-{fixed_var}.pckl', 'wb') as handle:
+        with open(join(result_file_path, f'all_sims-fixed-{fixed_var}.pckl'), 'wb') as handle:
             pickle.dump([mean_sc_rand_scores, mean_sc_rand_scores_err], handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    with open(f'{result_file_path}/all_sims-fixed-{fixed_var}.pckl', 'rb') as handle:
+    with open(join(result_file_path, f'all_sims-fixed-{fixed_var}.pckl'), 'rb') as handle:
         [mean_sc_rand_scores, mean_sc_rand_scores_err] = pickle.load(handle)
 
     # Reverse results in order of k for fixed n and T
@@ -153,6 +154,6 @@ for fixed_var in ['n', 't', 'k']:
     plt.xlabel(xlab, fontsize=16)
     # ax.set_title(f"CHIP SC AS3 Fixed {fixed_var.upper()}: {fixed_value}")
     fig.tight_layout()
-    plt.savefig(f"{result_file_path}/plots/as3-fixed-{fixed_var}.pdf", bbox_inches='tight')
+    plt.savefig(join(result_file_path, 'plots', f'as3-fixed-{fixed_var}.pdf'), bbox_inches='tight')
 #    plt.show()
 
