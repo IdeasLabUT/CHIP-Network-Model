@@ -20,20 +20,20 @@ existing models, including a Facebook network with over 40,000 nodes and over 80
 ## Setup
 We recommend Python 3.6 or higher. The code **does not** work with Python 2.7.
 
-To run experiments, either clone or fork this repository and refer to [requirements.txt](https://arxiv.org/abs/1908.06940) 
+To run experiments, either clone or fork this repository and refer to [requirements.txt](https://github.com/IdeasLabUT/CHIP-Network-Model/blob/master/requirements.txt) 
 for the required packages.
 
 ## Datasets
-All datasets used in this repo are either available in the [storage/datasets](https://arxiv.org/abs/1908.06940)
+All datasets used in this repo are either available in the [storage/datasets](https://github.com/IdeasLabUT/CHIP-Network-Model/tree/master/storage/datasets)
 directory or will be automatically downloaded by the preprocessing script.
 
 
 ## Examples
-There are 3 Jupyter notebook examples of the CHIP model in the [examples](https://arxiv.org/abs/1908.06940) directory:
+There are 3 Jupyter notebook examples of the CHIP model in the [examples](https://github.com/IdeasLabUT/CHIP-Network-Model/tree/master/examples) directory:
 
-- [generating_chip_networks.ipynb](https://arxiv.org/abs/1908.06940): how to generate and fit networks using CHIP
-- [facebook_wallposts_exploratory_analysis.ipynb](https://arxiv.org/abs/1908.06940): fit CHIP to the largest connected component of the Facebook Wall Post dataset
-- [enron_exploratory_analysis.ipynb](https://arxiv.org/abs/1908.06940): fit CHIP to the Enron dataset
+- [generating_chip_networks.ipynb](https://github.com/IdeasLabUT/CHIP-Network-Model/blob/master/examples/generating_chip_networks.ipynb): how to generate and fit networks using CHIP
+- [facebook_wallposts_exploratory_analysis.ipynb](https://github.com/IdeasLabUT/CHIP-Network-Model/blob/master/examples/facebook_wallposts_exploratory_analysis.ipynb): fit CHIP to the largest connected component of the Facebook Wall Post dataset
+- [enron_exploratory_analysis.ipynb](https://github.com/IdeasLabUT/CHIP-Network-Model/blob/master/examples/enron_exploratory_analysis.ipynb): fit CHIP to the Enron dataset
 
 
 ## Contact
