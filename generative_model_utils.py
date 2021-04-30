@@ -10,7 +10,6 @@ import dataset_utils
 from os.path import join
 import matplotlib.pyplot as plt
 import chip_generative_model as chip
-from tick.hawkes import SimuHawkesExpKernels
 
 
 def assign_class_membership(num_nodes, class_prob, one_hot=True):
@@ -62,28 +61,61 @@ def node_membership_to_community_membership(node_membership, n_classes, is_one_h
 
 def simulate_univariate_hawkes(mu, alpha, beta, run_time, seed=None):
     """
-    Simulates a univariate Hawkes based on the parameters.
+    Simulates a univariate Hawkes process with an exponential kernel,
+    using Ogata 1981 thinning algorithm.
 
-    :param mu, alpha, beta: parameters of the Hawkes process
-    :param run_time: End time of the simulation
-    :param seed: (optional) Seed for the random process.
-    :return: Hawkes event times
+    Based on Algorithm 3 of https://www.math.fsu.edu/~ychen/research/Thinning%20algorithm.pdf
+
+    :param mu: (float) baseline intensity
+    :param alpha: (float) jump size
+    :param beta: (float) decay rate
+    :param run_time: (float) length of the simulation. All event times will be within [0, T]
+    :param seed: (int) Seed for the random number generator
+
+    :return: (np array float32) list of event times
     """
-    # this is due to tick's implementation of Hawkes process
-    alpha = alpha / beta
+    if alpha / beta >= 1:
+        raise ValueError("The ratio of alpha to beta must be less than one for a stationary Hawkes process.")
 
-    # Hawkes simulation
-    n_nodes = 1  # dimension of the Hawkes process
-    adjacency = alpha * np.ones((n_nodes, n_nodes))
-    decays = beta * np.ones((n_nodes, n_nodes))
-    baseline = mu * np.ones(n_nodes)
-    hawkes_sim = SimuHawkesExpKernels(adjacency=adjacency, decays=decays, baseline=baseline, verbose=False, seed=seed)
+    if seed is not None:
+        np.random.seed(seed)
 
-    hawkes_sim.end_time = run_time
-    hawkes_sim.simulate()
-    event_times = hawkes_sim.timestamps[0]
+    # Creating a numpy vector with 3 standard deviations from the expected number of events (99.73% of cases)
+    expected_num_events = (mu * run_time) / (1 - (alpha / beta))
+    sd = int(np.sqrt((mu * run_time) / ((1 - (alpha / beta)) ** 3)))
+    num_events_upper_limit = int(expected_num_events + 3 * sd)
 
-    return event_times
+    timestamps = np.zeros(num_events_upper_limit, dtype=np.float32)
+    s, n = 0, 0
+
+    while s < run_time:
+        lambda_bar = hawkes_intensity(mu, alpha, beta, s, timestamps[:n])
+        u = np.random.uniform(low=0.0, high=1.0, size=1)[0]
+        w = -np.log(u) / lambda_bar  # drawing from ~exp(lambda_bar)
+        s += w
+
+        d = np.random.uniform(low=0.0, high=1.0, size=1)[0]
+        if d * lambda_bar <= hawkes_intensity(mu, alpha, beta, s, timestamps[:n]):
+            if n >= len(timestamps):  # increase vector size by a standard deviation if length is reached
+                temp = np.zeros(len(timestamps) + sd, dtype=np.float32)
+                temp[:n] = timestamps
+                timestamps = temp
+
+            timestamps[n] = s
+            n += 1
+
+    # resetting the seed
+    if seed is not None:
+        np.random.seed(None)
+
+    if timestamps[n-1] <= run_time:
+        return timestamps[:n]
+    return timestamps[:n - 1]
+
+
+def hawkes_intensity(mu, alpha, beta, s, timestamps):
+    """ Returns Hawkes intensity """
+    return mu + alpha * np.sum(np.exp(-beta * (s - timestamps)))
 
 
 def generate_random_hawkes_params(num_classes, mu_range, alpha_range, beta_range, seed=None):
@@ -172,15 +204,13 @@ def event_dict_to_aggregated_adjacency(num_nodes, event_dicts, dtype=np.float):
     return adjacency_matrix
 
 
-def event_dict_to_block_pair_events(event_dicts, class_assignment, n_classes, is_for_tick=False):
+def event_dict_to_block_pair_events(event_dicts, class_assignment, n_classes):
     """
     Converts event_dicts to list of event lists for each block pair.
 
     :param event_dicts: Edge dictionary of events between all node pair. Output of the generative models.
     :param class_assignment: membership of every node to one of K classes. num_nodes x 1 (class of node i)
     :param n_classes: (int) total number of classes
-    :param is_for_tick: (bool) if True, every list of event is wrapped in a list of length 1 to accommodate tick kernel
-                        estimation.
     :return: (list) n_classes x n_classes where entry ij is a list of event lists between nodes in block i to nodes in
                     block j.
     """
@@ -192,13 +222,7 @@ def event_dict_to_block_pair_events(event_dicts, class_assignment, n_classes, is
             block_pair_events[i][j] = []
 
     for u, v in event_dicts:
-        if is_for_tick and len(event_dicts[(u, v)]) == 0:
-            continue
-
-        if is_for_tick:
-            block_pair_events[class_assignment[u]][class_assignment[v]].append([event_dicts[(u, v)]])
-        else:
-            block_pair_events[class_assignment[u]][class_assignment[v]].append(np.array(event_dicts[(u, v)]))
+        block_pair_events[class_assignment[u]][class_assignment[v]].append(np.array(event_dicts[(u, v)]))
 
     return block_pair_events
 
