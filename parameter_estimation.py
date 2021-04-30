@@ -5,7 +5,6 @@
 
 import warnings
 import numpy as np
-import tick.hawkes as tick
 import matplotlib.pyplot as plt
 import generative_model_utils as utils
 from chip_generative_model import community_generative_model
@@ -93,54 +92,6 @@ def estimate_hawkes_from_counts(agg_adj, class_vec, duration, default_mu=None):
         alpha_beta_ratio[alpha_beta_ratio < 0] = 0
 
     return mu, alpha_beta_ratio
-
-
-def estimate_hawkes_kernel(event_dicts, class_assignment, n_classes, bp_beta, learner_param_dict=None):
-    """
-    Estimates mu and alpha for a network given the event_dict and a fixed and given beta/decay.
-
-    :param event_dicts: Edge dictionary of events between all node pair. Output of the generative models.
-    :param class_assignment: membership of every node to one of K classes. num_nodes x 1 (class of node i)
-    :param n_classes: (int) number of classes
-    :param bp_beta: K x K matrix where entry ij denotes the beta/decay of Hawkes process for block pair (b_i, b_j)
-    :param learner_param_dict: dict of parameters for tick's hawkes kernel. If `None` default values will be used.
-                                Check tick's `HawkesExpKern` for parameters. Check `default_param` for defaults.
-
-    :return: `mu_estimate` and `alpha_estimates` both K x K matrices where entry ij denotes the estimated mu and alpha
-             of the Hawkes process for block pair (b_i, b_j).
-    """
-    # Setting up parameters for estimation
-    default_params = {'penalty': 'l2',
-                      'C': 0.1,
-                      'gofit': 'least-squares',
-                      'verbose': True,
-                      'tol': 1e-11,
-                      'solver': 'gd',
-                      'step': 1e-3,
-                      'max_iter': 1000}
-
-    if learner_param_dict is not None:
-        default_params.update(learner_param_dict)
-
-    block_pair_events = utils.event_dict_to_block_pair_events(event_dicts, class_assignment, n_classes,
-                                                              is_for_tick=True)
-
-    alpha_estimates = np.zeros((n_classes, n_classes))
-    mu_estimates = np.zeros((n_classes, n_classes))
-
-    for b_i in range(n_classes):
-        for b_j in range(n_classes):
-            learner = tick.HawkesExpKern(bp_beta[b_i, b_j], penalty=default_params['penalty'], C=default_params['C'],
-                                         gofit=default_params['gofit'], verbose=default_params['verbose'],
-                                         tol=default_params['tol'], solver=default_params['solver'],
-                                         step=default_params['step'], max_iter=default_params['max_iter'])
-
-            learner.fit(block_pair_events[b_i][b_j], start=0.1)
-
-            alpha_estimates[b_i, b_j] = learner.adjacency[0][0] / bp_beta[b_i, b_j]
-            mu_estimates[b_i, b_j] = learner.baseline[0]
-
-    return mu_estimates, alpha_estimates
 
 
 def compute_wijs(np_events, beta):
@@ -491,7 +442,6 @@ if __name__ == "__main__":
     node_membership = utils.one_hot_to_class_assignment(node_membership)
 
     print("Simulation done.")
-    # mu_estimates, alpha_estimates = estimate_hawkes_kernel(event_dicts, node_membership, num_of_classes, bp_beta)
 
     block_pair_events = utils.event_dict_to_block_pair_events(event_dicts, node_membership, num_of_classes)
 
@@ -500,7 +450,7 @@ if __name__ == "__main__":
             plot_likelihood_scaling_alpha_beta(np.logspace(np.log10(0.01), np.log10(10), 100), block_pair_events[b_i][b_j],
                                                bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
 
-            # Plotting log-likelihood derivatives
+            # # Plotting log-likelihood derivatives
             # plot_likelihood_deriv("alpha", np.arange(bp_alpha[b_i, b_j] - 5, bp_alpha[b_i, b_j] + 15, 0.2),
             #                       block_pair_events[b_i][b_j],
             #                       bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
@@ -512,9 +462,9 @@ if __name__ == "__main__":
             # plot_likelihood_deriv("beta", np.arange(bp_beta[b_i, b_j] - 5, bp_beta[b_i, b_j] + 15, 0.2),
             #                       block_pair_events[b_i][b_j],
             #                       bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
-
-
-            # plotting log-likelihood
+            #
+            #
+            # # plotting log-likelihood
             # plot_likelihood("alpha", np.arange(bp_alpha[b_i, b_j] - 5, bp_alpha[b_i, b_j] + 15, 0.2),
             #                  block_pair_events[b_i][b_j],
             #                  bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
@@ -526,10 +476,4 @@ if __name__ == "__main__":
             # plot_likelihood("beta", np.arange(bp_beta[b_i, b_j] - 5, bp_beta[b_i, b_j] + 15, 0.2),
             #                  block_pair_events[b_i][b_j],
             #                  bp_mu[b_i, b_j], bp_alpha[b_i, b_j], bp_beta[b_i, b_j], end_time)
-
-
-            # Tick estimation
-            # print("Block pair", b_i, b_j)
-            # print("Alpha: True:", bp_alpha[b_i, b_j], "Estimate:", alpha_estimates[b_i, b_j])
-            # print("Mu: True:", bp_mu[b_i, b_j], "Estimate:", mu_estimates[b_i, b_j])
 
