@@ -81,8 +81,8 @@ def simulate_univariate_hawkes(mu, alpha, beta, run_time, seed=None):
         np.random.seed(seed)
 
     # Creating a numpy vector with 3 standard deviations from the expected number of events (99.73% of cases)
-    expected_num_events = (mu * run_time) / (1 - (alpha / beta))
-    sd = int(np.sqrt((mu * run_time) / ((1 - (alpha / beta)) ** 3)))
+    expected_num_events = max((mu * run_time) / (1 - (alpha / beta)), 5)
+    sd = max(int(np.sqrt((mu * run_time) / ((1 - (alpha / beta)) ** 3))), 5)
     num_events_upper_limit = int(expected_num_events + 3 * sd)
 
     timestamps = np.zeros(num_events_upper_limit, dtype=np.float32)
