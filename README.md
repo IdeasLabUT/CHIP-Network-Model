@@ -1,9 +1,8 @@
 # Community Hawkes Independent Pairs (CHIP) Network Model
 
-
-This repo includes the Python implementation of the CHIP network model 
-introduced in the paper [Scalable and Consistent Estimation in Continuous-time Networks of Relational Events](https://arxiv.org/abs/1908.06940),
-as well as the code to replicate all experiments in the aforementioned paper.
+This repo includes the Python implementation of the CHIP network model as well as the code to replicate all experiments 
+in the paper [CHIP: A Hawkes Process Model for Continuous-time Networks with Scalable and Consistent Estimation](https://arxiv.org/abs/1908.06940), 
+presented at **Neural Information Processing Systems (NeurIPS) 2020**.
 
 ## Introduction
 CHIP is a generative model for continuous-time networks of *timestamped relational events*, where each 
@@ -18,7 +17,7 @@ existing models, including a Facebook network with over 40,000 nodes and over 80
 
 
 ## Setup
-We recommend Python 3.6 or higher. The code **does not** work with Python 2.7.
+This repo has been developed and tested using Python 3.6.9. The code **does not** work with Python 2.7.
 
 To run experiments, either clone or fork this repository and refer to [requirements.txt](https://github.com/IdeasLabUT/CHIP-Network-Model/blob/master/requirements.txt) 
 for the required packages.
