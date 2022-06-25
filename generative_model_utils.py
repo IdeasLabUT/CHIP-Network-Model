@@ -10,7 +10,7 @@ import dataset_utils
 from os.path import join
 import matplotlib.pyplot as plt
 import chip_generative_model as chip
-
+from scipy.sparse import coo_matrix
 
 def assign_class_membership(num_nodes, class_prob, one_hot=True):
     """
@@ -168,39 +168,47 @@ def generate_theta_params_for_degree_corrected_community(num_nodes, dist, norm_s
 
 def event_dict_to_adjacency(num_nodes, event_dicts, dtype=np.float):
     """
-    Converts event dict to unweighted adjacency matrix
+    Converts event dict to sparse unweighted adjacency matrix
 
     :param num_nodes: (int) Total number of nodes
     :param event_dicts: Edge dictionary of events between all node pair. Output of the generative models.
     :param dtype: data type of the adjacency matrix. Float is needed for the spectral clustering algorithm.
 
-    :return: np array (num_nodes x num_nodes) Adjacency matrix with 1 between nodes where there is at least one event.
+    :return: np array (num_nodes x num_nodes) Sparse Adjacency matrix with 1 between nodes where there is at least one event.
     """
-    adjacency_matrix = np.zeros((num_nodes, num_nodes), dtype=dtype)
-
-    for (u, v), event_times in event_dicts.items():
+    l = len(event_dicts)
+    data = np.zeros(l, dtype=int)
+    row = np.zeros(l, dtype=int)
+    col = np.zeros(l, dtype=int)
+    for i, ((u, v), event_times) in enumerate(event_dicts.items()):
         if len(event_times) != 0:
-            adjacency_matrix[u, v] = 1
-
+            data[i] = 1
+            row[i] = u  # sender node id
+            col[i] = v  # receiver node id
+    adjacency_matrix = coo_matrix((data, (row, col)), shape=(num_nodes, num_nodes), dtype=dtype)
     return adjacency_matrix
 
 
 def event_dict_to_aggregated_adjacency(num_nodes, event_dicts, dtype=np.float):
     """
-    Converts event dict to weighted/aggregated adjacency matrix
+    Converts event dict to sparce weighted/aggregated adjacency matrix
 
     :param num_nodes: (int) Total number of nodes
     :param event_dicts: Edge dictionary of events between all node pair. Output of the generative models.
     :param dtype: data type of the adjacency matrix. Float is needed for the spectral clustering algorithm.
 
-    :return: np array (num_nodes x num_nodes) Adjacency matrix where element ij denotes the number of events between
+    :return: np array (num_nodes x num_nodes) Sparse Adjacency matrix where element ij denotes the number of events between
                                               nodes i an j.
     """
-    adjacency_matrix = np.zeros((num_nodes, num_nodes), dtype=dtype)
-
-    for (u, v), event_times in event_dicts.items():
-        adjacency_matrix[u, v] = len(event_times)
-
+    l = len(event_dicts)
+    data = np.zeros(l, dtype=int)
+    row = np.zeros(l, dtype=int)
+    col = np.zeros(l, dtype=int)
+    for i, ((u, v), events) in enumerate(event_dicts.items()):
+        data[i] = len(events)
+        row[i] = u  # sender node id
+        col[i] = v  # receiver node id
+    adjacency_matrix = coo_matrix((data, (row, col)), shape=(num_nodes, num_nodes), dtype=dtype)
     return adjacency_matrix
 
 

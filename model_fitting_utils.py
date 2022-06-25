@@ -82,7 +82,7 @@ def estimate_bp_hawkes_params(event_dict, node_membership, duration, num_classes
     :param node_membership: (list) membership of every node to one of K classes.
     :param duration: (int) duration of the network
     :param num_classes: (int) number of blocks / classes
-    :param agg_adj: (optional) np array (num_nodes x num_nodes) Adjacency matrix where element ij denotes the
+    :param agg_adj: (optional) np array (num_nodes x num_nodes) Sparse Adjacency matrix where element ij denotes the
                     number of events between nodes i an j. If None, this will be calculated.
     :param return_block_pair_events: (bool) If True, returns the return_block_pair_events
 

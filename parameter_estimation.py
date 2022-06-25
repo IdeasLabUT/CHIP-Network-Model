@@ -14,7 +14,7 @@ def compute_sample_mean_and_variance(agg_adj, class_vec):
     """
     Computes CHIP's sample mean (N) and variance (S^2)
 
-    :param agg_adj: weighted adjacency of the network
+    :param agg_adj: sparse weighted adjacency of the network
     :param class_vec: (list) membership of every node to one of K classes.
 
     :return: N, S^2
@@ -36,21 +36,24 @@ def compute_sample_mean_and_variance(agg_adj, class_vec):
                 sample_var[a, b] = 0
                 continue
 
-            agg_adj_block = agg_adj[nodes_in_a[:, np.newaxis], nodes_in_b]
+            agg_adj_block = agg_adj.tocsr()[nodes_in_a[:, np.newaxis], nodes_in_b]
             if a == b:
-                # For diagonal blocks, need to make sure we're not including the diagonal entries of the
-                # adjacency matrix in our calculations, so extract indices for the lower and upper triangular portions
+                # For diagonal blocks, need to make sure we're not including the diagonal
+                # entries of the adjacency matrix in our calculations
 
-                num_nodes_in_a = nodes_in_a.size
-                lower_indices = np.tril_indices(num_nodes_in_a, -1)
-                upper_indices = np.triu_indices(num_nodes_in_a, 1)
-                agg_adj_block_no_diag = np.r_[agg_adj_block[lower_indices], agg_adj_block[upper_indices]]
-
-                sample_mean[a, b] = np.mean(agg_adj_block_no_diag)
-                sample_var[a, b] = np.var(agg_adj_block_no_diag, ddof=1)
+                # compute number of node pairs in block pair(a, a)
+                n = len(nodes_in_a) * (len(nodes_in_a) - 1)
+                sample_mean[a, b] = agg_adj_block.sum()/n
+                adj_squared = agg_adj_block.copy()
+                adj_squared.data **= 2
+                sample_var[a, b] = n / (n - 1) * (adj_squared.sum()/n - np.square(sample_mean[a, b]))
             else:
-                sample_mean[a, b] = np.mean(agg_adj_block)
-                sample_var[a, b] = np.var(agg_adj_block, ddof=1)
+                sample_mean[a, b] = agg_adj_block.mean()
+                # compute number of node pairs in block pair(a, b)
+                n = agg_adj_block.shape[0] * agg_adj_block.shape[1]
+                adj_squared = agg_adj_block.copy()
+                adj_squared.data **= 2
+                sample_var[a, b] = n / (n - 1) * (adj_squared.mean() - np.square(sample_mean[a, b]))
 
     return sample_mean, sample_var
 
@@ -59,7 +62,7 @@ def estimate_hawkes_from_counts(agg_adj, class_vec, duration, default_mu=None):
     """
     Estimates CHIP's mu and m.
 
-    :param agg_adj: weighted adjacency of the network
+    :param agg_adj: sparse weighted adjacency of the network
     :param class_vec: (list) membership of every node to one of K classes.
     :param duration: duration of the network
     :param default_mu: default mu values for block pairs with sample variance of 0.
